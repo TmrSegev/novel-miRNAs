@@ -5,7 +5,6 @@ import pandas as pd
 
 ids_dic = {}
 
-print("Hello World")
 
 def handleGivenName(name, df, column):
     """
