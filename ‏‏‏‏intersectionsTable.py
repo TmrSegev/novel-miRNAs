@@ -358,10 +358,13 @@ columns[i1], columns[i2], columns[i3] = columns[i2], columns[i3], columns[i1]
 unified = unified[columns]
 
 # ---Normalize featurecounts to reads per million
-columns = [libraries_mature + ['sum_FC_m'] + libraries_star + ['sum_FC_s']]
-for column in columns:
-    total = unified[column].sum()
-    unified[column] = round((unified[column] / total) * 1000000, 0)
+columns = libraries_mature + ['sum_FC_m'] + libraries_star + ['sum_FC_s']
+total = unified[columns].sum()
+columns_rpm = [column + "_rpm" for column in columns]
+unified[columns_rpm] = round((unified[columns] / total) * 1000000, 0)
+print(unified[columns])
+print(unified[columns_rpm])
+
 
 # --- Extract seed
 unified['Seed'] = unified['Description'].str.split(';', expand=True)[4]
