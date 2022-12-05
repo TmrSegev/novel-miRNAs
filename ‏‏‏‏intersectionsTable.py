@@ -285,9 +285,8 @@ def loop_size_mirdeep(row):
     return loop_size
 
 mirdeep_blast_fc_intersections_table['loop_size'] = mirdeep_blast_fc_intersections_table.apply(lambda row : loop_size_mirdeep(row), axis=1)
-# mirdeep_blast_fc_intersections_table['mature_size'] = np.where(mirdeep_blast_fc_intersections_table['mature'] == '5p', len(mirdeep_blast_fc_intersections_table['5pseq']), len(mirdeep_blast_fc_intersections_table['3pseq']))
-mirdeep_blast_fc_intersections_table['mature_length'] = mirdeep_blast_fc_intersections_table['consensus mature sequence'].str.len()
-mirdeep_blast_fc_intersections_table['star_length'] = mirdeep_blast_fc_intersections_table['consensus star sequence'].str.len()
+mirdeep_blast_fc_intersections_table['mature_size'] = mirdeep_blast_fc_intersections_table['consensus mature sequence'].str.len()
+mirdeep_blast_fc_intersections_table['star_size'] = mirdeep_blast_fc_intersections_table['consensus star sequence'].str.len()
 
 #---sRNAbench:
 remaining_sRNAbench = pd.read_csv(remaining_sRNAbench_path, sep='\t')
@@ -310,6 +309,9 @@ def loop_size_sRNAbench(row):
     return loop_size
 
 sRNAbench_blast_fc_intersections_table['loop_size'] = sRNAbench_blast_fc_intersections_table.apply(lambda row : loop_size_sRNAbench(row), axis=1)
+sRNAbench_blast_fc_intersections_table['mature_size'] = np.where(sRNAbench_blast_fc_intersections_table['mature'] == '5p', sRNAbench_blast_fc_intersections_table['5pseq'].str.len(), sRNAbench_blast_fc_intersections_table['3pseq'].str.len())
+sRNAbench_blast_fc_intersections_table['star_size'] = np.where(sRNAbench_blast_fc_intersections_table['mature'] == '5p', sRNAbench_blast_fc_intersections_table['3pseq'].str.len(), sRNAbench_blast_fc_intersections_table['5pseq'].str.len())
+
 
 # -----Reorder columns:-----
 mirdeep_blast_fc_intersections_table = mirdeep_blast_fc_intersections_table[['Chr_mirdeep', 'Start_mirdeep', 'End_mirdeep', 'Strand_mirdeep', 'Description_mirdeep',
@@ -317,7 +319,7 @@ mirdeep_blast_fc_intersections_table = mirdeep_blast_fc_intersections_table[['Ch
                                                                              'Chr_sRNAbench', 'Start_sRNAbench', 'End_sRNAbench', 'Strand_sRNAbench', 'Description_sRNAbench'] +
                                                                              libraries_mature + ['sum_FC_m', 'sum_FC_m > 100?', 'RC_m mirdeep', 'RC_m sRNAbench', 'Diff Sum_FC_m / RC_m mirdeep', 'Diff Sum_FC_m / RC_m sRNAbench'] +
                                                                              libraries_star + ['sum_FC_s', 'sum_FC_s > 100?', 'RC_s mirdeep', 'RC_s sRNAbench', 'Diff Sum_FC_s / RC_s mirdeep', 'Diff Sum_FC_s / RC_s sRNAbench',
-                                                                             'consensus mature sequence', 'consensus star sequence', 'consensus precursor sequence', 'mature', 'loop_size']
+                                                                             'consensus mature sequence', 'consensus star sequence', 'consensus precursor sequence', 'mature', 'mature_size', 'star_size', 'loop_size']
                                                                             ]
 
 sRNAbench_blast_fc_intersections_table = sRNAbench_blast_fc_intersections_table[['Chr_sRNAbench', 'Start_sRNAbench', 'End_sRNAbench', 'Strand_sRNAbench', 'Description_sRNAbench',
@@ -325,7 +327,7 @@ sRNAbench_blast_fc_intersections_table = sRNAbench_blast_fc_intersections_table[
                                                                              'Chr_mirdeep', 'Start_mirdeep', 'End_mirdeep', 'Strand_mirdeep', 'Description_mirdeep'] +
                                                                              libraries_mature + ['sum_FC_m', 'sum_FC_m > 100?', 'RC_m sRNAbench', 'RC_m mirdeep', 'Diff Sum_FC_m / RC_m sRNAbench', 'Diff Sum_FC_m / RC_m mirdeep'] +
                                                                              libraries_star + ['sum_FC_s', 'sum_FC_s > 100?', 'RC_s sRNAbench', 'RC_s mirdeep', 'Diff Sum_FC_s / RC_s sRNAbench', 'Diff Sum_FC_s / RC_s mirdeep',
-                                                                             '5pseq', '3pseq', 'hairpinSeq', 'mature', 'loop_size']
+                                                                             '5pseq', '3pseq', 'hairpinSeq', 'mature', 'mature_size', 'star_size', 'loop_size']
                                                                                 ]
 
 # ------Add Types------
