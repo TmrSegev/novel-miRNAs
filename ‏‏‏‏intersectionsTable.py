@@ -184,6 +184,12 @@ mirdeep_blast_fc_intersections_table['Diff Sum_FC_m / RC_m sRNAbench'] = mirdeep
 mirdeep_blast_fc_intersections_table['Diff Sum_FC_s / RC_s mirdeep'] = mirdeep_blast_fc_intersections_table['sum_FC_s'] / mirdeep_blast_fc_intersections_table['RC_s mirdeep']
 mirdeep_blast_fc_intersections_table['Diff Sum_FC_s / RC_s sRNAbench'] = mirdeep_blast_fc_intersections_table['sum_FC_s'] / mirdeep_blast_fc_intersections_table['RC_s sRNAbench']
 
+# ---Normalize featurecounts to reads per million
+columns = libraries_mature  + libraries_star
+total = mirdeep_blast_fc_intersections_table[columns].sum()
+columns_rpm = [column + "_rpm" for column in columns]
+mirdeep_blast_fc_intersections_table[columns_rpm] = round((mirdeep_blast_fc_intersections_table[columns] / total) * 1000000, 0)
+
 # ---sRNAbench:
 featurecounts_sRNAbench = pd.read_csv(featurecounts_sRNAbench_path, sep='\t', names=['Geneid', 'Chr', 'Start', 'End', 'Strand', 'Length'] + libraries)
 featurecounts_sRNAbench = featurecounts_sRNAbench.drop(['Chr', 'Start', 'End', 'Strand', 'Length'], axis=1)
@@ -248,6 +254,12 @@ sRNAbench_blast_fc_intersections_table['Diff Sum_FC_m / RC_m mirdeep'] = sRNAben
 sRNAbench_blast_fc_intersections_table['Diff Sum_FC_m / RC_m sRNAbench'] = sRNAbench_blast_fc_intersections_table['sum_FC_m'] / sRNAbench_blast_fc_intersections_table['RC_m sRNAbench']
 sRNAbench_blast_fc_intersections_table['Diff Sum_FC_s / RC_s mirdeep'] = sRNAbench_blast_fc_intersections_table['sum_FC_s'] / sRNAbench_blast_fc_intersections_table['RC_s mirdeep']
 sRNAbench_blast_fc_intersections_table['Diff Sum_FC_s / RC_s sRNAbench'] = sRNAbench_blast_fc_intersections_table['sum_FC_s'] / sRNAbench_blast_fc_intersections_table['RC_s sRNAbench']
+
+# Normalize featurecounts to reads per million
+columns = libraries_mature + libraries_star
+total = sRNAbench_blast_fc_intersections_table[columns].sum()
+columns_rpm = [column + "_rpm" for column in columns]
+sRNAbench_blast_fc_intersections_table[columns_rpm] = round((sRNAbench_blast_fc_intersections_table[columns] / total) * 1000000, 0)
 
 # -----Add Sequences:-----
 # ---miRdeep:
@@ -319,6 +331,7 @@ mirdeep_blast_fc_intersections_table = mirdeep_blast_fc_intersections_table[['Ch
                                                                              'Chr_sRNAbench', 'Start_sRNAbench', 'End_sRNAbench', 'Strand_sRNAbench', 'Description_sRNAbench'] +
                                                                              libraries_mature + ['sum_FC_m', 'sum_FC_m > 100?', 'RC_m mirdeep', 'RC_m sRNAbench', 'Diff Sum_FC_m / RC_m mirdeep', 'Diff Sum_FC_m / RC_m sRNAbench'] +
                                                                              libraries_star + ['sum_FC_s', 'sum_FC_s > 100?', 'RC_s mirdeep', 'RC_s sRNAbench', 'Diff Sum_FC_s / RC_s mirdeep', 'Diff Sum_FC_s / RC_s sRNAbench',
+                                                                             columns_rpm,
                                                                              'consensus mature sequence', 'consensus star sequence', 'consensus precursor sequence', 'mature', 'mature_size', 'star_size', 'loop_size']
                                                                             ]
 
@@ -327,6 +340,7 @@ sRNAbench_blast_fc_intersections_table = sRNAbench_blast_fc_intersections_table[
                                                                              'Chr_mirdeep', 'Start_mirdeep', 'End_mirdeep', 'Strand_mirdeep', 'Description_mirdeep'] +
                                                                              libraries_mature + ['sum_FC_m', 'sum_FC_m > 100?', 'RC_m sRNAbench', 'RC_m mirdeep', 'Diff Sum_FC_m / RC_m sRNAbench', 'Diff Sum_FC_m / RC_m mirdeep'] +
                                                                              libraries_star + ['sum_FC_s', 'sum_FC_s > 100?', 'RC_s sRNAbench', 'RC_s mirdeep', 'Diff Sum_FC_s / RC_s sRNAbench', 'Diff Sum_FC_s / RC_s mirdeep',
+                                                                             columns_rpm,
                                                                              '5pseq', '3pseq', 'hairpinSeq', 'mature', 'mature_size', 'star_size', 'loop_size']
                                                                                 ]
 
@@ -357,13 +371,13 @@ i1, i2, i3 = columns.index('mature'), columns.index('5pseq'), columns.index('3ps
 columns[i1], columns[i2], columns[i3] = columns[i2], columns[i3], columns[i1]
 unified = unified[columns]
 
-# ---Normalize featurecounts to reads per million
-columns = libraries_mature + ['sum_FC_m'] + libraries_star + ['sum_FC_s']
-total = unified[columns].sum()
-columns_rpm = [column + "_rpm" for column in columns]
-unified[columns_rpm] = round((unified[columns] / total) * 1000000, 0)
-print(unified[columns])
-print(unified[columns_rpm])
+# # ---Normalize featurecounts to reads per million
+# columns = libraries_mature + ['sum_FC_m'] + libraries_star + ['sum_FC_s']
+# total = unified[columns].sum()
+# columns_rpm = [column + "_rpm" for column in columns]
+# unified[columns_rpm] = round((unified[columns] / total) * 1000000, 0)
+# print(unified[columns])
+# print(unified[columns_rpm])
 
 
 # --- Extract seed
