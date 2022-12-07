@@ -23,6 +23,7 @@ remaining1_mirdeep_path = None
 remaining2_mirdeep_path = None
 remaining_sRNAbench_path = None
 libraries = None
+sum_fc_thres = 100
 for i in range(1, len(sys.argv), 2):
     arg = sys.argv[i]
     if arg == '-s':
@@ -47,6 +48,8 @@ for i in range(1, len(sys.argv), 2):
         remaining_sRNAbench_path = sys.argv[i + 1]
     elif arg == '-l':
         libraries = sys.argv[i + 1].split(',')
+    elif arg == '--sum-fc-thres':
+        sum_fc_thres = int(sys.argv[i + 1])
     elif arg == '--help' or arg == '-h':
         print(f'Manual:\n'
               f' -s <name>: name of species.\n'
@@ -59,7 +62,8 @@ for i in range(1, len(sys.argv), 2):
               f' -r1m <path>: path to the first remaining mirdeep candidates file, remaining_file_1.csv.\n'
               f' -r2m <path>: path to the second remaining mirdeep candidates file, remaining_file_2.csv.\n'
               f' -rs <path>: path to remaining sRNAbench candidates file, sRNAbench_remaining.csv.\n'
-              f' -l <path>: list of sequencing libraries. Write the list seperated with commas, witout spaces. Example: library1,library2,library3 \n'
+              f' -l <list>: list of sequencing libraries. Write the list seperated with commas, witout spaces. Example: library1,library2,library3 \n'
+              f' --sum-fc-thres <int>: filtering threshold. Any candidates with sum_fc_m <= threshold will be filtered.\n'
               )
         sys.exit()
 
@@ -148,7 +152,6 @@ mature_counts = mature_counts.rename(columns=rename_dict)
 mature_counts['sum_FC_m'] = np.zeros(len(mature_counts))
 for library in libraries_mature:
     mature_counts['sum_FC_m'] += mature_counts[library]
-mature_counts['sum_FC_m > 100?'] = np.where(mature_counts['sum_FC_m'] > 100, 1, 0)
 mature_counts = mature_counts.drop('mature/star', axis=1)
 
 
@@ -166,6 +169,9 @@ star_counts = star_counts.drop('mature/star', axis=1)
 mirdeep_blast_m_intersections_table = pd.merge(mirdeep_blast_intersections_table, mature_counts, on='index', how='left')
 mirdeep_blast_fc_intersections_table = pd.merge(mirdeep_blast_m_intersections_table, star_counts, on='index', how='left')
 mirdeep_blast_fc_intersections_table = mirdeep_blast_fc_intersections_table.drop('index', axis=1)
+
+# filter by sum_fc_m < threshold
+mirdeep_blast_fc_intersections_table = mirdeep_blast_fc_intersections_table[mirdeep_blast_fc_intersections_table['sum_FC_m'] > sum_fc_thres]
 
 # Extract readcounts columns
 mirdeep_blast_fc_intersections_table['RC_m mirdeep'] = mirdeep_blast_fc_intersections_table["Description_mirdeep"].str.split(';', expand=True)[1]
@@ -229,7 +235,6 @@ mature_counts = mature_counts.rename(columns=rename_dict)
 mature_counts['sum_FC_m'] = np.zeros(len(mature_counts))
 for library in libraries_mature:
     mature_counts['sum_FC_m'] += mature_counts[library]
-mature_counts['sum_FC_m > 100?'] = np.where(mature_counts['sum_FC_m'] > 100, 1, 0)
 mature_counts = mature_counts.drop('mature/star', axis=1)
 
 star_counts = featurecounts_sRNAbench[featurecounts_sRNAbench['mature/star'] == 's']
@@ -245,6 +250,9 @@ star_counts = star_counts.drop(['mature/star', 'mature'], axis=1)
 sRNAbench_blast_m_intersections_table = pd.merge(sRNAbench_blast_intersections_table, mature_counts, on='index', how='left')
 sRNAbench_blast_fc_intersections_table = pd.merge(sRNAbench_blast_m_intersections_table, star_counts, on='index', how='left')
 sRNAbench_blast_fc_intersections_table = sRNAbench_blast_fc_intersections_table.drop('index', axis=1)
+
+# filter by sum_fc_m < threshold
+sRNAbench_blast_fc_intersections_table = sRNAbench_blast_fc_intersections_table[sRNAbench_blast_fc_intersections_table['sum_FC_m'] > sum_fc_thres]
 
 # Extract readcounts columns
 sRNAbench_blast_fc_intersections_table['RC_m mirdeep'] = sRNAbench_blast_fc_intersections_table["Description_mirdeep"].str.split(';', expand=True)[1]
@@ -342,7 +350,7 @@ sRNAbench_blast_fc_intersections_table['star_size'] = np.where(sRNAbench_blast_f
 mirdeep_blast_fc_intersections_table = mirdeep_blast_fc_intersections_table[['Chr_mirdeep', 'Start_mirdeep', 'End_mirdeep', 'Strand_mirdeep', 'Description_mirdeep',
                                                                              'query_accession','subject_accession', 'alignment_length', 'query_start', 'query_end', 'e_value',
                                                                              'Chr_sRNAbench', 'Start_sRNAbench', 'End_sRNAbench', 'Strand_sRNAbench', 'Description_sRNAbench'] +
-                                                                             libraries_mature + ['sum_FC_m', 'sum_FC_m > 100?', 'RC_m mirdeep', 'RC_m sRNAbench', 'Diff Sum_FC_m / RC_m mirdeep', 'Diff Sum_FC_m / RC_m sRNAbench'] +
+                                                                             libraries_mature + ['sum_FC_m', 'RC_m mirdeep', 'RC_m sRNAbench', 'Diff Sum_FC_m / RC_m mirdeep', 'Diff Sum_FC_m / RC_m sRNAbench'] +
                                                                              libraries_star + ['sum_FC_s', 'sum_FC_s > 100?', 'RC_s mirdeep', 'RC_s sRNAbench', 'Diff Sum_FC_s / RC_s mirdeep', 'Diff Sum_FC_s / RC_s sRNAbench'] +
                                                                              mature_rpm + ['sum_FC_m_rpm'] + star_rpm + ['sum_FC_s_rpm'] +
                                                                              ['consensus mature sequence', 'consensus star sequence', 'consensus precursor sequence', 'mature', 'mature_size', 'star_size', 'loop_size']
@@ -351,7 +359,7 @@ mirdeep_blast_fc_intersections_table = mirdeep_blast_fc_intersections_table[['Ch
 sRNAbench_blast_fc_intersections_table = sRNAbench_blast_fc_intersections_table[['Chr_sRNAbench', 'Start_sRNAbench', 'End_sRNAbench', 'Strand_sRNAbench', 'Description_sRNAbench',
                                                                              'query_accession','subject_accession', 'alignment_length', 'query_start', 'query_end', 'e_value',
                                                                              'Chr_mirdeep', 'Start_mirdeep', 'End_mirdeep', 'Strand_mirdeep', 'Description_mirdeep'] +
-                                                                             libraries_mature + ['sum_FC_m', 'sum_FC_m > 100?', 'RC_m sRNAbench', 'RC_m mirdeep', 'Diff Sum_FC_m / RC_m sRNAbench', 'Diff Sum_FC_m / RC_m mirdeep'] +
+                                                                             libraries_mature + ['sum_FC_m', 'RC_m sRNAbench', 'RC_m mirdeep', 'Diff Sum_FC_m / RC_m sRNAbench', 'Diff Sum_FC_m / RC_m mirdeep'] +
                                                                              libraries_star + ['sum_FC_s', 'sum_FC_s > 100?', 'RC_s sRNAbench', 'RC_s mirdeep', 'Diff Sum_FC_s / RC_s sRNAbench', 'Diff Sum_FC_s / RC_s mirdeep'] +
                                                                              mature_rpm + ['sum_FC_m_rpm'] + star_rpm + ['sum_FC_s_rpm'] +
                                                                              ['5pseq', '3pseq', 'hairpinSeq', 'mature', 'mature_size', 'star_size', 'loop_size']
