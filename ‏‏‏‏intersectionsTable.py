@@ -190,6 +190,7 @@ total = mirdeep_blast_fc_intersections_table[columns].sum()
 columns_rpm = [column + "_rpm" for column in columns]
 mirdeep_blast_fc_intersections_table[columns_rpm] = round((mirdeep_blast_fc_intersections_table[columns] / total) * 1000000, 0)
 
+
 # ---sRNAbench:
 featurecounts_sRNAbench = pd.read_csv(featurecounts_sRNAbench_path, sep='\t', names=['Geneid', 'Chr', 'Start', 'End', 'Strand', 'Length'] + libraries)
 featurecounts_sRNAbench = featurecounts_sRNAbench.drop(['Chr', 'Start', 'End', 'Strand', 'Length'], axis=1)
@@ -372,6 +373,7 @@ columns[i1], columns[i2], columns[i3] = columns[i2], columns[i3], columns[i1]
 unified = unified[columns]
 
 # # ---Normalize featurecounts to reads per million
+
 # columns = libraries_mature + ['sum_FC_m'] + libraries_star + ['sum_FC_s']
 # total = unified[columns].sum()
 # columns_rpm = [column + "_rpm" for column in columns]
