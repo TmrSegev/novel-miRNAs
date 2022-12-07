@@ -185,10 +185,16 @@ mirdeep_blast_fc_intersections_table['Diff Sum_FC_s / RC_s mirdeep'] = mirdeep_b
 mirdeep_blast_fc_intersections_table['Diff Sum_FC_s / RC_s sRNAbench'] = mirdeep_blast_fc_intersections_table['sum_FC_s'] / mirdeep_blast_fc_intersections_table['RC_s sRNAbench']
 
 # ---Normalize featurecounts to reads per million
-columns = libraries_mature  + libraries_star
+columns = libraries_mature + libraries_star
 total = mirdeep_blast_fc_intersections_table[columns].sum()
 columns_rpm = [column + "_rpm" for column in columns]
 mirdeep_blast_fc_intersections_table[columns_rpm] = round((mirdeep_blast_fc_intersections_table[columns] / total) * 1000000, 0)
+mirdeep_blast_fc_intersections_table['sum_FC_m_rpm'] = np.zeros(len(mirdeep_blast_fc_intersections_table))
+for library in libraries_mature:
+    mirdeep_blast_fc_intersections_table['sum_FC_m_rpm'] += mirdeep_blast_fc_intersections_table[library + "_rpm"]
+mirdeep_blast_fc_intersections_table['sum_FC_s_rpm'] = np.zeros(len(mirdeep_blast_fc_intersections_table))
+for library in libraries_star:
+    mirdeep_blast_fc_intersections_table['sum_FC_s_rpm'] += mirdeep_blast_fc_intersections_table[library + "_rpm"]
 
 
 # ---sRNAbench:
@@ -261,6 +267,12 @@ columns = libraries_mature + libraries_star
 total = sRNAbench_blast_fc_intersections_table[columns].sum()
 columns_rpm = [column + "_rpm" for column in columns]
 sRNAbench_blast_fc_intersections_table[columns_rpm] = round((sRNAbench_blast_fc_intersections_table[columns] / total) * 1000000, 0)
+sRNAbench_blast_fc_intersections_table['sum_FC_m_rpm'] = np.zeros(len(sRNAbench_blast_fc_intersections_table))
+for library in libraries_mature:
+    sRNAbench_blast_fc_intersections_table['sum_FC_m'] += sRNAbench_blast_fc_intersections_table[library + "_rpm"]
+sRNAbench_blast_fc_intersections_table['sum_FC_s_rpm'] = np.zeros(len(sRNAbench_blast_fc_intersections_table))
+for library in libraries_star:
+    sRNAbench_blast_fc_intersections_table['sum_FC_s_rpm'] += sRNAbench_blast_fc_intersections_table[library + "_rpm"]
 
 # -----Add Sequences:-----
 # ---miRdeep:
@@ -331,18 +343,18 @@ mirdeep_blast_fc_intersections_table = mirdeep_blast_fc_intersections_table[['Ch
                                                                              'query_accession','subject_accession', 'alignment_length', 'query_start', 'query_end', 'e_value',
                                                                              'Chr_sRNAbench', 'Start_sRNAbench', 'End_sRNAbench', 'Strand_sRNAbench', 'Description_sRNAbench'] +
                                                                              libraries_mature + ['sum_FC_m', 'sum_FC_m > 100?', 'RC_m mirdeep', 'RC_m sRNAbench', 'Diff Sum_FC_m / RC_m mirdeep', 'Diff Sum_FC_m / RC_m sRNAbench'] +
-                                                                             libraries_star + ['sum_FC_s', 'sum_FC_s > 100?', 'RC_s mirdeep', 'RC_s sRNAbench', 'Diff Sum_FC_s / RC_s mirdeep', 'Diff Sum_FC_s / RC_s sRNAbench',
-                                                                             columns_rpm,
-                                                                             'consensus mature sequence', 'consensus star sequence', 'consensus precursor sequence', 'mature', 'mature_size', 'star_size', 'loop_size']
+                                                                             libraries_star + ['sum_FC_s', 'sum_FC_s > 100?', 'RC_s mirdeep', 'RC_s sRNAbench', 'Diff Sum_FC_s / RC_s mirdeep', 'Diff Sum_FC_s / RC_s sRNAbench'] +
+                                                                             columns_rpm +
+                                                                             ['sum_FC_m_rpm', 'sum_FC_s_rpm', 'consensus mature sequence', 'consensus star sequence', 'consensus precursor sequence', 'mature', 'mature_size', 'star_size', 'loop_size']
                                                                             ]
 
 sRNAbench_blast_fc_intersections_table = sRNAbench_blast_fc_intersections_table[['Chr_sRNAbench', 'Start_sRNAbench', 'End_sRNAbench', 'Strand_sRNAbench', 'Description_sRNAbench',
                                                                              'query_accession','subject_accession', 'alignment_length', 'query_start', 'query_end', 'e_value',
                                                                              'Chr_mirdeep', 'Start_mirdeep', 'End_mirdeep', 'Strand_mirdeep', 'Description_mirdeep'] +
                                                                              libraries_mature + ['sum_FC_m', 'sum_FC_m > 100?', 'RC_m sRNAbench', 'RC_m mirdeep', 'Diff Sum_FC_m / RC_m sRNAbench', 'Diff Sum_FC_m / RC_m mirdeep'] +
-                                                                             libraries_star + ['sum_FC_s', 'sum_FC_s > 100?', 'RC_s sRNAbench', 'RC_s mirdeep', 'Diff Sum_FC_s / RC_s sRNAbench', 'Diff Sum_FC_s / RC_s mirdeep',
-                                                                             columns_rpm,
-                                                                             '5pseq', '3pseq', 'hairpinSeq', 'mature', 'mature_size', 'star_size', 'loop_size']
+                                                                             libraries_star + ['sum_FC_s', 'sum_FC_s > 100?', 'RC_s sRNAbench', 'RC_s mirdeep', 'Diff Sum_FC_s / RC_s sRNAbench', 'Diff Sum_FC_s / RC_s mirdeep'] +
+                                                                             columns_rpm +
+                                                                             ['sum_FC_m_rpm', 'sum_FC_s_rpm', '5pseq', '3pseq', 'hairpinSeq', 'mature', 'mature_size', 'star_size', 'loop_size']
                                                                                 ]
 
 # ------Add Types------
@@ -371,15 +383,6 @@ columns = list(unified.columns)
 i1, i2, i3 = columns.index('mature'), columns.index('5pseq'), columns.index('3pseq')
 columns[i1], columns[i2], columns[i3] = columns[i2], columns[i3], columns[i1]
 unified = unified[columns]
-
-# # ---Normalize featurecounts to reads per million
-
-# columns = libraries_mature + ['sum_FC_m'] + libraries_star + ['sum_FC_s']
-# total = unified[columns].sum()
-# columns_rpm = [column + "_rpm" for column in columns]
-# unified[columns_rpm] = round((unified[columns] / total) * 1000000, 0)
-# print(unified[columns])
-# print(unified[columns_rpm])
 
 
 # --- Extract seed
