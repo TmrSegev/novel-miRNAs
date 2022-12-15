@@ -4,14 +4,19 @@ import matplotlib.pyplot as plt
 import sys
 
 """
-Organize inputs
-Create intersections table
-Add BLAST results
-Add feature counts
-Add types
+GETTING INPUTS
+CREATE INTERSECTIONS TABLES
+ADD BLAST RESULTS
+ADD FEATURE COUNTS
+ADD SEQUENCES
+REORDER COLUMNS
+ADD TYPES
+CREATE ALL CANDIDATES SHEET
+STATISTICS
+SAVE TO EXCEL
 """
 
-# -----Getting Inputs-----
+# -----GETTING INPUTS-----
 species = None
 mirdeep_intersections_table_path = None
 sRNAbench_intersections_table_path = None
@@ -67,11 +72,42 @@ for i in range(1, len(sys.argv), 2):
               )
         sys.exit()
 
+# -----CREATE INTERSECTIONS TABLES-----
 # -----mirdeep intersections table:-----
 
 mirdeep_intersections_table = pd.read_csv(mirdeep_intersections_table_path, sep='\t', names=['Chr_mirdeep', '.1', 'pre_miRNA1', 'Start_mirdeep', 'End_mirdeep', '.2', 'Strand_mirdeep', '.3', 'Description_mirdeep', 'Chr_sRNAbench', '.4', 'pre_miRNA2', 'Start_sRNAbench', 'End_sRNAbench', '.5', 'Strand_sRNAbench', '.6', 'Description_sRNAbench'])
 mirdeep_intersections_table = mirdeep_intersections_table.drop(['.1', 'pre_miRNA1', '.2', '.3', '.4', 'pre_miRNA2', '.5', '.6'], axis=1)
 mirdeep_intersections_table.to_csv("mirdeep_intersections_table", sep='\t')
+
+if species == r'[Ee]legans':
+    mirdeep_mirbase = pd.read_csv('miRdeep_miRBase_intersect.bed', sep='\t',
+                                  names=['Chr_mirdeep', '.1', 'pre_miRNA1', 'Start_mirdeep', 'End_mirdeep', '.2',
+                                         'Strand_mirdeep', '.3', 'Description_mirdeep', 'Chr_mirbase', '.4',
+                                         'pre_miRNA2', 'Start_mirbase', 'End_mirbase', '.5', 'Strand_mirbase', '.6',
+                                         'Description_mirbase'])
+    mirdeep_mirgenedb = pd.read_csv('miRdeep_miRGeneDB_intersect.bed', sep='\t',
+                                    names=['Chr_mirdeep', '.1', 'pre_miRNA1', 'Start_mirdeep', 'End_mirdeep', '.2',
+                                           'Strand_mirdeep', '.3', 'Description_mirdeep', 'Chr_mirgenedb', '.4',
+                                           'pre_miRNA2', 'Start_mirgenedb', 'End_mirgenedb', '.5', 'Strand_mirgenedb',
+                                           '.6', 'Description_mirgenedb'])
+
+    mirdeep_mirbase = mirdeep_mirbase.drop(['.1', 'pre_miRNA1', '.2', '.3', '.4', 'pre_miRNA2', '.5', '.6'], axis=1)
+    mirdeep_mirgenedb = mirdeep_mirgenedb.drop(['.1', 'pre_miRNA1', '.2', '.3', '.4', 'pre_miRNA2', '.5', '.6'], axis=1)
+
+    mirdeep_intersections_table['T/F_sRNAbench'] = (mirdeep_intersections_table['Description_sRNAbench'] != '.').astype(
+        int)  # Used for classifying types
+
+    mirdeep_sRNAbench_mirbase = pd.merge(mirdeep_intersections_table, mirdeep_mirbase.iloc[:, 4:10], on='Description_mirdeep',
+                                         how='left')
+    mirdeep_sRNAbench_mirbase['T/F_mirbase'] = (mirdeep_sRNAbench_mirbase['Description_mirbase'] != '.').astype(
+        int)  # Used for classifying types
+    mirdeep_intersections_table = pd.merge(mirdeep_sRNAbench_mirbase, mirdeep_mirgenedb.iloc[:, 4:10],
+                                           on='Description_mirdeep', how='left')
+    mirdeep_intersections_table['T/F_mirgenedb'] = (mirdeep_intersections_table['Description_mirgenedb'] != '.').astype(
+        int)  # Used for classifying types
+    mirdeep_intersections_table.to_csv("mirdeep_intersections_table", sep='\t')
+
+print(mirdeep_intersections_table)
 
 # -----sRNAbench intersections table:-----
 
@@ -79,7 +115,74 @@ sRNAbench_intersections_table = pd.read_csv(sRNAbench_intersections_table_path, 
 sRNAbench_intersections_table = sRNAbench_intersections_table.drop(['.1', 'pre_miRNA1', '.2', '.3', '.4', 'pre_miRNA2', '.5', '.6'], axis=1)
 sRNAbench_intersections_table.to_csv("sRNAbench_intersections_table", sep='\t')
 
-# -----Add blast results:-----
+if species == r'[Ee]legans':
+    sRNAbench_mirbase = pd.read_csv('sRNAbench_miRBase_intersect.bed', sep='\t',
+                                    names=['Chr_sRNAbench', '.1', 'pre_miRNA1', 'Start_sRNAbench', 'End_sRNAbench',
+                                           '.2', 'Strand_sRNAbench', '.3', 'Description_sRNAbench', 'Chr_mirbase', '.4',
+                                           'pre_miRNA2', 'Start_mirbase', 'End_mirbase', '.5', 'Strand_mirbase', '.6',
+                                           'Description_mirbase'])
+    sRNAbench_mirgenedb = pd.read_csv('sRNAbench_miRGeneDB_intersect.bed', sep='\t',
+                                      names=['Chr_sRNAbench', '.1', 'pre_miRNA1', 'Start_sRNAbench', 'End_sRNAbench',
+                                             '.2', 'Strand_sRNAbench', '.3', 'Description_sRNAbench', 'Chr_mirgenedb',
+                                             '.4', 'pre_miRNA2', 'Start_mirgenedb', 'End_mirgenedb', '.5',
+                                             'Strand_mirgenedb', '.6', 'Description_mirgenedb'])
+
+    sRNAbench_mirbase = sRNAbench_mirbase.drop(['.1', 'pre_miRNA1', '.2', '.3', '.4', 'pre_miRNA2', '.5', '.6'], axis=1)
+    sRNAbench_mirgenedb = sRNAbench_mirgenedb.drop(['.1', 'pre_miRNA1', '.2', '.3', '.4', 'pre_miRNA2', '.5', '.6'],
+                                                   axis=1)
+
+    sRNAbench_intersections_table['T/F_mirdeep'] = (sRNAbench_intersections_table['Description_mirdeep'] != '.').astype(
+        int)  # Used for classifying types
+
+    sRNAbench_mirdeep_mirbase = pd.merge(sRNAbench_intersections_table, sRNAbench_mirbase.iloc[:, 4:10], on='Description_sRNAbench',
+                                         how='left')
+    sRNAbench_mirdeep_mirbase['T/F_mirbase'] = (sRNAbench_mirdeep_mirbase['Description_mirbase'] != '.').astype(
+        int)  # Used for classifying types
+    sRNAbench_intersections_table = pd.merge(sRNAbench_mirdeep_mirbase, sRNAbench_mirgenedb.iloc[:, 4:10],
+                                             on='Description_sRNAbench', how='left')
+    sRNAbench_intersections_table['T/F_mirgenedb'] = (
+                sRNAbench_intersections_table['Description_mirgenedb'] != '.').astype(int)  # Used for classifying types
+    sRNAbench_intersections_table.to_csv("sRNAbench_intersections_table", sep='\t')
+    print(sRNAbench_intersections_table)
+
+if species == r'[Ee]legans':
+    # -----mirbase intersections table:-----
+
+    mirbase_mirgenedb = pd.read_csv('miRBase_miRGeneDB_intersect.bed', sep='\t',
+                                    names=['Chr_mirbase', '.1', 'pre_miRNA1', 'Start_mirbase', 'End_mirbase', '.2',
+                                           'Strand_mirbase', '.3', 'Description_mirbase', 'Chr_mirgenedb', '.4',
+                                           'pre_miRNA2', 'Start_mirgenedb', 'End_mirgenedb', '.5', 'Strand_mirgenedb',
+                                           '.6', 'Description_mirgenedb'])
+    mirbase_mirdeep = pd.read_csv('miRBase_miRdeep_intersect.bed', sep='\t',
+                                  names=['Chr_mirbase', '.1', 'pre_miRNA1', 'Start_mirbase', 'End_mirbase', '.2',
+                                         'Strand_mirbase', '.3', 'Description_mirbase', 'Chr_mirdeep', '.4',
+                                         'pre_miRNA2', 'Start_mirdeep', 'End_mirdeep', '.5', 'Strand_mirdeep', '.6',
+                                         'Description_mirdeep'])
+    mirbase_sRNAbench = pd.read_csv('miRBase_sRNAbench_intersect.bed', sep='\t',
+                                    names=['Chr_mirbase', '.1', 'pre_miRNA1', 'Start_mirbase', 'End_mirbase', '.2',
+                                           'Strand_mirbase', '.3', 'Description_mirbase', 'Chr_sRNAbench', '.4',
+                                           'pre_miRNA2', 'Start_sRNAbench', 'End_sRNAbench', '.5', 'Strand_sRNAbench',
+                                           '.6', 'Description_sRNAbench'])
+
+    mirbase_mirgenedb = mirbase_mirgenedb.drop(['.1', 'pre_miRNA1', '.2', '.3', '.4', 'pre_miRNA2', '.5', '.6'], axis=1)
+    mirbase_mirdeep = mirbase_mirdeep.drop(['.1', 'pre_miRNA1', '.2', '.3', '.4', 'pre_miRNA2', '.5', '.6'], axis=1)
+    mirbase_sRNAbench = mirbase_sRNAbench.drop(['.1', 'pre_miRNA1', '.2', '.3', '.4', 'pre_miRNA2', '.5', '.6'], axis=1)
+
+    mirbase_mirgenedb['T/F_mirgenedb'] = (mirbase_mirgenedb['Description_mirgenedb'] != '.').astype(
+        int)  # Used for classifying types
+
+    mirbase_mirgenedb_mirdeep = pd.merge(mirbase_mirgenedb, mirbase_mirdeep.iloc[:, 4:10], on='Description_mirbase',
+                                         how='left')
+    mirbase_mirgenedb_mirdeep['T/F_mirdeep'] = (mirbase_mirgenedb_mirdeep['Description_mirdeep'] != '.').astype(
+        int)  # Used for classifying types
+    mirbase_intersections_table = pd.merge(mirbase_mirgenedb_mirdeep, mirbase_sRNAbench.iloc[:, 4:10],
+                                           on='Description_mirbase', how='left')
+    mirbase_intersections_table['T/F_sRNAbench'] = (mirbase_intersections_table['Description_sRNAbench'] != '.').astype(
+        int)  # Used for classifying types
+    mirbase_intersections_table.to_csv("mirbase_intersections_table", sep='\t')
+    print(mirbase_intersections_table)
+
+# -----ADD BLAST RESULTS-----
 # ---miRdeep:
 blast_mirdeep_orig = pd.read_csv(blast_mirdeep_path, sep='\t', names=['query_accession', 'subject_accession', '%_identical_matches', 'alignment_length', 'mismatches', 'gap_openings', 'query_start', 'query_end', 'subject_start', 'subject_end', 'e_value', 'bitscore'])
 blast_mirdeep_orig = blast_mirdeep_orig.drop_duplicates(subset=["query_accession"])
@@ -124,7 +227,7 @@ sRNAbench_intersections_table['index'] = sRNAbench_intersections_table['index'].
 # Merge sRNAbench results and blast results
 sRNAbench_blast_intersections_table = pd.merge(sRNAbench_intersections_table, blast_sRNAbench, on='index', how='left')
 
-# -----Add Featurecounts Results:-----
+# -----ADD FEATURE COUNTS:-----
 # ---miRDeep:
 featurecounts_mirdeep = pd.read_csv(featurecounts_mirdeep_path, sep='\t', names=['Geneid', 'Chr', 'Start', 'End', 'Strand', 'Length'] + libraries)
 featurecounts_mirdeep = featurecounts_mirdeep.drop(['Chr', 'Start', 'End', 'Strand', 'Length'], axis=1)
@@ -190,7 +293,7 @@ mirdeep_blast_fc_intersections_table['Diff Sum_FC_m / RC_m sRNAbench'] = mirdeep
 mirdeep_blast_fc_intersections_table['Diff Sum_FC_s / RC_s mirdeep'] = mirdeep_blast_fc_intersections_table['sum_FC_s'] / mirdeep_blast_fc_intersections_table['RC_s mirdeep']
 mirdeep_blast_fc_intersections_table['Diff Sum_FC_s / RC_s sRNAbench'] = mirdeep_blast_fc_intersections_table['sum_FC_s'] / mirdeep_blast_fc_intersections_table['RC_s sRNAbench']
 
-# ---Normalize featurecounts to reads per million
+# Normalize featurecounts to reads per million
 total = mirdeep_blast_fc_intersections_table[libraries_mature + libraries_star].sum()
 mature_rpm = [column + "_rpm" for column in libraries_mature]
 star_rpm = [column + "_rpm" for column in libraries_star]
@@ -282,7 +385,7 @@ sRNAbench_blast_fc_intersections_table['sum_FC_s_rpm'] = np.zeros(len(sRNAbench_
 for library in star_rpm:
     sRNAbench_blast_fc_intersections_table['sum_FC_s_rpm'] += sRNAbench_blast_fc_intersections_table[library]
 
-# -----Add Sequences:-----
+# -----ADD SEQUENCES-----
 # ---miRdeep:
 remaining1_mirdeep = pd.read_csv(remaining1_mirdeep_path, sep='\t')
 remaining2_mirdeep = pd.read_csv(remaining2_mirdeep_path, sep='\t')
@@ -346,10 +449,21 @@ sRNAbench_blast_fc_intersections_table['mature_size'] = np.where(sRNAbench_blast
 sRNAbench_blast_fc_intersections_table['star_size'] = np.where(sRNAbench_blast_fc_intersections_table['mature'] == '5p', sRNAbench_blast_fc_intersections_table['3pseq'].str.len(), sRNAbench_blast_fc_intersections_table['5pseq'].str.len())
 
 
-# -----Reorder columns:-----
+# -----REORDER COLUMNS:-----
+
+if species == r'[Ee]legans':
+    elegans_columns_mirdeep = ['T/F_sRNAbench', 'Chr_mirbase', 'Start_mirbase', 'End_mirbase', 'Strand_mirbase', 'Description_mirbase', 'T/F_mirbase',
+                       'Chr_mirgenedb', 'Start_mirgenedb', 'End_mirgenedb', 'Strand_mirgenedb', 'Description_mirgenedb', 'T/F_mirgenedb']
+    elegans_columns_sRNAbench = ['T/F_mirdeep', 'Chr_mirbase', 'Start_mirbase', 'End_mirbase', 'Strand_mirbase', 'Description_mirbase', 'T/F_mirbase',
+                       'Chr_mirgenedb', 'Start_mirgenedb', 'End_mirgenedb', 'Strand_mirgenedb', 'Description_mirgenedb', 'T/F_mirgenedb']
+else:
+    elegans_columns_mirdeep = []
+    elegans_columns_sRNAbench = []
+
+
 mirdeep_blast_fc_intersections_table = mirdeep_blast_fc_intersections_table[['Chr_mirdeep', 'Start_mirdeep', 'End_mirdeep', 'Strand_mirdeep', 'Description_mirdeep',
                                                                              'query_accession','subject_accession', 'alignment_length', 'query_start', 'query_end', 'e_value',
-                                                                             'Chr_sRNAbench', 'Start_sRNAbench', 'End_sRNAbench', 'Strand_sRNAbench', 'Description_sRNAbench'] +
+                                                                             'Chr_sRNAbench', 'Start_sRNAbench', 'End_sRNAbench', 'Strand_sRNAbench', 'Description_sRNAbench'] + elegans_columns_mirdeep +
                                                                              libraries_mature + ['sum_FC_m', 'RC_m mirdeep', 'RC_m sRNAbench', 'Diff Sum_FC_m / RC_m mirdeep', 'Diff Sum_FC_m / RC_m sRNAbench'] +
                                                                              libraries_star + ['sum_FC_s', 'sum_FC_s > 100?', 'RC_s mirdeep', 'RC_s sRNAbench', 'Diff Sum_FC_s / RC_s mirdeep', 'Diff Sum_FC_s / RC_s sRNAbench'] +
                                                                              mature_rpm + ['sum_FC_m_rpm'] + star_rpm + ['sum_FC_s_rpm'] +
@@ -358,21 +472,44 @@ mirdeep_blast_fc_intersections_table = mirdeep_blast_fc_intersections_table[['Ch
 
 sRNAbench_blast_fc_intersections_table = sRNAbench_blast_fc_intersections_table[['Chr_sRNAbench', 'Start_sRNAbench', 'End_sRNAbench', 'Strand_sRNAbench', 'Description_sRNAbench',
                                                                              'query_accession','subject_accession', 'alignment_length', 'query_start', 'query_end', 'e_value',
-                                                                             'Chr_mirdeep', 'Start_mirdeep', 'End_mirdeep', 'Strand_mirdeep', 'Description_mirdeep'] +
+                                                                             'Chr_mirdeep', 'Start_mirdeep', 'End_mirdeep', 'Strand_mirdeep', 'Description_mirdeep'] + elegans_columns_sRNAbench +
                                                                              libraries_mature + ['sum_FC_m', 'RC_m sRNAbench', 'RC_m mirdeep', 'Diff Sum_FC_m / RC_m sRNAbench', 'Diff Sum_FC_m / RC_m mirdeep'] +
                                                                              libraries_star + ['sum_FC_s', 'sum_FC_s > 100?', 'RC_s sRNAbench', 'RC_s mirdeep', 'Diff Sum_FC_s / RC_s sRNAbench', 'Diff Sum_FC_s / RC_s mirdeep'] +
                                                                              mature_rpm + ['sum_FC_m_rpm'] + star_rpm + ['sum_FC_s_rpm'] +
                                                                              ['5pseq', '3pseq', 'hairpinSeq', 'mature', 'mature_size', 'star_size', 'loop_size']
                                                                                 ]
 
-# ------Add Types------
-# ---miRdeep:
-mirdeep_blast_fc_intersections_table['Type'] = np.where(mirdeep_blast_fc_intersections_table['Description_sRNAbench'] != '.', 1, 2)
+# ------ADD TYPES------
 
-# ---sRNAbench:
-sRNAbench_blast_fc_intersections_table['Type'] = np.where(sRNAbench_blast_fc_intersections_table['Description_mirdeep'] != '.', 1, 3)
+if species == r'[Ee]legans':
+    # ------miRdeep:
+    mirdeep_blast_fc_intersections_table['Type'] = np.zeros(len(mirdeep_blast_fc_intersections_table))
+    mirdeep_blast_fc_intersections_table.loc[((mirdeep_blast_fc_intersections_table['T/F_sRNAbench'] == 1) & (mirdeep_blast_fc_intersections_table['T/F_mirbase'] == 1) & (mirdeep_blast_fc_intersections_table['T/F_mirgenedb'] == 1)), 'Type'] = 1
+    mirdeep_blast_fc_intersections_table.loc[((mirdeep_blast_fc_intersections_table['T/F_sRNAbench'] == 0) & (mirdeep_blast_fc_intersections_table['T/F_mirbase'] == 1) & (mirdeep_blast_fc_intersections_table['T/F_mirgenedb'] == 1)), 'Type'] = 2
+    mirdeep_blast_fc_intersections_table.loc[((mirdeep_blast_fc_intersections_table['T/F_sRNAbench'] == 1) & (mirdeep_blast_fc_intersections_table['T/F_mirbase'] == 1) & (mirdeep_blast_fc_intersections_table['T/F_mirgenedb'] == 0)), 'Type'] = 4
+    mirdeep_blast_fc_intersections_table.loc[((mirdeep_blast_fc_intersections_table['T/F_sRNAbench'] == 0) & (mirdeep_blast_fc_intersections_table['T/F_mirbase'] == 1) & (mirdeep_blast_fc_intersections_table['T/F_mirgenedb'] == 0)), 'Type'] = 5
+    mirdeep_blast_fc_intersections_table.loc[((mirdeep_blast_fc_intersections_table['T/F_sRNAbench'] == 1) & (mirdeep_blast_fc_intersections_table['T/F_mirbase'] == 0) & (mirdeep_blast_fc_intersections_table['T/F_mirgenedb'] == 0)), 'Type'] = 7
+    mirdeep_blast_fc_intersections_table.loc[((mirdeep_blast_fc_intersections_table['T/F_sRNAbench'] == 0) & (mirdeep_blast_fc_intersections_table['T/F_mirbase'] == 0) & (mirdeep_blast_fc_intersections_table['T/F_mirgenedb'] == 0)), 'Type'] = 8
 
-# ------Create unified sheet:------
+
+    # ------sRNAbench:
+    sRNAbench_blast_fc_intersections_table['Type'] = np.zeros(len(sRNAbench_blast_fc_intersections_table))
+    sRNAbench_blast_fc_intersections_table.loc[((sRNAbench_blast_fc_intersections_table['T/F_mirdeep'] == 1) & (sRNAbench_blast_fc_intersections_table['T/F_mirbase'] == 1) & (sRNAbench_blast_fc_intersections_table['T/F_mirgenedb'] == 1)), 'Type'] = 1
+    sRNAbench_blast_fc_intersections_table.loc[((sRNAbench_blast_fc_intersections_table['T/F_mirdeep'] == 0) & (sRNAbench_blast_fc_intersections_table['T/F_mirbase'] == 1) & (sRNAbench_blast_fc_intersections_table['T/F_mirgenedb'] == 1)), 'Type'] = 2
+    sRNAbench_blast_fc_intersections_table.loc[((sRNAbench_blast_fc_intersections_table['T/F_mirdeep'] == 1) & (sRNAbench_blast_fc_intersections_table['T/F_mirbase'] == 1) & (sRNAbench_blast_fc_intersections_table['T/F_mirgenedb'] == 0)), 'Type'] = 4
+    sRNAbench_blast_fc_intersections_table.loc[((sRNAbench_blast_fc_intersections_table['T/F_mirdeep'] == 0) & (sRNAbench_blast_fc_intersections_table['T/F_mirbase'] == 1) & (sRNAbench_blast_fc_intersections_table['T/F_mirgenedb'] == 0)), 'Type'] = 5
+    sRNAbench_blast_fc_intersections_table.loc[((sRNAbench_blast_fc_intersections_table['T/F_mirdeep'] == 1) & (sRNAbench_blast_fc_intersections_table['T/F_mirbase'] == 0) & (sRNAbench_blast_fc_intersections_table['T/F_mirgenedb'] == 0)), 'Type'] = 7
+    sRNAbench_blast_fc_intersections_table.loc[((sRNAbench_blast_fc_intersections_table['T/F_mirdeep'] == 0) & (sRNAbench_blast_fc_intersections_table['T/F_mirbase'] == 0) & (sRNAbench_blast_fc_intersections_table['T/F_mirgenedb'] == 0)), 'Type'] = 8
+
+else:
+    # ---miRdeep:
+    mirdeep_blast_fc_intersections_table['Type'] = np.where(mirdeep_blast_fc_intersections_table['Description_sRNAbench'] != '.', 1, 2)
+
+    # ---sRNAbench:
+    sRNAbench_blast_fc_intersections_table['Type'] = np.where(sRNAbench_blast_fc_intersections_table['Description_mirdeep'] != '.', 1, 3)
+
+
+# ------CREATE ALL CANDIDATES SHEET:------
 unified = mirdeep_blast_fc_intersections_table.copy()
 
 # Defining 5p/3p sequences in mirdeep
@@ -418,6 +555,8 @@ unified = unified.reindex(columns=[col for col in unified.columns if col != 'Typ
 mask = unified.duplicated(subset=unified.columns.drop('Seed_mirGeneDB'), keep=False)
 unified = unified.loc[~mask | (unified['Seed'] == unified['Seed_mirGeneDB'])]
 
+
+# -----STATISTICS-----
 # ---Creating a families by type pivot table
 
 
@@ -457,12 +596,10 @@ def unknown_families_by_type(df):
     plt.clf()
 
     pivot_solos = pivot_solos.drop('sum', axis=1)
-    print(pivot_solos)
-    print(pivot_solos.sum())
     pivot_solos.sum().plot(kind='pie', y='Type', autopct='%1.0f%%',
                            title="{} unique seed candidates by type".format(species))
-    # plt.ylabel("Counts")
-    # plt.legend(["1: Both", "2: miRDeep only", "3: sRNAbench only"])
+    plt.ylabel("Counts")
+    plt.legend(["1: Both", "2: miRDeep only", "3: sRNAbench only"])
     # plt.show()
     plt.savefig("{}_unique_seed_candidates_by_type.png".format(species))
 
@@ -470,11 +607,13 @@ def unknown_families_by_type(df):
 
 unknown_families_by_type(unified)
 
-# -----Save each intersections table as a sheet in one excel file:-----
+# -----SAVE TO EXCEL-----
 
 writer = pd.ExcelWriter('intersections_table_{}.xlsx'.format(species))
 mirdeep_blast_fc_intersections_table.to_excel(writer, sheet_name='miRdeep')
 sRNAbench_blast_fc_intersections_table.to_excel(writer, sheet_name='sRNAbench')
+if species == r'[Ee]legans':
+    mirbase_fc_intersections_table.to_excel(writer, sheet_name='mirbase')
 unified.to_excel(writer, sheet_name='all_candidates')
 blast_mirdeep_orig.to_excel(writer, sheet_name='blast_miRdeep')
 blast_sRNAbench_orig.to_excel(writer, sheet_name='blast_sRNAbench')
