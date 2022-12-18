@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import sys
+import re
 
 """
 GETTING INPUTS
@@ -19,11 +20,16 @@ SAVE TO EXCEL
 # -----GETTING INPUTS-----
 species = None
 mirdeep_intersections_table_path = None
+mirdeep_mibrase_inter = None
+mirdeep_mirgenedb_inter = None
 sRNAbench_intersections_table_path = None
+sRNAbench_mibrase_inter = None
+sRNAbench_mirgenedb_inter = None
 blast_mirdeep_path = None
 blast_sRNAbench_path = None
 featurecounts_mirdeep_path = None
 featurecounts_sRNAbench_path = None
+featurecounts_mirbase_path = None
 remaining1_mirdeep_path = None
 remaining2_mirdeep_path = None
 remaining_sRNAbench_path = None
@@ -55,6 +61,16 @@ for i in range(1, len(sys.argv), 2):
         libraries = sys.argv[i + 1].split(',')
     elif arg == '--sum-fc-thres':
         sum_fc_thres = int(sys.argv[i + 1])
+    elif arg == '--mirdeep-mibrase-inter':
+        mirdeep_mibrase_inter = sys.argv[i + 1]
+    elif arg == '--mirdeep-mirgenedb-inter':
+        mirdeep_mirgenedb_inter = sys.argv[i + 1]
+    elif arg == '--sRNAbench-mibrase-inter':
+        sRNAbench_mibrase_inter = sys.argv[i + 1]
+    elif arg == '--sRNAbench-mirgenedb-inter':
+        sRNAbench_mirgenedb_inter = sys.argv[i + 1]
+    elif arg == '--fc_mirbase':
+        featurecounts_mirbase_path = sys.argv[i + 1]
     elif arg == '--help' or arg == '-h':
         print(f'Manual:\n'
               f' -s <name>: name of species.\n'
@@ -69,6 +85,12 @@ for i in range(1, len(sys.argv), 2):
               f' -rs <path>: path to remaining sRNAbench candidates file, sRNAbench_remaining.csv.\n'
               f' -l <list>: list of sequencing libraries. Write the list seperated with commas, witout spaces. Example: library1,library2,library3 \n'
               f' --sum-fc-thres <int>: filtering threshold. Any candidates with sum_fc_m <= threshold will be filtered.\n'
+              f'\nElegans only parameters:\n'
+              f' ---mirdeep-mibrase-inter <path>: path to bedtools -a mirdeep and -b mirbase intersection .bed file.\n'
+              f' ---mirdeep-mirgenedb-inter <path>: path to bedtools -a mirdeep and -b mirgenedb intersection .bed file.\n'
+              f' ---sRNAbench-mibrase-inter <path>: path to bedtools -a sRNAbench and -b mirbase intersection .bed file.\n'
+              f' ---sRNAbench-mirgenedb-inter <path>: path to bedtools -a sRNAbench and -b mirgenedb intersection .bed file.\n'
+              f' --fc-mirbase <path>: path to mirbase featurecounts results file (full counts, not the summary file).\n'
               )
         sys.exit()
 
@@ -79,7 +101,7 @@ mirdeep_intersections_table = pd.read_csv(mirdeep_intersections_table_path, sep=
 mirdeep_intersections_table = mirdeep_intersections_table.drop(['.1', 'pre_miRNA1', '.2', '.3', '.4', 'pre_miRNA2', '.5', '.6'], axis=1)
 mirdeep_intersections_table.to_csv("mirdeep_intersections_table", sep='\t')
 
-if species == r'[Ee]legans':
+if (species == 'Elegans') or (species == 'elegans'):
     mirdeep_mirbase = pd.read_csv('miRdeep_miRBase_intersect.bed', sep='\t',
                                   names=['Chr_mirdeep', '.1', 'pre_miRNA1', 'Start_mirdeep', 'End_mirdeep', '.2',
                                          'Strand_mirdeep', '.3', 'Description_mirdeep', 'Chr_mirbase', '.4',
@@ -115,7 +137,7 @@ sRNAbench_intersections_table = pd.read_csv(sRNAbench_intersections_table_path, 
 sRNAbench_intersections_table = sRNAbench_intersections_table.drop(['.1', 'pre_miRNA1', '.2', '.3', '.4', 'pre_miRNA2', '.5', '.6'], axis=1)
 sRNAbench_intersections_table.to_csv("sRNAbench_intersections_table", sep='\t')
 
-if species == r'[Ee]legans':
+if (species == 'Elegans') or (species == 'elegans'):
     sRNAbench_mirbase = pd.read_csv('sRNAbench_miRBase_intersect.bed', sep='\t',
                                     names=['Chr_sRNAbench', '.1', 'pre_miRNA1', 'Start_sRNAbench', 'End_sRNAbench',
                                            '.2', 'Strand_sRNAbench', '.3', 'Description_sRNAbench', 'Chr_mirbase', '.4',
@@ -145,7 +167,7 @@ if species == r'[Ee]legans':
     sRNAbench_intersections_table.to_csv("sRNAbench_intersections_table", sep='\t')
     print(sRNAbench_intersections_table)
 
-if species == r'[Ee]legans':
+if (species == 'Elegans') or (species == 'elegans'):
     # -----mirbase intersections table:-----
 
     mirbase_mirgenedb = pd.read_csv('miRBase_miRGeneDB_intersect.bed', sep='\t',
@@ -451,7 +473,7 @@ sRNAbench_blast_fc_intersections_table['star_size'] = np.where(sRNAbench_blast_f
 
 # -----REORDER COLUMNS:-----
 
-if species == r'[Ee]legans':
+if (species == 'Elegans') or (species == 'elegans'):
     elegans_columns_mirdeep = ['T/F_sRNAbench', 'Chr_mirbase', 'Start_mirbase', 'End_mirbase', 'Strand_mirbase', 'Description_mirbase', 'T/F_mirbase',
                        'Chr_mirgenedb', 'Start_mirgenedb', 'End_mirgenedb', 'Strand_mirgenedb', 'Description_mirgenedb', 'T/F_mirgenedb']
     elegans_columns_sRNAbench = ['T/F_mirdeep', 'Chr_mirbase', 'Start_mirbase', 'End_mirbase', 'Strand_mirbase', 'Description_mirbase', 'T/F_mirbase',
@@ -481,7 +503,7 @@ sRNAbench_blast_fc_intersections_table = sRNAbench_blast_fc_intersections_table[
 
 # ------ADD TYPES------
 
-if species == r'[Ee]legans':
+if (species == 'Elegans') or (species == 'elegans'):
     # ------miRdeep:
     mirdeep_blast_fc_intersections_table['Type'] = np.zeros(len(mirdeep_blast_fc_intersections_table))
     mirdeep_blast_fc_intersections_table.loc[((mirdeep_blast_fc_intersections_table['T/F_sRNAbench'] == 1) & (mirdeep_blast_fc_intersections_table['T/F_mirbase'] == 1) & (mirdeep_blast_fc_intersections_table['T/F_mirgenedb'] == 1)), 'Type'] = 1
@@ -612,8 +634,8 @@ unknown_families_by_type(unified)
 writer = pd.ExcelWriter('intersections_table_{}.xlsx'.format(species))
 mirdeep_blast_fc_intersections_table.to_excel(writer, sheet_name='miRdeep')
 sRNAbench_blast_fc_intersections_table.to_excel(writer, sheet_name='sRNAbench')
-if species == r'[Ee]legans':
-    mirbase_fc_intersections_table.to_excel(writer, sheet_name='mirbase')
+# if (species == 'Elegans') or (species == 'elegans'):
+    # mirbase_fc_intersections_table.to_excel(writer, sheet_name='mirbase')
 unified.to_excel(writer, sheet_name='all_candidates')
 blast_mirdeep_orig.to_excel(writer, sheet_name='blast_miRdeep')
 blast_sRNAbench_orig.to_excel(writer, sheet_name='blast_sRNAbench')
