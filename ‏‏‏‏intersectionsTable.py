@@ -39,7 +39,7 @@ for i in range(1, len(sys.argv), 2):
     arg = sys.argv[i]
     if arg == '-s':
         species = sys.argv[i + 1]
-    if arg == '--mirdeep-inter-table':
+    elif arg == '--mirdeep-inter-table':
         mirdeep_intersections_table_path = sys.argv[i + 1]
     elif arg == '--sRNAbench-inter-table':
         sRNAbench_intersections_table_path = sys.argv[i + 1]
@@ -51,6 +51,8 @@ for i in range(1, len(sys.argv), 2):
         featurecounts_mirdeep_path = sys.argv[i + 1]
     elif arg == '--fc-sRNAbench':
         featurecounts_sRNAbench_path = sys.argv[i + 1]
+    elif arg == '--fc_mirbase':
+        featurecounts_mirbase_path = sys.argv[i + 1]
     elif arg == '-r1m':
         remaining1_mirdeep_path = sys.argv[i + 1]
     elif arg == '-r2m':
@@ -69,8 +71,6 @@ for i in range(1, len(sys.argv), 2):
         sRNAbench_mibrase_inter = sys.argv[i + 1]
     elif arg == '--sRNAbench-mirgenedb-inter':
         sRNAbench_mirgenedb_inter = sys.argv[i + 1]
-    elif arg == '--fc_mirbase':
-        featurecounts_mirbase_path = sys.argv[i + 1]
     elif arg == '--help' or arg == '-h':
         print(f'Manual:\n'
               f' -s <name>: name of species.\n'
@@ -129,7 +129,6 @@ if (species == 'Elegans') or (species == 'elegans'):
         int)  # Used for classifying types
     mirdeep_intersections_table.to_csv("mirdeep_intersections_table", sep='\t')
 
-print(mirdeep_intersections_table)
 
 # -----sRNAbench intersections table:-----
 
@@ -165,7 +164,6 @@ if (species == 'Elegans') or (species == 'elegans'):
     sRNAbench_intersections_table['T/F_mirgenedb'] = (
                 sRNAbench_intersections_table['Description_mirgenedb'] != '.').astype(int)  # Used for classifying types
     sRNAbench_intersections_table.to_csv("sRNAbench_intersections_table", sep='\t')
-    print(sRNAbench_intersections_table)
 
 if (species == 'Elegans') or (species == 'elegans'):
     # -----mirbase intersections table:-----
@@ -202,7 +200,6 @@ if (species == 'Elegans') or (species == 'elegans'):
     mirbase_intersections_table['T/F_sRNAbench'] = (mirbase_intersections_table['Description_sRNAbench'] != '.').astype(
         int)  # Used for classifying types
     mirbase_intersections_table.to_csv("mirbase_intersections_table", sep='\t')
-    print(mirbase_intersections_table)
 
 # -----ADD BLAST RESULTS-----
 # ---miRdeep:
@@ -406,6 +403,121 @@ for library in mature_rpm:
 sRNAbench_blast_fc_intersections_table['sum_FC_s_rpm'] = np.zeros(len(sRNAbench_blast_fc_intersections_table))
 for library in star_rpm:
     sRNAbench_blast_fc_intersections_table['sum_FC_s_rpm'] += sRNAbench_blast_fc_intersections_table[library]
+
+# -----miRBase:
+featurecounts_mirbase = pd.read_csv(featurecounts_mirbase_path, sep='\t', names=['Geneid', 'Chr', 'Start', 'End', 'Strand', 'Length'] + libraries)
+featurecounts_mirbase = featurecounts_mirbase.drop(['Chr', 'Start', 'End', 'Strand', 'Length'], axis=1)
+featurecounts_mirbase = featurecounts_mirbase.iloc[2:] # Drop the first 2 rows, which is readme info from featurecounts and not data
+
+
+# Create index column for featurecounts
+featurecounts_mirbase['index'] = featurecounts_mirbase['Geneid'].str.split('|')
+featurecounts_mirbase['index'] = featurecounts_mirbase['index'].apply(lambda x : x[3])
+featurecounts_mirbase['index'] = featurecounts_mirbase['index'].str.replace('Derives_from=MI', '')
+
+# Create 5p/3p columns
+featurecounts_mirbase['5p/3p'] = featurecounts_mirbase['Geneid'].str.split('|')
+featurecounts_mirbase['5p/3p'] = featurecounts_mirbase['5p/3p'].apply(lambda x : x[2])
+featurecounts_mirbase['5p/3p'] = featurecounts_mirbase['5p/3p'].str[-2:]
+featurecounts_mirbase = featurecounts_mirbase.drop('Geneid', axis=1)
+
+# Casting libraries columns to int64
+featurecounts_mirbase = featurecounts_mirbase.astype(cast_dict)
+
+# Separate df into 5p and 3p
+counts_mb_5p = featurecounts_mirbase[featurecounts_mirbase['5p/3p'] == '5p']
+libraries_5p = [library + '_5p' for library in libraries]
+rename_dict_5p = dict(zip(libraries, libraries_5p))
+counts_mb_5p = counts_mb_5p.rename(columns=rename_dict_5p)
+counts_mb_5p = counts_mb_5p.drop('5p/3p', axis=1)
+
+counts_mb_3p = featurecounts_mirbase[featurecounts_mirbase['5p/3p'] == '3p']
+libraries_3p = [library + '_3p' for library in libraries]
+rename_dict_3p = dict(zip(libraries, libraries_3p))
+counts_mb_3p = counts_mb_3p.rename(columns=rename_dict_3p)
+counts_mb_3p = counts_mb_3p.drop('5p/3p', axis=1)
+
+counts_no_5p3p = featurecounts_mirbase[(featurecounts_mirbase['5p/3p'] != '3p') & (featurecounts_mirbase['5p/3p'] != '5p')]
+
+# sum 5p and 3p to determine mature/star
+numeric_counts_mb_5p = counts_mb_5p[libraries_5p].astype(int)
+counts_mb_5p['sum'] = numeric_counts_mb_5p.sum(axis=1)
+numeric_counts_mb_3p = counts_mb_3p[libraries_3p].astype(int)
+counts_mb_3p['sum'] = numeric_counts_mb_3p.sum(axis=1)
+
+# Create empty mature df and star df, iterate the rows of 5p and 3p and add to the relavant.
+mature_df = pd.DataFrame(columns=libraries_mature)
+star_df = pd.DataFrame(columns=libraries_star)
+for i in range(0, len(counts_mb_5p)):
+    row_5p = counts_mb_5p.iloc[i]
+    row_3p = counts_mb_3p.iloc[i]
+    if row_5p['sum'] > row_3p['sum']: # if 5p is the mature
+        rename_dict = dict(zip(libraries_5p, libraries_mature))
+        row_5p = row_5p.rename(rename_dict)
+        rename_dict = dict(zip(libraries_3p, libraries_star))
+        row_3p = row_3p.rename(rename_dict)
+        mature_df = mature_df.append(row_5p)
+        star_df = star_df.append(row_3p)
+    else: # else 3p is the mature
+        rename_dict = dict(zip(libraries_5p, libraries_star))
+        row_5p = row_5p.rename(rename_dict)
+        rename_dict = dict(zip(libraries_3p, libraries_mature))
+        row_3p = row_3p.rename(rename_dict)
+        mature_df = mature_df.append(row_3p)
+        star_df = star_df.append(row_5p)
+
+mature_df = mature_df.rename(columns={'sum':'sum_FC_m'})
+star_df = star_df.rename(columns={'sum':'sum_FC_s'})
+
+# Those that are only one strand and are no 5p/3p are determined as mature.
+counts_no_5p3p = counts_no_5p3p.drop('5p/3p', axis=1)
+rename_dict = dict(zip(libraries, libraries_mature))
+counts_no_5p3p = counts_no_5p3p.rename(columns=rename_dict)
+mature_df = mature_df.append(counts_no_5p3p)
+
+# Create index column for mirbase
+mirbase_intersections_table['index'] = mirbase_intersections_table['Description_mirbase'].str.split(';')
+mirbase_intersections_table['index'] = mirbase_intersections_table['index'].apply(lambda x : x[0])
+mirbase_intersections_table['index'] = mirbase_intersections_table['index'].str.replace('ID=MI', '')
+
+# Merge mirbase results and mirbase featurecounts results
+mirbase_m_intersections_table = pd.merge(mirbase_intersections_table, mature_df, on='index', how='left')
+mirbase_fc_intersections_table = pd.merge(mirbase_m_intersections_table, star_df, on='index', how='left')
+mirbase_fc_intersections_table = mirbase_fc_intersections_table.drop('index', axis=1)
+
+# filter by sum_fc_m < threshold
+mirbase_fc_intersections_table = mirbase_fc_intersections_table[mirbase_fc_intersections_table['sum_FC_m'] > sum_fc_thres]
+
+# Extract readcounts columns
+mirbase_fc_intersections_table['RC_m mirdeep'] = mirbase_fc_intersections_table["Description_mirdeep"].str.split(';', expand=True)[1]
+mirbase_fc_intersections_table['RC_s mirdeep'] = mirbase_fc_intersections_table["Description_mirdeep"].str.split(';', expand=True)[2]
+mirbase_fc_intersections_table['RC_m sRNAbench'] = mirbase_fc_intersections_table["Description_sRNAbench"].str.split(';', expand=True)[1]
+mirbase_fc_intersections_table['RC_s sRNAbench'] = mirbase_fc_intersections_table["Description_sRNAbench"].str.split(';', expand=True)[2]
+mirbase_fc_intersections_table[['RC_m mirdeep', 'RC_s mirdeep']] = mirbase_fc_intersections_table[['RC_m mirdeep', 'RC_s mirdeep']].fillna('0')
+mirbase_fc_intersections_table[['RC_m sRNAbench', 'RC_s sRNAbench']] = mirbase_fc_intersections_table[['RC_m sRNAbench', 'RC_s sRNAbench']].fillna('0')
+mirbase_fc_intersections_table['RC_m mirdeep'] = mirbase_fc_intersections_table['RC_m mirdeep'].str.replace('RC_m=', '').astype('int64')
+mirbase_fc_intersections_table['RC_s mirdeep'] = mirbase_fc_intersections_table['RC_s mirdeep'].str.replace('RC_s=', '').astype('int64')
+mirbase_fc_intersections_table['RC_m sRNAbench'] = mirbase_fc_intersections_table['RC_m sRNAbench'].str.replace('RC_m=', '').astype('int64')
+mirbase_fc_intersections_table['RC_s sRNAbench'] = mirbase_fc_intersections_table['RC_s sRNAbench'].str.replace('RC_s=', '').astype('int64')
+
+# Create diff columns
+mirbase_fc_intersections_table['Diff Sum_FC_m / RC_m mirdeep'] = mirbase_fc_intersections_table['sum_FC_m'] / mirbase_fc_intersections_table['RC_m mirdeep']
+mirbase_fc_intersections_table['Diff Sum_FC_m / RC_m sRNAbench'] = mirbase_fc_intersections_table['sum_FC_m'] / mirbase_fc_intersections_table['RC_m sRNAbench']
+mirbase_fc_intersections_table['Diff Sum_FC_s / RC_s mirdeep'] = mirbase_fc_intersections_table['sum_FC_s'] / mirbase_fc_intersections_table['RC_s mirdeep']
+mirbase_fc_intersections_table['Diff Sum_FC_s / RC_s sRNAbench'] = mirbase_fc_intersections_table['sum_FC_s'] / mirbase_fc_intersections_table['RC_s sRNAbench']
+
+# Normalize featurecounts to reads per million
+total = mirbase_fc_intersections_table[libraries_mature + libraries_star].sum()
+print(type(total))
+print(mirbase_fc_intersections_table.info())
+mirbase_fc_intersections_table[mature_rpm + star_rpm] = round((mirbase_fc_intersections_table[libraries_mature + libraries_star] / total) * 1000000, 0)
+
+mirbase_fc_intersections_table['sum_FC_m_rpm'] = np.zeros(len(mirbase_fc_intersections_table))
+for library in mature_rpm:
+    mirbase_fc_intersections_table['sum_FC_m_rpm'] += mirbase_fc_intersections_table[library]
+mirbase_fc_intersections_table['sum_FC_s_rpm'] = np.zeros(len(mirbase_fc_intersections_table))
+for library in star_rpm:
+    mirbase_fc_intersections_table['sum_FC_s_rpm'] += mirbase_fc_intersections_table[library]
 
 # -----ADD SEQUENCES-----
 # ---miRdeep:
@@ -634,8 +746,8 @@ unknown_families_by_type(unified)
 writer = pd.ExcelWriter('intersections_table_{}.xlsx'.format(species))
 mirdeep_blast_fc_intersections_table.to_excel(writer, sheet_name='miRdeep')
 sRNAbench_blast_fc_intersections_table.to_excel(writer, sheet_name='sRNAbench')
-# if (species == 'Elegans') or (species == 'elegans'):
-    # mirbase_fc_intersections_table.to_excel(writer, sheet_name='mirbase')
+if (species == 'Elegans') or (species == 'elegans'):
+    mirbase_fc_intersections_table.to_excel(writer, sheet_name='mirbase')
 unified.to_excel(writer, sheet_name='all_candidates')
 blast_mirdeep_orig.to_excel(writer, sheet_name='blast_miRdeep')
 blast_sRNAbench_orig.to_excel(writer, sheet_name='blast_sRNAbench')
