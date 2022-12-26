@@ -675,8 +675,15 @@ unified['5pseq'] = np.where(unified['mature'] == '5p', unified['consensus mature
 unified['3pseq'] = np.where(unified['mature'] == '3p', unified['consensus mature sequence'], unified['consensus star sequence'])
 
 unified = unified.drop(['Chr_sRNAbench', 'Start_sRNAbench', 'End_sRNAbench', 'Strand_sRNAbench', 'Description_sRNAbench', 'consensus mature sequence', 'consensus star sequence'], axis=1)
+if (species == 'Elegans') or (species == 'elegans'):
+    only_sRNAbench = sRNAbench_blast_fc_intersections_table[sRNAbench_blast_fc_intersections_table['Type'].isin([2, 5, 8])]
+    # only_sRNAbench = sRNAbench_blast_fc_intersections_table[(sRNAbench_blast_fc_intersections_table['Type'] == 2) or
+    #                                                         (sRNAbench_blast_fc_intersections_table['Type'] == 5) or
+    #                                                         (sRNAbench_blast_fc_intersections_table['Type'] == 8)]
+else:
+    only_sRNAbench = sRNAbench_blast_fc_intersections_table[sRNAbench_blast_fc_intersections_table['Type'] == 3]
 
-only_sRNAbench = sRNAbench_blast_fc_intersections_table[sRNAbench_blast_fc_intersections_table['Type'] == 3]
+
 only_sRNAbench = only_sRNAbench.drop(['Chr_mirdeep', 'Start_mirdeep', 'End_mirdeep', 'Strand_mirdeep', 'Description_mirdeep'], axis=1)
 unified = unified.rename(columns={'Chr_mirdeep':'Chr', 'Start_mirdeep':'Start', 'End_mirdeep':'End', 'Strand_mirdeep':'Strand', 'Description_mirdeep':'Description', 'consensus precursor sequence':'hairpinSeq'})
 only_sRNAbench = only_sRNAbench.rename(columns={'Chr_sRNAbench':'Chr', 'Start_sRNAbench':'Start', 'End_sRNAbench':'End', 'Strand_sRNAbench':'Strand', 'Description_sRNAbench':'Description'})
