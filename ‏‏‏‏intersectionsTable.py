@@ -25,6 +25,9 @@ mirdeep_mirgenedb_inter = None
 sRNAbench_intersections_table_path = None
 sRNAbench_mibrase_inter = None
 sRNAbench_mirgenedb_inter = None
+mirbase_mirgenedb_inter = None
+mirbase_mirdeep_inter = None
+mirbase_sRNAbench_inter = None
 blast_mirdeep_path = None
 blast_sRNAbench_path = None
 featurecounts_mirdeep_path = None
@@ -71,6 +74,12 @@ for i in range(1, len(sys.argv), 2):
         sRNAbench_mibrase_inter = sys.argv[i + 1]
     elif arg == '--sRNAbench-mirgenedb-inter':
         sRNAbench_mirgenedb_inter = sys.argv[i + 1]
+    elif arg == '--mirbase-mirgenedb-inter':
+        mirbase_mirgenedb_inter = sys.argv[i + 1]
+    elif arg == '--mirbase-mirdeep-inter':
+        mirbase_mirdeep_inter = sys.argv[i + 1]
+    elif arg == '--mirbase-sRNAbench-inter':
+        mirbase_sRNAbench_inter = sys.argv[i + 1]
     elif arg == '--help' or arg == '-h':
         print(f'Manual:\n'
               f' -s <name>: name of species.\n'
@@ -86,10 +95,13 @@ for i in range(1, len(sys.argv), 2):
               f' -l <list>: list of sequencing libraries. Write the list seperated with commas, witout spaces. Example: library1,library2,library3 \n'
               f' --sum-fc-thres <int>: filtering threshold. Any candidates with sum_fc_m <= threshold will be filtered.\n'
               f'\nElegans only parameters:\n'
-              f' ---mirdeep-mibrase-inter <path>: path to bedtools -a mirdeep and -b mirbase intersection .bed file.\n'
-              f' ---mirdeep-mirgenedb-inter <path>: path to bedtools -a mirdeep and -b mirgenedb intersection .bed file.\n'
-              f' ---sRNAbench-mibrase-inter <path>: path to bedtools -a sRNAbench and -b mirbase intersection .bed file.\n'
-              f' ---sRNAbench-mirgenedb-inter <path>: path to bedtools -a sRNAbench and -b mirgenedb intersection .bed file.\n'
+              f' --mirdeep-mibrase-inter <path>: path to bedtools -a mirdeep and -b mirbase intersection .bed file.\n'
+              f' --mirdeep-mirgenedb-inter <path>: path to bedtools -a mirdeep and -b mirgenedb intersection .bed file.\n'
+              f' --sRNAbench-mibrase-inter <path>: path to bedtools -a sRNAbench and -b mirbase intersection .bed file.\n'
+              f' --sRNAbench-mirgenedb-inter <path>: path to bedtools -a sRNAbench and -b mirgenedb intersection .bed file.\n'
+              f' --mirbase-mirgenedb-inter <path>: path to bedtools -a mirbase and -b mirgenedb intersection .bed file.\n'
+              f' --mirbase-mirdeep-inter <path>: path to bedtools -a mirbase and -b mirdeep intersection .bed file.\n'
+              f' --mirbase-sRNAbench-inter <path>: path to bedtools -a mirbase and -b sRNAbench intersection .bed file.\n'
               f' --fc-mirbase <path>: path to mirbase featurecounts results file (full counts, not the summary file).\n'
               )
         sys.exit()
@@ -99,15 +111,15 @@ for i in range(1, len(sys.argv), 2):
 
 mirdeep_intersections_table = pd.read_csv(mirdeep_intersections_table_path, sep='\t', names=['Chr_mirdeep', '.1', 'pre_miRNA1', 'Start_mirdeep', 'End_mirdeep', '.2', 'Strand_mirdeep', '.3', 'Description_mirdeep', 'Chr_sRNAbench', '.4', 'pre_miRNA2', 'Start_sRNAbench', 'End_sRNAbench', '.5', 'Strand_sRNAbench', '.6', 'Description_sRNAbench'])
 mirdeep_intersections_table = mirdeep_intersections_table.drop(['.1', 'pre_miRNA1', '.2', '.3', '.4', 'pre_miRNA2', '.5', '.6'], axis=1)
-mirdeep_intersections_table.to_csv("mirdeep_intersections_table", sep='\t')
+# mirdeep_intersections_table.to_csv("mirdeep_intersections_table", sep='\t')
 
 if (species == 'Elegans') or (species == 'elegans'):
-    mirdeep_mirbase = pd.read_csv('miRdeep_miRBase_intersect.bed', sep='\t',
+    mirdeep_mirbase = pd.read_csv(mirdeep_mibrase_inter, sep='\t',
                                   names=['Chr_mirdeep', '.1', 'pre_miRNA1', 'Start_mirdeep', 'End_mirdeep', '.2',
                                          'Strand_mirdeep', '.3', 'Description_mirdeep', 'Chr_mirbase', '.4',
                                          'pre_miRNA2', 'Start_mirbase', 'End_mirbase', '.5', 'Strand_mirbase', '.6',
                                          'Description_mirbase'])
-    mirdeep_mirgenedb = pd.read_csv('miRdeep_miRGeneDB_intersect.bed', sep='\t',
+    mirdeep_mirgenedb = pd.read_csv(mirdeep_mirgenedb_inter, sep='\t',
                                     names=['Chr_mirdeep', '.1', 'pre_miRNA1', 'Start_mirdeep', 'End_mirdeep', '.2',
                                            'Strand_mirdeep', '.3', 'Description_mirdeep', 'Chr_mirgenedb', '.4',
                                            'pre_miRNA2', 'Start_mirgenedb', 'End_mirgenedb', '.5', 'Strand_mirgenedb',
@@ -127,22 +139,22 @@ if (species == 'Elegans') or (species == 'elegans'):
                                            on='Description_mirdeep', how='left')
     mirdeep_intersections_table['T/F_mirgenedb'] = (mirdeep_intersections_table['Description_mirgenedb'] != '.').astype(
         int)  # Used for classifying types
-    mirdeep_intersections_table.to_csv("mirdeep_intersections_table", sep='\t')
+    # mirdeep_intersections_table.to_csv("mirdeep_intersections_table", sep='\t')
 
 
 # -----sRNAbench intersections table:-----
 
 sRNAbench_intersections_table = pd.read_csv(sRNAbench_intersections_table_path, sep='\t', names=['Chr_sRNAbench', '.1', 'pre_miRNA1', 'Start_sRNAbench', 'End_sRNAbench', '.2', 'Strand_sRNAbench', '.3', 'Description_sRNAbench', 'Chr_mirdeep', '.4', 'pre_miRNA2', 'Start_mirdeep', 'End_mirdeep', '.5', 'Strand_mirdeep', '.6', 'Description_mirdeep'])
 sRNAbench_intersections_table = sRNAbench_intersections_table.drop(['.1', 'pre_miRNA1', '.2', '.3', '.4', 'pre_miRNA2', '.5', '.6'], axis=1)
-sRNAbench_intersections_table.to_csv("sRNAbench_intersections_table", sep='\t')
+# sRNAbench_intersections_table.to_csv("sRNAbench_intersections_table", sep='\t')
 
 if (species == 'Elegans') or (species == 'elegans'):
-    sRNAbench_mirbase = pd.read_csv('sRNAbench_miRBase_intersect.bed', sep='\t',
+    sRNAbench_mirbase = pd.read_csv(sRNAbench_mibrase_inter, sep='\t',
                                     names=['Chr_sRNAbench', '.1', 'pre_miRNA1', 'Start_sRNAbench', 'End_sRNAbench',
                                            '.2', 'Strand_sRNAbench', '.3', 'Description_sRNAbench', 'Chr_mirbase', '.4',
                                            'pre_miRNA2', 'Start_mirbase', 'End_mirbase', '.5', 'Strand_mirbase', '.6',
                                            'Description_mirbase'])
-    sRNAbench_mirgenedb = pd.read_csv('sRNAbench_miRGeneDB_intersect.bed', sep='\t',
+    sRNAbench_mirgenedb = pd.read_csv(sRNAbench_mirgenedb_inter, sep='\t',
                                       names=['Chr_sRNAbench', '.1', 'pre_miRNA1', 'Start_sRNAbench', 'End_sRNAbench',
                                              '.2', 'Strand_sRNAbench', '.3', 'Description_sRNAbench', 'Chr_mirgenedb',
                                              '.4', 'pre_miRNA2', 'Start_mirgenedb', 'End_mirgenedb', '.5',
@@ -163,22 +175,25 @@ if (species == 'Elegans') or (species == 'elegans'):
                                              on='Description_sRNAbench', how='left')
     sRNAbench_intersections_table['T/F_mirgenedb'] = (
                 sRNAbench_intersections_table['Description_mirgenedb'] != '.').astype(int)  # Used for classifying types
-    sRNAbench_intersections_table.to_csv("sRNAbench_intersections_table", sep='\t')
+    # sRNAbench_intersections_table.to_csv("sRNAbench_intersections_table", sep='\t')
 
 if (species == 'Elegans') or (species == 'elegans'):
     # -----mirbase intersections table:-----
-
-    mirbase_mirgenedb = pd.read_csv('miRBase_miRGeneDB_intersect.bed', sep='\t',
+    print(mirbase_mirgenedb_inter)
+    print(mirbase_mirdeep_inter)
+    print(mirbase_sRNAbench_inter)
+    print(mirdeep_intersections_table_path)
+    mirbase_mirgenedb = pd.read_csv(mirbase_mirgenedb_inter, sep='\t',
                                     names=['Chr_mirbase', '.1', 'pre_miRNA1', 'Start_mirbase', 'End_mirbase', '.2',
                                            'Strand_mirbase', '.3', 'Description_mirbase', 'Chr_mirgenedb', '.4',
                                            'pre_miRNA2', 'Start_mirgenedb', 'End_mirgenedb', '.5', 'Strand_mirgenedb',
                                            '.6', 'Description_mirgenedb'])
-    mirbase_mirdeep = pd.read_csv('miRBase_miRdeep_intersect.bed', sep='\t',
+    mirbase_mirdeep = pd.read_csv(mirbase_mirdeep_inter, sep='\t',
                                   names=['Chr_mirbase', '.1', 'pre_miRNA1', 'Start_mirbase', 'End_mirbase', '.2',
                                          'Strand_mirbase', '.3', 'Description_mirbase', 'Chr_mirdeep', '.4',
                                          'pre_miRNA2', 'Start_mirdeep', 'End_mirdeep', '.5', 'Strand_mirdeep', '.6',
                                          'Description_mirdeep'])
-    mirbase_sRNAbench = pd.read_csv('miRBase_sRNAbench_intersect.bed', sep='\t',
+    mirbase_sRNAbench = pd.read_csv(mirbase_sRNAbench_inter, sep='\t',
                                     names=['Chr_mirbase', '.1', 'pre_miRNA1', 'Start_mirbase', 'End_mirbase', '.2',
                                            'Strand_mirbase', '.3', 'Description_mirbase', 'Chr_sRNAbench', '.4',
                                            'pre_miRNA2', 'Start_sRNAbench', 'End_sRNAbench', '.5', 'Strand_sRNAbench',
@@ -199,7 +214,7 @@ if (species == 'Elegans') or (species == 'elegans'):
                                            on='Description_mirbase', how='left')
     mirbase_intersections_table['T/F_sRNAbench'] = (mirbase_intersections_table['Description_sRNAbench'] != '.').astype(
         int)  # Used for classifying types
-    mirbase_intersections_table.to_csv("mirbase_intersections_table", sep='\t')
+    # mirbase_intersections_table.to_csv("mirbase_intersections_table", sep='\t')
 
 # -----ADD BLAST RESULTS-----
 # ---miRdeep:
@@ -677,9 +692,9 @@ unified['3pseq'] = np.where(unified['mature'] == '3p', unified['consensus mature
 unified = unified.drop(['Chr_sRNAbench', 'Start_sRNAbench', 'End_sRNAbench', 'Strand_sRNAbench', 'Description_sRNAbench', 'consensus mature sequence', 'consensus star sequence'], axis=1)
 if (species == 'Elegans') or (species == 'elegans'):
     only_sRNAbench = sRNAbench_blast_fc_intersections_table[sRNAbench_blast_fc_intersections_table['Type'].isin([2, 5, 8])]
-    # only_sRNAbench = sRNAbench_blast_fc_intersections_table[(sRNAbench_blast_fc_intersections_table['Type'] == 2) or
-    #                                                         (sRNAbench_blast_fc_intersections_table['Type'] == 5) or
-    #                                                         (sRNAbench_blast_fc_intersections_table['Type'] == 8)]
+    only_mirbase = mirbase_fc_intersections_table[mirbase_fc_intersections_table['Type'].isin([3, 6])]
+   # unified = unified.drop(['T/F_sRNAbench', 'T/F_mirbase', 'T/F_mirgenedb'], axis=1)
+    #only_sRNAbench = only_sRNAbench.drop(['T/F_mirdeep'], axis=1)
 else:
     only_sRNAbench = sRNAbench_blast_fc_intersections_table[sRNAbench_blast_fc_intersections_table['Type'] == 3]
 
@@ -687,7 +702,13 @@ else:
 only_sRNAbench = only_sRNAbench.drop(['Chr_mirdeep', 'Start_mirdeep', 'End_mirdeep', 'Strand_mirdeep', 'Description_mirdeep'], axis=1)
 unified = unified.rename(columns={'Chr_mirdeep':'Chr', 'Start_mirdeep':'Start', 'End_mirdeep':'End', 'Strand_mirdeep':'Strand', 'Description_mirdeep':'Description', 'consensus precursor sequence':'hairpinSeq'})
 only_sRNAbench = only_sRNAbench.rename(columns={'Chr_sRNAbench':'Chr', 'Start_sRNAbench':'Start', 'End_sRNAbench':'End', 'Strand_sRNAbench':'Strand', 'Description_sRNAbench':'Description'})
-unified = pd.concat([unified, only_sRNAbench], axis=0, ignore_index=True)
+if (species == 'Elegans') or (species == 'elegans'):
+    only_mirbase = only_mirbase.drop(['Chr_mirdeep', 'Start_mirdeep', 'End_mirdeep', 'Strand_mirdeep', 'Description_mirdeep', 'Chr_sRNAbench', 'Start_sRNAbench', 'End_sRNAbench', 'Strand_sRNAbench', 'Description_sRNAbench',], axis=1)
+    only_mirbase = only_mirbase.rename(columns={'Chr_mirbase':'Chr', 'Start_mirbase':'Start', 'End_mirbase':'End', 'Strand_mirbase':'Strand', 'Description_mirbase':'Description'})
+    unified = pd.concat([unified, only_sRNAbench, only_mirbase], axis=0, ignore_index=True)
+    unified = unified.drop(['T/F_mirdeep', 'T/F_sRNAbench', 'T/F_mirbase', 'T/F_mirgenedb'], axis=1)
+else:
+    unified = pd.concat([unified, only_sRNAbench], axis=0, ignore_index=True)
 # reorder sequences columns
 columns = list(unified.columns)
 i1, i2, i3 = columns.index('mature'), columns.index('5pseq'), columns.index('3pseq')
@@ -724,6 +745,7 @@ unified = unified.loc[~mask | (unified['Seed'] == unified['Seed_mirGeneDB'])]
 # -----STATISTICS-----
 # ---Creating a families by type pivot table
 
+print(unified)
 
 def families_by_type(df):
     families_by_type = pd.pivot_table(df, values='Description', index='Family', columns='Type', aggfunc='count')
@@ -732,7 +754,7 @@ def families_by_type(df):
     families_by_type.sort_values('Family', inplace=True)
     families_by_type.plot(kind='bar', figsize=(14, 10), stacked=True, title="{} counts of known families in each type".format(species))
     plt.ylabel("Counts")
-    plt.legend(["1: Both", "2: miRDeep only", "3: sRNAbench only"])
+    # plt.legend(["1: Both", "2: miRDeep only", "3: sRNAbench only"])
     # plt.show()
     plt.savefig("{}_family_counts_per_type.png".format(species))
 
@@ -755,7 +777,7 @@ def unknown_families_by_type(df):
     pivot_groups.plot(kind='bar', figsize=(14, 10), stacked=True,
                           title="{} counts of unknown families in each type".format(species))
     plt.ylabel("Counts")
-    plt.legend(["1: Both", "2: miRDeep only", "3: sRNAbench only"])
+    # plt.legend(["1: Both", "2: miRDeep only", "3: sRNAbench only"])
     # plt.show()
     plt.savefig("{}_unknown_family_counts_per_type.png".format(species))
     plt.clf()
@@ -764,7 +786,7 @@ def unknown_families_by_type(df):
     pivot_solos.sum().plot(kind='pie', y='Type', autopct='%1.0f%%',
                            title="{} unique seed candidates by type".format(species))
     plt.ylabel("Counts")
-    plt.legend(["1: Both", "2: miRDeep only", "3: sRNAbench only"])
+    # plt.legend(["1: Both", "2: miRDeep only", "3: sRNAbench only"])
     # plt.show()
     plt.savefig("{}_unique_seed_candidates_by_type.png".format(species))
 
