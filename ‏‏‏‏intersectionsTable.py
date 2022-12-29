@@ -2,7 +2,6 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import sys
-import re
 
 """
 GETTING INPUTS
@@ -179,10 +178,6 @@ if (species == 'Elegans') or (species == 'elegans'):
 
 if (species == 'Elegans') or (species == 'elegans'):
     # -----mirbase intersections table:-----
-    print(mirbase_mirgenedb_inter)
-    print(mirbase_mirdeep_inter)
-    print(mirbase_sRNAbench_inter)
-    print(mirdeep_intersections_table_path)
     mirbase_mirgenedb = pd.read_csv(mirbase_mirgenedb_inter, sep='\t',
                                     names=['Chr_mirbase', '.1', 'pre_miRNA1', 'Start_mirbase', 'End_mirbase', '.2',
                                            'Strand_mirbase', '.3', 'Description_mirbase', 'Chr_mirgenedb', '.4',
@@ -341,7 +336,8 @@ for library in mature_rpm:
 mirdeep_blast_fc_intersections_table['sum_FC_s_rpm'] = np.zeros(len(mirdeep_blast_fc_intersections_table))
 for library in star_rpm:
     mirdeep_blast_fc_intersections_table['sum_FC_s_rpm'] += mirdeep_blast_fc_intersections_table[library]
-
+mirdeep_blast_fc_intersections_table['mean_m_rpm'] = round(mirdeep_blast_fc_intersections_table[mature_rpm].mean(axis=1), 2)
+mirdeep_blast_fc_intersections_table['mean_s_rpm'] = round(mirdeep_blast_fc_intersections_table[star_rpm].mean(axis=1), 2)
 
 # ---sRNAbench:
 featurecounts_sRNAbench = pd.read_csv(featurecounts_sRNAbench_path, sep='\t', names=['Geneid', 'Chr', 'Start', 'End', 'Strand', 'Length'] + libraries)
@@ -422,6 +418,8 @@ for library in mature_rpm:
 sRNAbench_blast_fc_intersections_table['sum_FC_s_rpm'] = np.zeros(len(sRNAbench_blast_fc_intersections_table))
 for library in star_rpm:
     sRNAbench_blast_fc_intersections_table['sum_FC_s_rpm'] += sRNAbench_blast_fc_intersections_table[library]
+sRNAbench_blast_fc_intersections_table['mean_m_rpm'] = round(sRNAbench_blast_fc_intersections_table[mature_rpm].mean(axis=1), 2)
+sRNAbench_blast_fc_intersections_table['mean_s_rpm'] = round(sRNAbench_blast_fc_intersections_table[star_rpm].mean(axis=1), 2)
 
 # -----miRBase:
 featurecounts_mirbase = pd.read_csv(featurecounts_mirbase_path, sep='\t', names=['Geneid', 'Chr', 'Start', 'End', 'Strand', 'Length'] + libraries)
@@ -538,6 +536,8 @@ for library in mature_rpm:
 mirbase_fc_intersections_table['sum_FC_s_rpm'] = np.zeros(len(mirbase_fc_intersections_table))
 for library in star_rpm:
     mirbase_fc_intersections_table['sum_FC_s_rpm'] += mirbase_fc_intersections_table[library]
+mirbase_fc_intersections_table['mean_m_rpm'] = round(mirbase_fc_intersections_table[mature_rpm].mean(axis=1), 2)
+mirbase_fc_intersections_table['mean_s_rpm'] = round(mirbase_fc_intersections_table[star_rpm].mean(axis=1), 2)
 
 # -----ADD SEQUENCES-----
 # ---miRdeep:
@@ -616,7 +616,7 @@ if (species == 'Elegans') or (species == 'elegans'):
                                                                      'Chr_sRNAbench', 'Start_sRNAbench', 'End_sRNAbench', 'Strand_sRNAbench', 'Description_sRNAbench', 'T/F_sRNAbench'] +
                                                                     libraries_mature + ['sum_FC_m', 'RC_m mirdeep', 'RC_m sRNAbench', 'Diff Sum_FC_m / RC_m mirdeep', 'Diff Sum_FC_m / RC_m sRNAbench'] +
                                                                     libraries_star + ['sum_FC_s', 'sum_FC_s > 100?', 'RC_s mirdeep', 'RC_s sRNAbench', 'Diff Sum_FC_s / RC_s mirdeep', 'Diff Sum_FC_s / RC_s sRNAbench'] +
-                                                                    mature_rpm + ['sum_FC_m_rpm'] + star_rpm + ['sum_FC_s_rpm']
+                                                                    mature_rpm + ['sum_FC_m_rpm', 'mean_m_rpm'] + star_rpm + ['sum_FC_s_rpm', 'mean_s_rpm']
                                                                     ]
 else:
     elegans_columns_mirdeep = []
@@ -628,7 +628,7 @@ mirdeep_blast_fc_intersections_table = mirdeep_blast_fc_intersections_table[['Ch
                                                                              'Chr_sRNAbench', 'Start_sRNAbench', 'End_sRNAbench', 'Strand_sRNAbench', 'Description_sRNAbench'] + elegans_columns_mirdeep +
                                                                              libraries_mature + ['sum_FC_m', 'RC_m mirdeep', 'RC_m sRNAbench', 'Diff Sum_FC_m / RC_m mirdeep', 'Diff Sum_FC_m / RC_m sRNAbench'] +
                                                                              libraries_star + ['sum_FC_s', 'sum_FC_s > 100?', 'RC_s mirdeep', 'RC_s sRNAbench', 'Diff Sum_FC_s / RC_s mirdeep', 'Diff Sum_FC_s / RC_s sRNAbench'] +
-                                                                             mature_rpm + ['sum_FC_m_rpm'] + star_rpm + ['sum_FC_s_rpm'] +
+                                                                             mature_rpm + ['sum_FC_m_rpm', 'mean_m_rpm'] + star_rpm + ['sum_FC_s_rpm', 'mean_s_rpm'] +
                                                                              ['consensus mature sequence', 'consensus star sequence', 'consensus precursor sequence', 'mature', 'mature_size', 'star_size', 'loop_size']
                                                                             ]
 
@@ -637,7 +637,7 @@ sRNAbench_blast_fc_intersections_table = sRNAbench_blast_fc_intersections_table[
                                                                              'Chr_mirdeep', 'Start_mirdeep', 'End_mirdeep', 'Strand_mirdeep', 'Description_mirdeep'] + elegans_columns_sRNAbench +
                                                                              libraries_mature + ['sum_FC_m', 'RC_m sRNAbench', 'RC_m mirdeep', 'Diff Sum_FC_m / RC_m sRNAbench', 'Diff Sum_FC_m / RC_m mirdeep'] +
                                                                              libraries_star + ['sum_FC_s', 'sum_FC_s > 100?', 'RC_s sRNAbench', 'RC_s mirdeep', 'Diff Sum_FC_s / RC_s sRNAbench', 'Diff Sum_FC_s / RC_s mirdeep'] +
-                                                                             mature_rpm + ['sum_FC_m_rpm'] + star_rpm + ['sum_FC_s_rpm'] +
+                                                                             mature_rpm + ['sum_FC_m_rpm', 'mean_m_rpm'] + star_rpm + ['sum_FC_s_rpm', 'mean_s_rpm'] +
                                                                              ['5pseq', '3pseq', 'hairpinSeq', 'mature', 'mature_size', 'star_size', 'loop_size']
                                                                                 ]
 
