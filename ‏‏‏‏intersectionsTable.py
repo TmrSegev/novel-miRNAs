@@ -462,6 +462,8 @@ counts_mb_5p['sum'] = numeric_counts_mb_5p.sum(axis=1)
 numeric_counts_mb_3p = counts_mb_3p[libraries_3p].astype(int)
 counts_mb_3p['sum'] = numeric_counts_mb_3p.sum(axis=1)
 
+print(counts_mb_5p['sum'])
+
 # Create empty mature df and star df, iterate the rows of 5p and 3p and add to the relavant.
 mature_df = pd.DataFrame(columns=libraries_mature)
 star_df = pd.DataFrame(columns=libraries_star)
@@ -491,7 +493,19 @@ star_df['sum_FC_s > 100?'] = np.where(star_df['sum_FC_s'] > 100, 1, 0)
 counts_no_5p3p = counts_no_5p3p.drop('5p/3p', axis=1)
 rename_dict = dict(zip(libraries, libraries_mature))
 counts_no_5p3p = counts_no_5p3p.rename(columns=rename_dict)
+counts_no_5p3p['sum_FC_m'] = counts_no_5p3p[libraries_mature].sum(axis=1)
+print(counts_no_5p3p)
 mature_df = mature_df.append(counts_no_5p3p)
+
+counts_no_5p3p_filler = counts_no_5p3p.copy()
+rename_dict = dict(zip(libraries_mature, libraries_star))
+counts_no_5p3p_filler = counts_no_5p3p_filler.rename(columns=rename_dict)
+counts_no_5p3p_filler = counts_no_5p3p_filler.drop('sum_FC_m', axis=1)
+counts_no_5p3p_filler[libraries_star] = 0
+counts_no_5p3p_filler['sum_FC_s'] = 0
+counts_no_5p3p_filler['sum_FC_s > 100?'] = 0
+print(counts_no_5p3p_filler)
+star_df = star_df.append(counts_no_5p3p_filler)
 
 # Create index column for mirbase
 mirbase_intersections_table['index'] = mirbase_intersections_table['Description_mirbase'].str.split(';')
@@ -499,9 +513,15 @@ mirbase_intersections_table['index'] = mirbase_intersections_table['index'].appl
 mirbase_intersections_table['index'] = mirbase_intersections_table['index'].str.replace('ID=MI', '')
 
 # Merge mirbase results and mirbase featurecounts results
+print(mirbase_intersections_table.loc[mirbase_intersections_table['index'] == '0007979'])
+print(mature_df.loc[mature_df['index'] == '0007979'])
+print(star_df.loc[star_df['index'] == '0007979'])
 mirbase_m_intersections_table = pd.merge(mirbase_intersections_table, mature_df, on='index', how='left')
+print(mirbase_m_intersections_table.loc[mirbase_m_intersections_table['index'] == '0007979'])
 mirbase_fc_intersections_table = pd.merge(mirbase_m_intersections_table, star_df, on='index', how='left')
+print(mirbase_fc_intersections_table.loc[mirbase_fc_intersections_table['index'] == '0007979'])
 mirbase_fc_intersections_table = mirbase_fc_intersections_table.drop('index', axis=1)
+print(mirbase_fc_intersections_table['Description_mirbase'].str.contains('0007979'))
 
 # filter by sum_fc_m < threshold
 mirbase_fc_intersections_table = mirbase_fc_intersections_table[mirbase_fc_intersections_table['sum_FC_m'] > sum_fc_thres]
@@ -745,7 +765,6 @@ unified = unified.loc[~mask | (unified['Seed'] == unified['Seed_mirGeneDB'])]
 # -----STATISTICS-----
 # ---Creating a families by type pivot table
 
-print(unified)
 
 def families_by_type(df):
     families_by_type = pd.pivot_table(df, values='Description', index='Family', columns='Type', aggfunc='count')
