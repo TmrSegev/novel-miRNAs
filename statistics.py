@@ -47,6 +47,12 @@ def unknown_families_by_type(df):
     plt.savefig("{}_unique_seed_candidates_by_type.png".format(species))
 
 
+def boxplot_by_type(df):
+    print(df)
+    print(df['mean_m_rpm'].dtype)
+    df.boxplot(column='mean_m_rpm')
+    plt.savefig("{}_boxplot_by_type.png".format(species))
+
 if __name__ == '__main__':
     species = None
     all_path = None
@@ -65,3 +71,4 @@ if __name__ == '__main__':
     all = pd.read_excel(all_path, sheet_name="all_candidates")
     families_by_type(all)
     unknown_families_by_type(all)
+    boxplot_by_type(all)
