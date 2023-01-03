@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 import matplotlib.pyplot as plt
 import sys
 
@@ -48,10 +49,19 @@ def unknown_families_by_type(df):
 
 
 def boxplot_by_type(df):
-    print(df)
-    print(df['mean_m_rpm'].dtype)
-    df.boxplot(column='mean_m_rpm')
-    plt.savefig("{}_boxplot_by_type.png".format(species))
+    plt.clf()
+    types = list(df['Type'].unique())
+    types.sort()
+    columns = []
+    for type in types:
+        col = 'Type_{}_mean_rpm'.format(type)
+        df[col] = np.log10(df.loc[df['Type'] == type, 'mean_m_rpm'])
+        columns.append(col)
+    df.boxplot(column=columns)
+    plt.ylabel("log10_mean_m_rpm")
+    plt.title("{} boxplots by type".format(species))
+    plt.xticks(rotation=45)
+    plt.savefig("{}_boxplots_by_type.png".format(species))
 
 if __name__ == '__main__':
     species = None
