@@ -17,8 +17,6 @@ def families_by_type(df):
     plt.savefig("{}_family_counts_per_type.png".format(species))
 
 
-families_by_type(unified)
-
 # ---Creating unknown seeds by type pivot table
 
 
@@ -50,5 +48,20 @@ def unknown_families_by_type(df):
 
 
 if __name__ == '__main__':
-
-    unknown_families_by_type(unified)
+    species = None
+    all_path = None
+    for i in range(1, len(sys.argv), 2):
+        arg = sys.argv[i]
+        if arg == '-s':
+            species = sys.argv[i + 1]
+        elif arg == '--all':
+            all_path = sys.argv[i + 1]
+        elif arg == '--help' or arg == '-h':
+            print(f'Manual:\n'
+                  f' -s <name>: name of species.\n'
+                  f' --all <path>: path to an intersection table excel which contains "all_candidates" sheet.\n'
+                  )
+            sys.exit()
+    all = pd.read_excel(all_path, sheet_name="all_candidates")
+    families_by_type(all)
+    unknown_families_by_type(all)
