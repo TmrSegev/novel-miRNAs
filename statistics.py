@@ -63,6 +63,26 @@ def boxplot_by_type(df):
     plt.xticks(rotation=45)
     plt.savefig("{}_boxplots_by_type.png".format(species))
 
+def boxplot_known_unknown(df):
+    plt.clf()
+    types = list(df['Type'].unique())
+    types.sort()
+    columns = []
+    for type in types:
+        col_known = 'Type_{}_known'.format(type)
+        col_unknown = 'Type_{}_unknown'.format(type)
+        df[col_known] = df.loc[(df['Type'] == type) & (df['Family'] != 'UNKNOWN'), 'mean_m_rpm']
+        df[col_unknown] = df.loc[(df['Type'] == type) & (df['Family'] == 'UNKNOWN'), 'mean_m_rpm']
+        df[col_known] = np.log10(df[col_known])
+        df[col_unknown] = np.log10(df[col_unknown])
+        columns.append(col_known)
+        columns.append(col_unknown)
+    df.boxplot(column=columns)
+    plt.ylabel("log10_mean_m_rpm")
+    plt.title("{} boxplots known/unknown by type".format(species))
+    plt.xticks(rotation=45)
+    plt.savefig("{}_boxplots_known_unknown.png".format(species))
+
 if __name__ == '__main__':
     species = None
     all_path = None
@@ -82,3 +102,4 @@ if __name__ == '__main__':
     families_by_type(all)
     unknown_families_by_type(all)
     boxplot_by_type(all)
+    boxplot_known_unknown(all)
