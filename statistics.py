@@ -54,13 +54,14 @@ def boxplot_by_type(df):
     types.sort()
     columns = []
     for type in types:
-        col = 'Type_{}_mean_rpm'.format(type)
+        col = 'Type {} (n={})'.format(type, len(df.loc[df['Type'] == type]))
         df[col] = np.log10(df.loc[df['Type'] == type, 'mean_m_rpm'])
         columns.append(col)
     df.boxplot(column=columns)
     plt.ylabel("log10_mean_m_rpm")
     plt.title("{} boxplots by type".format(species))
     plt.xticks(rotation=45)
+    plt.tight_layout()
     plt.savefig("{}_boxplots_by_type.png".format(species))
 
 def boxplot_known_unknown(df):
@@ -69,8 +70,8 @@ def boxplot_known_unknown(df):
     types.sort()
     columns = []
     for type in types:
-        col_known = 'Type_{}_known'.format(type)
-        col_unknown = 'Type_{}_unknown'.format(type)
+        col_known = 'Type {} known (n={})'.format(type, len(df.loc[(df['Type'] == type) & (df['Family'] != 'UNKNOWN')]))
+        col_unknown = 'Type {} unknown (n={})'.format(type, len(df.loc[(df['Type'] == type) & (df['Family'] == 'UNKNOWN')]))
         df[col_known] = df.loc[(df['Type'] == type) & (df['Family'] != 'UNKNOWN'), 'mean_m_rpm']
         df[col_unknown] = df.loc[(df['Type'] == type) & (df['Family'] == 'UNKNOWN'), 'mean_m_rpm']
         df[col_known] = np.log10(df[col_known])
@@ -81,6 +82,7 @@ def boxplot_known_unknown(df):
     plt.ylabel("log10_mean_m_rpm")
     plt.title("{} boxplots known/unknown by type".format(species))
     plt.xticks(rotation=45)
+    plt.tight_layout()
     plt.savefig("{}_boxplots_known_unknown.png".format(species))
 
 if __name__ == '__main__':
