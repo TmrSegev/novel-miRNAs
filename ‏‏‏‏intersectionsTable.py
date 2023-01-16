@@ -515,7 +515,7 @@ if (species == 'Elegans') or (species == 'elegans'):
     mirbase_fc_intersections_table = mirbase_fc_intersections_table.drop('index', axis=1)
 
     # filter by sum_fc_m < threshold
-    # mirbase_fc_intersections_table = mirbase_fc_intersections_table[mirbase_fc_intersections_table['sum_FC_m'] > sum_fc_thres]
+    mirbase_fc_intersections_table = mirbase_fc_intersections_table[mirbase_fc_intersections_table['sum_FC_m'] > sum_fc_thres]
 
     # Extract readcounts columns
     mirbase_fc_intersections_table['RC_m mirdeep'] = mirbase_fc_intersections_table["Description_mirdeep"].str.split(';', expand=True)[1]
