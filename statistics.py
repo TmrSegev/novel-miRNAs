@@ -62,6 +62,11 @@ def boxplot_by_type(df):
     plt.title("{} boxplots by type".format(species))
     plt.xticks(rotation=45)
     plt.tight_layout()
+    print(enumerate(df[columns]))
+    for i, d in enumerate(df[columns]):
+        y = df[columns][d]
+        x = np.random.normal(i + 1, 0.04, len(y))
+        plt.scatter(x, y)
     plt.savefig("{}_boxplots_by_type.png".format(species))
 
 def boxplot_known_unknown(df):
@@ -83,6 +88,10 @@ def boxplot_known_unknown(df):
     plt.title("{} boxplots known/unknown by type".format(species))
     plt.xticks(rotation=45)
     plt.tight_layout()
+    for i, d in enumerate(df[columns]):
+        y = df[columns][d]
+        x = np.random.normal(i + 1, 0.04, len(y))
+        plt.scatter(x, y)
     plt.savefig("{}_boxplots_known_unknown.png".format(species))
 
 if __name__ == '__main__':
