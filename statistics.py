@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import sys
+from itertools import cycle
 
 # ---Creating a families by type pivot table
 
@@ -94,6 +95,19 @@ def boxplot_known_unknown(df):
         plt.scatter(x, y)
     plt.savefig("{}_boxplots_known_unknown.png".format(species))
 
+
+def normal_dist(df):
+    plt.clf()
+    types = list(df['Type'].unique())
+    types.sort()
+    figure, axis = plt.subplots(4, 2)
+    for i, ax in enumerate(figure.axes):
+        # ax.set_ylabel(str(i))
+        ax.hist(df.loc[df['Type'] == type, 'mean_m_rpm'])
+        ax.set_title("Type {}".format(type))
+    plt.savefig("{}_normal_dist.png".format(species))
+
+
 if __name__ == '__main__':
     species = None
     all_path = None
@@ -114,3 +128,4 @@ if __name__ == '__main__':
     unknown_families_by_type(all)
     boxplot_by_type(all)
     boxplot_known_unknown(all)
+    # normal_dist(all)
