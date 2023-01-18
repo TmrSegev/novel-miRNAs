@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import sys
-from itertools import cycle
+import scipy.stats as stats
 
 # ---Creating a families by type pivot table
 
@@ -96,6 +96,12 @@ def boxplot_known_unknown(df):
     plt.savefig("{}_boxplots_known_unknown.png".format(species))
 
 
+def wilcoxon_test(df):
+    print(np.log10(df.loc[df['Type'] == 1, 'mean_m_rpm']).describe())
+    print(np.log10(df.loc[df['Type'] == 1, 'mean_m_rpm']).describe())
+    stats.wilcoxon(np.log10(df.loc[df['Type'] == 1, 'mean_m_rpm']), np.log10(df.loc[df['Type'] == 2, 'mean_m_rpm']))
+
+
 def normal_dist(df):
     plt.clf()
     types = list(df['Type'].unique())
@@ -129,3 +135,4 @@ if __name__ == '__main__':
     boxplot_by_type(all)
     boxplot_known_unknown(all)
     # normal_dist(all)
+    wilcoxon_test(all)
