@@ -2,7 +2,8 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import sys
-import scipy.stats as stats
+# import scipy.stats as stats
+from scipy.stats import ttest_ind
 
 # ---Creating a families by type pivot table
 
@@ -70,6 +71,7 @@ def boxplot_by_type(df):
         plt.scatter(x, y)
     plt.savefig("{}_boxplots_by_type.png".format(species))
 
+
 def boxplot_known_unknown(df):
     plt.clf()
     types = list(df['Type'].unique())
@@ -96,10 +98,21 @@ def boxplot_known_unknown(df):
     plt.savefig("{}_boxplots_known_unknown.png".format(species))
 
 
-def wilcoxon_test(df):
-    print(np.log10(df.loc[df['Type'] == 1, 'mean_m_rpm']).describe())
-    print(np.log10(df.loc[df['Type'] == 1, 'mean_m_rpm']).describe())
-    stats.wilcoxon(np.log10(df.loc[df['Type'] == 1, 'mean_m_rpm']), np.log10(df.loc[df['Type'] == 2, 'mean_m_rpm']))
+#def wilcoxon_test(df):
+    #print(np.log10(df.loc[df['Type'] == 1, 'mean_m_rpm']).describe())
+   # print(np.log10(df.loc[df['Type'] == 1, 'mean_m_rpm']).describe())
+  #  stats.wilcoxon(np.log10(df.loc[df['Type'] == 1, 'mean_m_rpm']), np.log10(df.loc[df['Type'] == 2, 'mean_m_rpm']))
+
+
+def t_test(df):
+    types = list(df['Type'].unique())
+    types.sort()
+    for i in range(1, len(types)+1):
+        for j in range(i+1, len(types)+1):
+            disti = np.log10(df.loc[df['Type'] == i, 'mean_m_rpm'])
+            distj = np.log10(df.loc[df['Type'] == j, 'mean_m_rpm'])
+            stat, p = ttest_ind(disti, distj)
+            print("Type", i, "vs Type", j, ":     stat:", stat, ", p:", p)
 
 
 def normal_dist(df):
@@ -135,4 +148,5 @@ if __name__ == '__main__':
     boxplot_by_type(all)
     boxplot_known_unknown(all)
     # normal_dist(all)
-    wilcoxon_test(all)
+    # wilcoxon_test(all)
+    t_test(all)
