@@ -380,10 +380,10 @@ def run(inputs, output, threshold_tp, threshold_s, exclude_c, fasta_path, seed_p
             end = int(positions.split('..')[1])
             if mature_seq == 5:
                 seed = seq5p_id.split('|')[5]
-                gff_row = [[f'chr{name}', '.', 'pre_miRNA', str(start), str(end), '.', strand, '.', f'ID={seq_id};RC_m={rc_mature};RC_s={rc_star};index={intersection_index};{seed}']]
+                gff_row = [[f'{name}', '.', 'pre_miRNA', str(start), str(end), '.', strand, '.', f'ID={seq_id};RC_m={rc_mature};RC_s={rc_star};index={intersection_index};{seed}']]
             if mature_seq == 3:
                 seed = seq3p_id.split('|')[5]
-                gff_row = [[f'chr{name}', '.', 'pre_miRNA', str(start), str(end), '.', strand, '.', f'ID={seq_id};RC_m={rc_mature};RC_s={rc_star};index={intersection_index};{seed}']]
+                gff_row = [[f'{name}', '.', 'pre_miRNA', str(start), str(end), '.', strand, '.', f'ID={seq_id};RC_m={rc_mature};RC_s={rc_star};index={intersection_index};{seed}']]
             gff3_pre_only = gff3_pre_only.append(gff_row)
 
             if strand == '+':

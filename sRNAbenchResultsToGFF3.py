@@ -200,10 +200,10 @@ def run(input, output, additional=None, fasta_path=None, seed_path=None):
 
         if mature_seq == 5:
             seed = name5p.split('|')[4]
-            gff_row = [[f'chr{seqId}', '.', 'pre_miRNA', str(start), str(end), '.', strand, '.', f'ID={name};RC_m={rc_mature};RC_s={rc_star};index={intersection_index};{seed}']]
+            gff_row = [[f'{seqId}', '.', 'pre_miRNA', str(start), str(end), '.', strand, '.', f'ID={name};RC_m={rc_mature};RC_s={rc_star};index={intersection_index};{seed}']]
         if mature_seq == 3:
             seed = name3p.split('|')[4]
-            gff_row = [[f'chr{seqId}', '.', 'pre_miRNA', str(start), str(end), '.', strand, '.', f'ID={name};RC_m={rc_mature};RC_s={rc_star};index={intersection_index};{seed}']]
+            gff_row = [[f'{seqId}', '.', 'pre_miRNA', str(start), str(end), '.', strand, '.', f'ID={name};RC_m={rc_mature};RC_s={rc_star};index={intersection_index};{seed}']]
         gff3_pre_only = gff3_pre_only.append(gff_row)
 
         if strand == '+':
