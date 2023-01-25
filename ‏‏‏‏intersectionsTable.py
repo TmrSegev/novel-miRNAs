@@ -193,6 +193,7 @@ if (species == 'Elegans') or (species == 'elegans'):
                                            'Strand_mirbase', '.3', 'Description_mirbase', 'Chr_sRNAbench', '.4',
                                            'pre_miRNA2', 'Start_sRNAbench', 'End_sRNAbench', '.5', 'Strand_sRNAbench',
                                            '.6', 'Description_sRNAbench'])
+    print(mirbase_mirgenedb['Description_mirbase'])
 
     mirbase_mirgenedb = mirbase_mirgenedb.drop(['.1', 'pre_miRNA1', '.2', '.3', '.4', 'pre_miRNA2', '.5', '.6'], axis=1)
     mirbase_mirdeep = mirbase_mirdeep.drop(['.1', 'pre_miRNA1', '.2', '.3', '.4', 'pre_miRNA2', '.5', '.6'], axis=1)
@@ -426,10 +427,13 @@ if (species == 'Elegans') or (species == 'elegans'):
     featurecounts_mirbase = pd.read_csv(featurecounts_mirbase_path, sep='\t', names=['Geneid', 'Chr', 'Start', 'End', 'Strand', 'Length'] + libraries)
     featurecounts_mirbase = featurecounts_mirbase.drop(['Chr', 'Start', 'End', 'Strand', 'Length'], axis=1)
     featurecounts_mirbase = featurecounts_mirbase.iloc[2:] # Drop the first 2 rows, which is readme info from featurecounts and not data
+    print(featurecounts_mirbase)
 
 
     # Create index column for featurecounts
+    print(featurecounts_mirbase['Geneid'])
     featurecounts_mirbase['index'] = featurecounts_mirbase['Geneid'].str.split('|')
+    print(featurecounts_mirbase['index'])
     featurecounts_mirbase['index'] = featurecounts_mirbase['index'].apply(lambda x : x[3])
     featurecounts_mirbase['index'] = featurecounts_mirbase['index'].str.replace('Derives_from=MI', '')
 
