@@ -41,12 +41,12 @@ def writeRemovedFasta(removed_input, seed_path, seed_file, fasta_path):
                 seq5p_seed = seq5p[1:8].upper()
                 seq3p_seed = seq3p[1:8].upper()
                 try:
-                    seq5p_id += '|' + seed_file[seed_file['seed'] == seq5p_seed]["miRBase_name"].iloc[0]
+                    seq5p_id += '|' + seed_file[seed_file['Seed'] == seq5p_seed]["MirGeneDB ID"].iloc[0]
                 except:
                     seq5p_id += '|' + seq5p_seed
 
                 try:
-                    seq3p_id += '|' + seed_file[seed_file['seed'] == seq3p_seed]["miRBase_name"].iloc[0]
+                    seq3p_id += '|' + seed_file[seed_file['Seed'] == seq3p_seed]["MirGeneDB ID"].iloc[0]
                 except:
                     seq3p_id += '|' + seq3p_seed
 
@@ -98,7 +98,7 @@ def filterInputs(inputs_arr, score_threshold, true_positive_threshold, exclude_c
                     deleted_input = deleted_input.append(row)
                     input.drop(index=index, inplace=True)
                     f.close()
-            with open('/sise/vaksler-group/IsanaRNA/Isana_Tzah/RNAcentral/ncRNAs_Caenorhabditis/Caenorhabditis_snoRNA.fasta') as f:
+            with open('/sise/vaksler-group/IsanaRNA/Isana_Tzah/RNAcentral/ncRNAs_Caenorhabditis/CAENOR~5.FAS') as f:
                 if row['consensus mature sequence'].upper() in f.read():
                     row['Removal Reason'] = 'snoRNA'
                     deleted_input = deleted_input.append(row)
@@ -302,6 +302,10 @@ def run(inputs, output, threshold_tp, threshold_s, exclude_c, fasta_path, seed_p
 
     if seed_path is not None:
         seed_file = pd.read_csv(seed_path, sep="\t")
+        print(seed_file["MirGeneDB ID"])
+        print(seed_file["Seed"])
+        print(seed_file[seed_file['Seed'] == "UGAGCAA"]["MirGeneDB ID"])
+        print(seed_file[seed_file['Seed'] == "UGAGCAA"]["MirGeneDB ID"].iloc[0])
 
     if fasta_path is not None:
         fasta_file = ''
@@ -353,14 +357,14 @@ def run(inputs, output, threshold_tp, threshold_s, exclude_c, fasta_path, seed_p
                 if seq5p != '-':
                     seq5p_seed = seq5p[1:8].upper()
                     try:
-                        seq5p_id += '|' + seed_file[seed_file['seed'] == seq5p_seed]["miRBase_name"].iloc[0]
+                        seq5p_id += '|' + seed_file[seed_file['Seed'] == seq5p_seed]["MirGeneDB ID"].iloc[0]
                     except:
                         seq5p_id += '|' + seq5p_seed
 
                 if seq3p != '-':
                     seq3p_seed = seq3p[1:8].upper()
                     try:
-                        seq3p_id += '|' + seed_file[seed_file['seed'] == seq3p_seed]["miRBase_name"].iloc[0]
+                        seq3p_id += '|' + seed_file[seed_file['Seed'] == seq3p_seed]["MirGeneDB ID"].iloc[0]
                     except:
                         seq3p_id += '|' + seq3p_seed
 

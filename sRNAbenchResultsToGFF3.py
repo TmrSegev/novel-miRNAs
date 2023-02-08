@@ -114,7 +114,7 @@ def run(input, output, additional=None, fasta_path=None, seed_path=None):
                 deleted_input = deleted_input.append(row)
                 table.drop(index=index, inplace=True)
                 f.close()
-        with open('/sise/vaksler-group/IsanaRNA/Isana_Tzah/RNAcentral/ncRNAs_Caenorhabditis/Caenorhabditis_snoRNA.fasta') as f:
+        with open('/sise/vaksler-group/IsanaRNA/Isana_Tzah/RNAcentral/ncRNAs_Caenorhabditis/CAENOR~5.FAS') as f:
             if (row['5pseq'] in f.read()) or (row['3pseq'] in f.read()):
                 row['Removal Reason'] = 'snoRNA'
                 deleted_input = deleted_input.append(row)
@@ -176,14 +176,14 @@ def run(input, output, additional=None, fasta_path=None, seed_path=None):
             if not pd.isnull(seq5p):
                 seq5p_seed = seq5p[1:8].upper().replace("T", "U")
                 try:
-                    name5p += '|' + seed_file[seed_file['seed'] == seq5p_seed]["miRBase_name"].iloc[0]
+                    name5p += '|' + seed_file[seed_file['Seed'] == seq5p_seed]["MirGeneDB ID"].iloc[0]
                 except:
                     name5p += '|' + seq5p_seed
 
             if not pd.isnull(seq3p):
                 seq3p_seed = seq3p[1:8].upper().replace("T", "U")
                 try:
-                    name3p += '|' + seed_file[seed_file['seed'] == seq3p_seed]["miRBase_name"].iloc[0]
+                    name3p += '|' + seed_file[seed_file['Seed'] == seq3p_seed]["MirGeneDB ID"].iloc[0]
                 except:
                     name3p += '|' + seq3p_seed
 
