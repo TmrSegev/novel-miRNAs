@@ -8,26 +8,32 @@
 
 import pandas as pd
 from Bio import SeqIO
+import gffpandas.gffpandas as gffpd
 
-gff = pd.read_csv("/sise/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/mirbase_data/cel_mirbase.gff3", sep='\t', names=['Chr', '.1', 'pre/miRNA', 'Start', 'End', '.2', 'Strand', '.3', 'Description'],
-                  skiprows=13)
-print(gff)
+annotation = gffpd.read_gff3("/sise/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/mirbase_data/cel_mirbase.gff3")
+gff = annotation.df
+
 hairpin = SeqIO.parse(open("/sise/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/mirbase_data/animalsHairpin.fa"),
                         'fasta')
 hairpin_dict = SeqIO.to_dict(hairpin)
-print(str(hairpin_dict['cel-let-7'].seq))
+
 mature = SeqIO.parse(open("/sise/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/mirbase_data/animalsMature.fa"),
                         'fasta')
+mature_dict = SeqIO.to_dict(mature)
 
-gff['name'] = gff['Description'].str.split('|', expand=True)[2]
+gff['name'] = gff['attributes'].str.split('|', expand=True)[2]
 gff['name'] = gff['name'].str.split('=', expand=True)[1]
 
-# for index, row in gff.iterrows():
-    # if gff['pre/miRNA'] == "miRNA_primary_transcript":
-    #     str
-    # elif gff['pre/miRNA'] == "miRNA":
+new_gff = pd.DataFrame(columns=gff.columns)
+for index, row in gff.iterrows():
+    if row['type'] == "miRNA_primary_transcript":
+        row['attributes'] = row['attributes'] + '|' + str(hairpin_dict[row['name']].seq)
+        new_gff = new_gff.append(row)
+    elif row['type'] == "miRNA":
+        row['attributes'] = row['attributes'] + '|' + str(mature_dict[row['name']].seq)
+        new_gff = new_gff.append(row)
 
-# for fasta in hairpin:
-#     description = fasta.description
-#     print(f">{description}")
-#     print(str(fasta.seq))
+new_gff = new_gff.drop(['name'], axis=1)
+
+annotation.df = new_gff
+annotation.to_gff3('cel_mirbase_seq.gff3')
