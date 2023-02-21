@@ -17,7 +17,7 @@ def families_by_type(df):
     plt.ylabel("Counts")
     # plt.legend(["1: Both", "2: miRDeep only", "3: sRNAbench only"])
     # plt.show()
-    plt.savefig("{}_family_counts_per_type.png".format(species))
+    plt.savefig("{}_family_counts_per_type.png".format(species), dpi=300)
 
 
 # ---Creating unknown seeds by type pivot table
@@ -38,7 +38,7 @@ def unknown_families_by_type(df):
     plt.ylabel("Counts")
     # plt.legend(["1: Both", "2: miRDeep only", "3: sRNAbench only"])
     # plt.show()
-    plt.savefig("{}_unknown_family_counts_per_type.png".format(species))
+    plt.savefig("{}_unknown_family_counts_per_type.png".format(species), dpi=300)
     plt.clf()
 
     pivot_solos = pivot_solos.drop('sum', axis=1)
@@ -47,7 +47,7 @@ def unknown_families_by_type(df):
     plt.ylabel("Counts")
     # plt.legend(["1: Both", "2: miRDeep only", "3: sRNAbench only"])
     # plt.show()
-    plt.savefig("{}_unique_seed_candidates_by_type.png".format(species))
+    plt.savefig("{}_unique_seed_candidates_by_type.png".format(species), dpi=300)
 
 
 def boxplot_by_type(df):
@@ -71,7 +71,7 @@ def boxplot_by_type(df):
         y = df[columns][d]
         x = np.random.normal(i + 1, 0.04, len(y))
         plt.scatter(x, y)
-    plt.savefig("{}_boxplots_by_type.png".format(species))
+    plt.savefig("{}_boxplots_by_type.png".format(species), dpi=300)
 
 
 def boxplot_known_unknown(df):
@@ -98,7 +98,7 @@ def boxplot_known_unknown(df):
         y = df[columns][d]
         x = np.random.normal(i + 1, 0.04, len(y))
         plt.scatter(x, y)
-    plt.savefig("{}_boxplots_known_unknown.png".format(species))
+    plt.savefig("{}_boxplots_known_unknown.png".format(species), dpi=300)
 
 
 #def wilcoxon_test(df):
@@ -137,7 +137,7 @@ def normal_dist(df):
         # ax.set_ylabel(str(i))
         ax.hist(df.loc[df['Type'] == type, 'mean_m_rpm'])
         ax.set_title("Type {}".format(type))
-    plt.savefig("{}_normal_dist.png".format(species))
+    plt.savefig("{}_normal_dist.png".format(species), dpi=300)
 
 
 if __name__ == '__main__':

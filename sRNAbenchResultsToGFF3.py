@@ -89,6 +89,7 @@ def run(input, output, additional=None, fasta_path=None, seed_path=None):
     # gff3_pre_only = gff3_pre_only.astype({"end": int})
     output_pre_only = "Elegans_sRNAbench_pre_only.gff3"
     table = pd.read_csv(input, sep='\t')
+    table["origin"] = "novel"
     table, deleted_input = filterNovel(table)
 
     if seed_path:
@@ -100,9 +101,11 @@ def run(input, output, additional=None, fasta_path=None, seed_path=None):
 
     if additional:
         table_to_add = pd.read_csv(additional, sep='\t')
+        table_to_add["origin"] = "novel451"
         table_to_add, table_to_delete = filterNovel451(table_to_add, table)
         deleted_input = deleted_input.append(table_to_delete)
         table = table.append(table_to_add)
+        print(table["origin"].value_counts())
 
     # Filter non coding RNA
     table['5pseq'] = table['5pseq'].astype(str)
@@ -114,7 +117,7 @@ def run(input, output, additional=None, fasta_path=None, seed_path=None):
                 deleted_input = deleted_input.append(row)
                 table.drop(index=index, inplace=True)
                 f.close()
-        with open('/sise/vaksler-group/IsanaRNA/Isana_Tzah/RNAcentral/ncRNAs_Caenorhabditis/CAENOR~5.FAS') as f:
+        with open('/sise/vaksler-group/IsanaRNA/Isana_Tzah/RNAcentral/ncRNAs_Caenorhabditis/Caenorhabditis_snoRNA.fasta') as f:
             if (row['5pseq'] in f.read()) or (row['3pseq'] in f.read()):
                 row['Removal Reason'] = 'snoRNA'
                 deleted_input = deleted_input.append(row)
@@ -149,6 +152,7 @@ def run(input, output, additional=None, fasta_path=None, seed_path=None):
         hairpin = row['hairpinSeq']
         start = row['start']
         end = row['end']
+        origin = row['origin']
 
         if row['5pRC'] >= row['3pRC']:
             name5p += '|m'
@@ -176,14 +180,14 @@ def run(input, output, additional=None, fasta_path=None, seed_path=None):
             if not pd.isnull(seq5p):
                 seq5p_seed = seq5p[1:8].upper().replace("T", "U")
                 try:
-                    name5p += '|' + seed_file[seed_file['Seed'] == seq5p_seed]["MirGeneDB ID"].iloc[0]
+                    name5p += '|' + seed_file[seed_file['Seed'] == seq5p_seed]["Family"].iloc[0]
                 except:
                     name5p += '|' + seq5p_seed
 
             if not pd.isnull(seq3p):
                 seq3p_seed = seq3p[1:8].upper().replace("T", "U")
                 try:
-                    name3p += '|' + seed_file[seed_file['Seed'] == seq3p_seed]["MirGeneDB ID"].iloc[0]
+                    name3p += '|' + seed_file[seed_file['Seed'] == seq3p_seed]["Family"].iloc[0]
                 except:
                     name3p += '|' + seq3p_seed
 
@@ -200,10 +204,10 @@ def run(input, output, additional=None, fasta_path=None, seed_path=None):
 
         if mature_seq == 5:
             seed = name5p.split('|')[4]
-            gff_row = [[f'{seqId}', '.', 'pre_miRNA', str(start), str(end), '.', strand, '.', f'ID={name};RC_m={rc_mature};RC_s={rc_star};index={intersection_index};{seed}']]
+            gff_row = [[f'{seqId}', '.', 'pre_miRNA', str(start), str(end), '.', strand, '.', f'ID={name};RC_m={rc_mature};RC_s={rc_star};index={intersection_index};{seed};{origin}']]
         if mature_seq == 3:
             seed = name3p.split('|')[4]
-            gff_row = [[f'{seqId}', '.', 'pre_miRNA', str(start), str(end), '.', strand, '.', f'ID={name};RC_m={rc_mature};RC_s={rc_star};index={intersection_index};{seed}']]
+            gff_row = [[f'{seqId}', '.', 'pre_miRNA', str(start), str(end), '.', strand, '.', f'ID={name};RC_m={rc_mature};RC_s={rc_star};index={intersection_index};{seed};{origin}']]
         gff3_pre_only = gff3_pre_only.append(gff_row)
 
         if strand == '+':
