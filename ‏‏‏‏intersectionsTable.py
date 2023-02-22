@@ -592,10 +592,30 @@ mirdeep_blast_fc_intersections_table['star_size'] = mirdeep_blast_fc_intersectio
 #---sRNAbench:
 remaining_sRNAbench = pd.read_csv(remaining_sRNAbench_path, sep='\t')
 sRNAbench_blast_fc_intersections_table['5pseq'] = remaining_sRNAbench['5pseq'].str.replace('T', 'U')
+sRNAbench_blast_fc_intersections_table['5pseq'] = sRNAbench_blast_fc_intersections_table['5pseq'].fillna(np.nan).replace([np.nan], [None])
 sRNAbench_blast_fc_intersections_table['3pseq'] = remaining_sRNAbench['3pseq'].str.replace('T', 'U')
+sRNAbench_blast_fc_intersections_table['3pseq'] = sRNAbench_blast_fc_intersections_table['3pseq'].fillna(np.nan).replace([np.nan], [None])
 sRNAbench_blast_fc_intersections_table['hairpinSeq'] = remaining_sRNAbench['hairpinSeq'].str.replace('T', 'U')
 
 #Removing flank and adjusting start/end
+def start_5p(row):
+    if row['5pseq'] is not None:
+        return row['hairpinSeq'].find(row['5pseq'])
+    else:
+        return 0
+
+sRNAbench_blast_fc_intersections_table['start_5p'] = sRNAbench_blast_fc_intersections_table.apply(lambda row : start_5p(row), axis=1)
+print(sRNAbench_blast_fc_intersections_table['start_5p'])
+
+def end_3p(row):
+    if row['3pseq'] is not None:
+        return row['hairpinSeq'].find(row['3pseq']) + len(row['3pseq'])
+    else:
+        return len(row['hairpinSeq'])
+
+sRNAbench_blast_fc_intersections_table['end_3p'] = sRNAbench_blast_fc_intersections_table.apply(lambda row : end_3p(row), axis=1)
+print(sRNAbench_blast_fc_intersections_table['end_3p'])
+
 sRNAbench_blast_fc_intersections_table['hairpinSeq'] = sRNAbench_blast_fc_intersections_table['hairpinSeq'].str[11:-11]
 sRNAbench_blast_fc_intersections_table['Start_sRNAbench'] = sRNAbench_blast_fc_intersections_table['Start_sRNAbench'] + 11
 sRNAbench_blast_fc_intersections_table['End_sRNAbench'] = sRNAbench_blast_fc_intersections_table['End_sRNAbench'] - 11
