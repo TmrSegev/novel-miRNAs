@@ -616,9 +616,15 @@ def end_3p(row):
 sRNAbench_blast_fc_intersections_table['end_3p'] = sRNAbench_blast_fc_intersections_table.apply(lambda row : end_3p(row), axis=1)
 print(sRNAbench_blast_fc_intersections_table['end_3p'])
 
-sRNAbench_blast_fc_intersections_table['hairpinSeq'] = sRNAbench_blast_fc_intersections_table['hairpinSeq'].str[11:-11]
-sRNAbench_blast_fc_intersections_table['Start_sRNAbench'] = sRNAbench_blast_fc_intersections_table['Start_sRNAbench'] + 11
-sRNAbench_blast_fc_intersections_table['End_sRNAbench'] = sRNAbench_blast_fc_intersections_table['End_sRNAbench'] - 11
+def cut_hairpin(row):
+    return row['hairpinSeq'][row['start_5p']:row['end_3p']]
+
+sRNAbench_blast_fc_intersections_table['hairpinSeq'] = sRNAbench_blast_fc_intersections_table.apply(lambda row : cut_hairpin(row), axis=1)
+# sRNAbench_blast_fc_intersections_table['hairpinSeq'] = sRNAbench_blast_fc_intersections_table['hairpinSeq'].str[sRNAbench_blast_fc_intersections_table['start_5p']:sRNAbench_blast_fc_intersections_table['end_3p']]
+sRNAbench_blast_fc_intersections_table['Start_sRNAbench'] = sRNAbench_blast_fc_intersections_table['Start_sRNAbench'] + sRNAbench_blast_fc_intersections_table['start_5p']
+sRNAbench_blast_fc_intersections_table['End_sRNAbench'] = sRNAbench_blast_fc_intersections_table['End_sRNAbench'] - (len(sRNAbench_blast_fc_intersections_table['hairpinSeq']) - sRNAbench_blast_fc_intersections_table['end_3p'])
+
+print(sRNAbench_blast_fc_intersections_table['hairpinSeq'])
 
 # Extract loop size
 def loop_size_sRNAbench(row):
