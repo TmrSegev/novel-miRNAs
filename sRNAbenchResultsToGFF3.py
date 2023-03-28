@@ -2,6 +2,7 @@
 
 import sys
 import pandas as pd
+import numpy as np
 
 ids_dic = {}
 
@@ -71,6 +72,24 @@ def filterNovel(novel):
     return novel, deleted_input
 
 
+def start_5p(row):
+    if row['5pseq'] is not None:
+        return row['hairpinSeq'].find(row['5pseq'])
+    else:
+        return 0
+
+
+def end_3p(row):
+    if row['3pseq'] is not None:
+        return row['hairpinSeq'].find(row['3pseq']) + len(row['3pseq'])
+    else:
+        return len(row['hairpinSeq'])
+
+
+def cut_hairpin(row):
+    return row['hairpinSeq'][row['start_5p']:row['end_3p']]
+
+
 def run(input, output, additional=None, fasta_path=None, seed_path=None):
     """
     This Function will create GFF3 file from the sRNAbench output.
@@ -105,7 +124,6 @@ def run(input, output, additional=None, fasta_path=None, seed_path=None):
         table_to_add, table_to_delete = filterNovel451(table_to_add, table)
         deleted_input = deleted_input.append(table_to_delete)
         table = table.append(table_to_add)
-        print(table["origin"].value_counts())
 
     # Filter non coding RNA
     table['5pseq'] = table['5pseq'].astype(str)
@@ -135,6 +153,20 @@ def run(input, output, additional=None, fasta_path=None, seed_path=None):
                 deleted_input = deleted_input.append(row)
                 table.drop(index=index, inplace=True)
                 f.close()
+
+    # Trim the sequences and adjust start/end
+    table['5pseq'] = table['5pseq'].fillna(np.nan).replace([np.nan], [None])
+    table['3pseq'] = table['3pseq'].fillna(np.nan).replace([np.nan], [None])
+
+    table['start_5p'] = table.apply(lambda row : start_5p(row), axis=1)
+
+    table['end_3p'] = table.apply(lambda row : end_3p(row), axis=1)
+
+    table['hairpinSeq'] = table.apply(lambda row : cut_hairpin(row), axis=1)
+    # table['hairpinSeq'] = table['hairpinSeq'].str[table['start_5p']:table['end_3p']]
+    table['end'] = table['start'] + table['end_3p'] - 1
+    table['start'] = table['start'] + table['start_5p']
+    table = table.drop(['start_5p', 'end_3p'], axis=1)
 
     table.to_csv('sRNAbench_remaining.csv', sep='\t')
     deleted_input.to_csv('sRNAbench_removed.csv', sep='\t')
