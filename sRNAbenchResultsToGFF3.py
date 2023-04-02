@@ -73,14 +73,14 @@ def filterNovel(novel):
 
 
 def start_5p(row):
-    if row['5pseq'] is not None:
+    if row['5pseq'] != "nan":
         return row['hairpinSeq'].find(row['5pseq'])
     else:
         return 0
 
 
 def end_3p(row):
-    if row['3pseq'] is not None:
+    if row['3pseq'] != "nan":
         return row['hairpinSeq'].find(row['3pseq']) + len(row['3pseq'])
     else:
         return len(row['hairpinSeq'])
@@ -155,8 +155,9 @@ def run(input, output, additional=None, fasta_path=None, seed_path=None):
                 f.close()
 
     # Trim the sequences and adjust start/end
-    table['5pseq'] = table['5pseq'].fillna(np.nan).replace([np.nan], [None])
-    table['3pseq'] = table['3pseq'].fillna(np.nan).replace([np.nan], [None])
+    print(table['5pseq'].loc[table['5pseq'] == 'nan'])
+    # table['5pseq'] = table['5pseq'].fillna(np.nan).replace([np.nan], [None])
+    # table['3pseq'] = table['3pseq'].fillna(np.nan).replace([np.nan], [None])
 
     table['start_5p'] = table.apply(lambda row : start_5p(row), axis=1)
 
