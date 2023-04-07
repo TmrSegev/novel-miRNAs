@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import sys
-# import scipy.stats as stats
+import scipy.stats as stats
 from scipy.stats import ttest_ind
 
 # ---Creating a families by type pivot table
@@ -17,7 +17,7 @@ def families_by_type(df):
     plt.ylabel("Counts")
     # plt.legend(["1: Both", "2: miRDeep only", "3: sRNAbench only"])
     # plt.show()
-    plt.savefig("{}_family_counts_per_type.png".format(species))
+    plt.savefig("{}_family_counts_per_type.png".format(species), dpi=300)
 
 
 # ---Creating unknown seeds by type pivot table
@@ -38,7 +38,7 @@ def unknown_families_by_type(df):
     plt.ylabel("Counts")
     # plt.legend(["1: Both", "2: miRDeep only", "3: sRNAbench only"])
     # plt.show()
-    plt.savefig("{}_unknown_family_counts_per_type.png".format(species))
+    plt.savefig("{}_unknown_family_counts_per_type.png".format(species), dpi=300)
     plt.clf()
 
     pivot_solos = pivot_solos.drop('sum', axis=1)
@@ -47,7 +47,7 @@ def unknown_families_by_type(df):
     plt.ylabel("Counts")
     # plt.legend(["1: Both", "2: miRDeep only", "3: sRNAbench only"])
     # plt.show()
-    plt.savefig("{}_unique_seed_candidates_by_type.png".format(species))
+    plt.savefig("{}_unique_seed_candidates_by_type.png".format(species), dpi=300)
 
 
 def boxplot_by_type(df):
@@ -58,9 +58,11 @@ def boxplot_by_type(df):
     for type in types:
         col = 'Type {} (n={})'.format(type, len(df.loc[df['Type'] == type]))
         df[col] = np.log10(df.loc[df['Type'] == type, 'mean_m_rpm'])
+        # df[col] = df.loc[df['Type'] == type, 'mean_m_rpm']
         columns.append(col)
     df.boxplot(column=columns)
     plt.ylabel("log10_mean_m_rpm")
+    plt.yticks(ticks= np.arange(0, 6), labels=10 ** np.arange(0, 6))
     plt.title("{} boxplots by type".format(species))
     plt.xticks(rotation=45)
     plt.tight_layout()
@@ -69,7 +71,7 @@ def boxplot_by_type(df):
         y = df[columns][d]
         x = np.random.normal(i + 1, 0.04, len(y))
         plt.scatter(x, y)
-    plt.savefig("{}_boxplots_by_type.png".format(species))
+    plt.savefig("{}_boxplots_by_type.png".format(species), dpi=300)
 
 
 def boxplot_known_unknown(df):
@@ -88,6 +90,7 @@ def boxplot_known_unknown(df):
         columns.append(col_unknown)
     df.boxplot(column=columns)
     plt.ylabel("log10_mean_m_rpm")
+    plt.yticks(ticks=np.arange(0, 6), labels=10 ** np.arange(0, 6))
     plt.title("{} boxplots known/unknown by type".format(species))
     plt.xticks(rotation=45)
     plt.tight_layout()
@@ -95,7 +98,7 @@ def boxplot_known_unknown(df):
         y = df[columns][d]
         x = np.random.normal(i + 1, 0.04, len(y))
         plt.scatter(x, y)
-    plt.savefig("{}_boxplots_known_unknown.png".format(species))
+    plt.savefig("{}_boxplots_known_unknown.png".format(species), dpi=300)
 
 
 #def wilcoxon_test(df):
@@ -103,6 +106,16 @@ def boxplot_known_unknown(df):
    # print(np.log10(df.loc[df['Type'] == 1, 'mean_m_rpm']).describe())
   #  stats.wilcoxon(np.log10(df.loc[df['Type'] == 1, 'mean_m_rpm']), np.log10(df.loc[df['Type'] == 2, 'mean_m_rpm']))
 
+def mann_whitney(df):
+    types = list(df['Type'].unique())
+    types.sort()
+    with open('{}_mann_whitney.txt'.format(species), 'w') as file:
+        for i in range(1, len(types) + 1):
+            for j in range(i + 1, len(types) + 1):
+                disti = np.log10(df.loc[df['Type'] == i, 'mean_m_rpm'])
+                distj = np.log10(df.loc[df['Type'] == j, 'mean_m_rpm'])
+                res = stats.mannwhitneyu(disti, distj, alternative="two-sided")
+                file.write("Type " + str(i) + " vs Type " + str(j) + ":    " + str(res) + '\n')
 
 def t_test(df):
     types = list(df['Type'].unique())
@@ -124,7 +137,7 @@ def normal_dist(df):
         # ax.set_ylabel(str(i))
         ax.hist(df.loc[df['Type'] == type, 'mean_m_rpm'])
         ax.set_title("Type {}".format(type))
-    plt.savefig("{}_normal_dist.png".format(species))
+    plt.savefig("{}_normal_dist.png".format(species), dpi=300)
 
 
 if __name__ == '__main__':
@@ -149,4 +162,5 @@ if __name__ == '__main__':
     boxplot_known_unknown(all)
     # normal_dist(all)
     # wilcoxon_test(all)
-    t_test(all)
+    # t_test(all)
+    mann_whitney(all)

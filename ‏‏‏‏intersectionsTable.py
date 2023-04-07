@@ -592,13 +592,36 @@ mirdeep_blast_fc_intersections_table['star_size'] = mirdeep_blast_fc_intersectio
 #---sRNAbench:
 remaining_sRNAbench = pd.read_csv(remaining_sRNAbench_path, sep='\t')
 sRNAbench_blast_fc_intersections_table['5pseq'] = remaining_sRNAbench['5pseq'].str.replace('T', 'U')
+# sRNAbench_blast_fc_intersections_table['5pseq'] = sRNAbench_blast_fc_intersections_table['5pseq'].fillna(np.nan).replace([np.nan], [None])
 sRNAbench_blast_fc_intersections_table['3pseq'] = remaining_sRNAbench['3pseq'].str.replace('T', 'U')
+# sRNAbench_blast_fc_intersections_table['3pseq'] = sRNAbench_blast_fc_intersections_table['3pseq'].fillna(np.nan).replace([np.nan], [None])
 sRNAbench_blast_fc_intersections_table['hairpinSeq'] = remaining_sRNAbench['hairpinSeq'].str.replace('T', 'U')
+#
+# #Removing flank and adjusting start/end
+# def start_5p(row):
+#     if row['5pseq'] is not None:
+#         return row['hairpinSeq'].find(row['5pseq'])
+#     else:
+#         return 0
+#
+# sRNAbench_blast_fc_intersections_table['start_5p'] = sRNAbench_blast_fc_intersections_table.apply(lambda row : start_5p(row), axis=1)
+#
+# def end_3p(row):
+#     if row['3pseq'] is not None:
+#         return row['hairpinSeq'].find(row['3pseq']) + len(row['3pseq'])
+#     else:
+#         return len(row['hairpinSeq'])
+#
+# sRNAbench_blast_fc_intersections_table['end_3p'] = sRNAbench_blast_fc_intersections_table.apply(lambda row : end_3p(row), axis=1)
+#
+# def cut_hairpin(row):
+#     return row['hairpinSeq'][row['start_5p']:row['end_3p']]
+#
+# sRNAbench_blast_fc_intersections_table['hairpinSeq'] = sRNAbench_blast_fc_intersections_table.apply(lambda row : cut_hairpin(row), axis=1)
+# # sRNAbench_blast_fc_intersections_table['hairpinSeq'] = sRNAbench_blast_fc_intersections_table['hairpinSeq'].str[sRNAbench_blast_fc_intersections_table['start_5p']:sRNAbench_blast_fc_intersections_table['end_3p']]
+# sRNAbench_blast_fc_intersections_table['Start_sRNAbench'] = sRNAbench_blast_fc_intersections_table['Start_sRNAbench'] + sRNAbench_blast_fc_intersections_table['start_5p']
+# sRNAbench_blast_fc_intersections_table['End_sRNAbench'] = sRNAbench_blast_fc_intersections_table['End_sRNAbench'] - (len(sRNAbench_blast_fc_intersections_table['hairpinSeq']) - sRNAbench_blast_fc_intersections_table['end_3p'])
 
-#Removing flank and adjusting start/end
-sRNAbench_blast_fc_intersections_table['hairpinSeq'] = sRNAbench_blast_fc_intersections_table['hairpinSeq'].str[11:-11]
-sRNAbench_blast_fc_intersections_table['Start_sRNAbench'] = sRNAbench_blast_fc_intersections_table['Start_sRNAbench'] + 11
-sRNAbench_blast_fc_intersections_table['End_sRNAbench'] = sRNAbench_blast_fc_intersections_table['End_sRNAbench'] - 11
 
 # Extract loop size
 def loop_size_sRNAbench(row):
@@ -700,7 +723,7 @@ unified = mirdeep_blast_fc_intersections_table.copy()
 unified['5pseq'] = np.where(unified['mature'] == '5p', unified['consensus mature sequence'], unified['consensus star sequence'])
 unified['3pseq'] = np.where(unified['mature'] == '3p', unified['consensus mature sequence'], unified['consensus star sequence'])
 
-unified = unified.drop(['Chr_sRNAbench', 'Start_sRNAbench', 'End_sRNAbench', 'Strand_sRNAbench', 'Description_sRNAbench', 'consensus mature sequence', 'consensus star sequence'], axis=1)
+unified = unified.drop(['Chr_sRNAbench', 'Start_sRNAbench', 'End_sRNAbench', 'Strand_sRNAbench', 'consensus mature sequence', 'consensus star sequence'], axis=1)
 if (species == 'Elegans') or (species == 'elegans'):
     only_sRNAbench = sRNAbench_blast_fc_intersections_table[sRNAbench_blast_fc_intersections_table['Type'].isin([2, 5, 8])]
     only_mirbase = mirbase_fc_intersections_table[mirbase_fc_intersections_table['Type'].isin([3, 6])]
@@ -710,12 +733,12 @@ else:
     only_sRNAbench = sRNAbench_blast_fc_intersections_table[sRNAbench_blast_fc_intersections_table['Type'] == 3]
 
 
-only_sRNAbench = only_sRNAbench.drop(['Chr_mirdeep', 'Start_mirdeep', 'End_mirdeep', 'Strand_mirdeep', 'Description_mirdeep'], axis=1)
-unified = unified.rename(columns={'Chr_mirdeep':'Chr', 'Start_mirdeep':'Start', 'End_mirdeep':'End', 'Strand_mirdeep':'Strand', 'Description_mirdeep':'Description', 'consensus precursor sequence':'hairpinSeq'})
-only_sRNAbench = only_sRNAbench.rename(columns={'Chr_sRNAbench':'Chr', 'Start_sRNAbench':'Start', 'End_sRNAbench':'End', 'Strand_sRNAbench':'Strand', 'Description_sRNAbench':'Description'})
+only_sRNAbench = only_sRNAbench.drop(['Chr_mirdeep', 'Start_mirdeep', 'End_mirdeep', 'Strand_mirdeep'], axis=1)
+unified = unified.rename(columns={'Chr_mirdeep':'Chr', 'Start_mirdeep':'Start', 'End_mirdeep':'End', 'Strand_mirdeep':'Strand', 'consensus precursor sequence':'hairpinSeq'})
+only_sRNAbench = only_sRNAbench.rename(columns={'Chr_sRNAbench':'Chr', 'Start_sRNAbench':'Start', 'End_sRNAbench':'End', 'Strand_sRNAbench':'Strand'})
 if (species == 'Elegans') or (species == 'elegans'):
-    only_mirbase = only_mirbase.drop(['Chr_mirdeep', 'Start_mirdeep', 'End_mirdeep', 'Strand_mirdeep', 'Description_mirdeep', 'Chr_sRNAbench', 'Start_sRNAbench', 'End_sRNAbench', 'Strand_sRNAbench', 'Description_sRNAbench',], axis=1)
-    only_mirbase = only_mirbase.rename(columns={'Chr_mirbase':'Chr', 'Start_mirbase':'Start', 'End_mirbase':'End', 'Strand_mirbase':'Strand', 'Description_mirbase':'Description'})
+    only_mirbase = only_mirbase.drop(['Chr_mirdeep', 'Start_mirdeep', 'End_mirdeep', 'Strand_mirdeep', 'Chr_sRNAbench', 'Start_sRNAbench', 'End_sRNAbench', 'Strand_sRNAbench'], axis=1)
+    only_mirbase = only_mirbase.rename(columns={'Chr_mirbase':'Chr', 'Start_mirbase':'Start', 'End_mirbase':'End', 'Strand_mirbase':'Strand'})
     unified = pd.concat([unified, only_sRNAbench, only_mirbase], axis=0, ignore_index=True)
     unified = unified.drop(['T/F_mirdeep', 'T/F_sRNAbench', 'T/F_mirbase', 'T/F_mirgenedb'], axis=1)
 else:
@@ -724,11 +747,17 @@ else:
 columns = list(unified.columns)
 i1, i2, i3 = columns.index('mature'), columns.index('5pseq'), columns.index('3pseq')
 columns[i1], columns[i2], columns[i3] = columns[i2], columns[i3], columns[i1]
+# reorder sRNAbench and mirbase description columns
+columns.remove('Description_sRNAbench')
+columns.remove('Description_mirbase')
+columns.insert(columns.index('Description_mirdeep') + 1, 'Description_sRNAbench')
+columns.insert(columns.index('Description_mirdeep') + 2, 'Description_mirbase')
 unified = unified[columns]
 
 
 # --- Extract seed
-unified['Seed'] = unified['Description'].str.split(';', expand=True)[4]
+unified['Seed'] = unified['Description_mirdeep'].str.split(';', expand=True)[4]
+unified['Seed'] = unified['Description_sRNAbench'].str.split(';', expand=True)[4]
 unified['Seed'] = unified['Seed'].str.split('|', expand=True)[0] # Remove sense / antisense / overlap
 
 seed_families = pd.read_csv('/sise/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/mirbase_data/cel-mirgenedb-families.csv')
@@ -749,60 +778,8 @@ unified['Seed'] = np.where(unified["mature"] == '5p', unified["5pseq"].str[1:8],
 unified = unified.reindex(columns=[col for col in unified.columns if col != 'Type'] + ['Type']) # move 'type' column to last position
 
 # --- Removing duplicates
-mask = unified.duplicated(subset=unified.columns.drop('Seed_mirGeneDB'), keep=False)
-unified = unified.loc[~mask | (unified['Seed'] == unified['Seed_mirGeneDB'])]
-
-
-# -----STATISTICS-----
-# ---Creating a families by type pivot table
-
-
-def families_by_type(df):
-    families_by_type = pd.pivot_table(df, values='Description', index='Family', columns='Type', aggfunc='count')
-    families_by_type.fillna(0, inplace=True)
-    families_by_type = families_by_type.drop("UNKNOWN", axis=0)
-    families_by_type.sort_values('Family', inplace=True)
-    families_by_type.plot(kind='bar', figsize=(14, 10), stacked=True, title="{} counts of known families in each type".format(species))
-    plt.ylabel("Counts")
-    # plt.legend(["1: Both", "2: miRDeep only", "3: sRNAbench only"])
-    # plt.show()
-    plt.savefig("{}_family_counts_per_type.png".format(species))
-
-
-families_by_type(unified)
-
-# ---Creating unknown seeds by type pivot table
-
-
-def unknown_families_by_type(df):
-    filtered_df = df[df['Family'] == "UNKNOWN"]
-    pivot = pd.pivot_table(filtered_df, values='Description', index='Seed', columns='Type', aggfunc='count')
-    pivot.fillna(0, inplace=True)
-    pivot['sum'] = pivot.sum(axis=1)
-    pivot_groups = pivot[pivot['sum'] > 1]
-    pivot_solos = pivot[pivot['sum'] == 1]
-
-    pivot_groups = pivot_groups.drop('sum', axis=1)
-    pivot_groups.sort_values('Seed', inplace=True)
-    pivot_groups.plot(kind='bar', figsize=(14, 10), stacked=True,
-                          title="{} counts of unknown families in each type".format(species))
-    plt.ylabel("Counts")
-    # plt.legend(["1: Both", "2: miRDeep only", "3: sRNAbench only"])
-    # plt.show()
-    plt.savefig("{}_unknown_family_counts_per_type.png".format(species))
-    plt.clf()
-
-    pivot_solos = pivot_solos.drop('sum', axis=1)
-    pivot_solos.sum().plot(kind='pie', y='Type', autopct='%1.0f%%',
-                           title="{} unique seed candidates by type".format(species))
-    plt.ylabel("Counts")
-    # plt.legend(["1: Both", "2: miRDeep only", "3: sRNAbench only"])
-    # plt.show()
-    plt.savefig("{}_unique_seed_candidates_by_type.png".format(species))
-
-
-
-unknown_families_by_type(unified)
+# mask = unified.duplicated(subset=unified.columns.drop('Seed_mirGeneDB'), keep=False)
+# unified = unified.loc[~mask | (unified['Seed'] == unified['Seed_mirGeneDB'])]
 
 # -----SAVE TO EXCEL-----
 
