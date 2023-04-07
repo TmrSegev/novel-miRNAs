@@ -41,12 +41,12 @@ def writeRemovedFasta(removed_input, seed_path, seed_file, fasta_path):
                 seq5p_seed = seq5p[1:8].upper()
                 seq3p_seed = seq3p[1:8].upper()
                 try:
-                    seq5p_id += '|' + seed_file[seed_file['seed'] == seq5p_seed]["miRBase_name"].iloc[0]
+                    seq5p_id += '|' + seed_file[seed_file['Seed'] == seq5p_seed]["Family"].iloc[0]
                 except:
                     seq5p_id += '|' + seq5p_seed
 
                 try:
-                    seq3p_id += '|' + seed_file[seed_file['seed'] == seq3p_seed]["miRBase_name"].iloc[0]
+                    seq3p_id += '|' + seed_file[seed_file['Seed'] == seq3p_seed]["Family"].iloc[0]
                 except:
                     seq3p_id += '|' + seq3p_seed
 
@@ -353,14 +353,14 @@ def run(inputs, output, threshold_tp, threshold_s, exclude_c, fasta_path, seed_p
                 if seq5p != '-':
                     seq5p_seed = seq5p[1:8].upper()
                     try:
-                        seq5p_id += '|' + seed_file[seed_file['seed'] == seq5p_seed]["miRBase_name"].iloc[0]
+                        seq5p_id += '|' + seed_file[seed_file['Seed'] == seq5p_seed]["Family"].iloc[0]
                     except:
                         seq5p_id += '|' + seq5p_seed
 
                 if seq3p != '-':
                     seq3p_seed = seq3p[1:8].upper()
                     try:
-                        seq3p_id += '|' + seed_file[seed_file['seed'] == seq3p_seed]["miRBase_name"].iloc[0]
+                        seq3p_id += '|' + seed_file[seed_file['Seed'] == seq3p_seed]["Family"].iloc[0]
                     except:
                         seq3p_id += '|' + seq3p_seed
 
@@ -380,10 +380,10 @@ def run(inputs, output, threshold_tp, threshold_s, exclude_c, fasta_path, seed_p
             end = int(positions.split('..')[1])
             if mature_seq == 5:
                 seed = seq5p_id.split('|')[5]
-                gff_row = [[f'chr{name}', '.', 'pre_miRNA', str(start), str(end), '.', strand, '.', f'ID={seq_id};RC_m={rc_mature};RC_s={rc_star};index={intersection_index};{seed}']]
+                gff_row = [[f'{name}', '.', 'pre_miRNA', str(start), str(end), '.', strand, '.', f'ID={seq_id};RC_m={rc_mature};RC_s={rc_star};index={intersection_index};{seed}']]
             if mature_seq == 3:
                 seed = seq3p_id.split('|')[5]
-                gff_row = [[f'chr{name}', '.', 'pre_miRNA', str(start), str(end), '.', strand, '.', f'ID={seq_id};RC_m={rc_mature};RC_s={rc_star};index={intersection_index};{seed}']]
+                gff_row = [[f'{name}', '.', 'pre_miRNA', str(start), str(end), '.', strand, '.', f'ID={seq_id};RC_m={rc_mature};RC_s={rc_star};index={intersection_index};{seed}']]
             gff3_pre_only = gff3_pre_only.append(gff_row)
 
             if strand == '+':
