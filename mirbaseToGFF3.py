@@ -77,7 +77,7 @@ for index, row in gff.iterrows():
         elif next2_row['type'] == "miRNA_primary_transcript":
             # no need to cut the precursor. Just assign 5p/3p
             next1_seq = str(mature_dict[next1_row['name']].seq)
-            flag_5p3p = '|' + is_5p_3p(hairpinSeq, next1_seq)
+            flag_5p3p = is_5p_3p(hairpinSeq, next1_seq)
 
         # append trimmed sequence to new gff
         row['attributes'] = row['attributes'] + '|' + hairpinSeq
@@ -85,7 +85,9 @@ for index, row in gff.iterrows():
         new_pre_gff = new_pre_gff.append(row)
 
     elif row['type'] == "miRNA":
-        row['attributes'] = row['attributes'] + '|' + str(mature_dict[row['name']].seq) + flag_5p3p
+        if flag_5p3p == '':
+            flag_5p3p = row['name'][-2:]
+        row['attributes'] = row['attributes'] + '|' + str(mature_dict[row['name']].seq) + '|' + flag_5p3p
         flag_5p3p = ''
         new_gff = new_gff.append(row)
 
