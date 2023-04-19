@@ -30,7 +30,8 @@ mature = SeqIO.parse(open("/sise/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/m
                         'fasta')
 mature_dict = SeqIO.to_dict(mature)
 
-gff['name'] = gff['attributes'].str.split('|', expand=True)[2]
+gff['attributes'] = gff['attributes'].str.replace('|', ';', regex=False)
+gff['name'] = gff['attributes'].str.split(';', expand=True)[2]
 gff['name'] = gff['name'].str.split('=', expand=True)[1]
 
 new_gff = pd.DataFrame(columns=gff.columns)
@@ -80,14 +81,14 @@ for index, row in gff.iterrows():
             flag_5p3p = is_5p_3p(hairpinSeq, next1_seq)
 
         # append trimmed sequence to new gff
-        row['attributes'] = row['attributes'] + '|' + hairpinSeq
+        row['attributes'] = row['attributes'] + ';' + hairpinSeq
         new_gff = new_gff.append(row)
         new_pre_gff = new_pre_gff.append(row)
 
     elif row['type'] == "miRNA":
         if flag_5p3p == '':
             flag_5p3p = row['name'][-2:]
-        row['attributes'] = row['attributes'] + '|' + str(mature_dict[row['name']].seq) + '|' + flag_5p3p
+        row['attributes'] = row['attributes'] + ';' + str(mature_dict[row['name']].seq) + ';' + flag_5p3p
         flag_5p3p = ''
         new_gff = new_gff.append(row)
 
