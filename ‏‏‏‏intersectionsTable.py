@@ -210,6 +210,7 @@ if (species == 'Elegans') or (species == 'elegans'):
     mirbase_intersections_table['T/F_sRNAbench'] = (mirbase_intersections_table['Description_sRNAbench'] != '.').astype(
         int)  # Used for classifying types
     # mirbase_intersections_table.to_csv("mirbase_intersections_table", sep='\t')
+    print(mirbase_intersections_table.info())
 
 # -----ADD BLAST RESULTS-----
 # ---miRdeep:
@@ -426,15 +427,16 @@ if (species == 'Elegans') or (species == 'elegans'):
     featurecounts_mirbase = pd.read_csv(featurecounts_mirbase_path, sep='\t', names=['Geneid', 'Chr', 'Start', 'End', 'Strand', 'Length'] + libraries)
     featurecounts_mirbase = featurecounts_mirbase.drop(['Chr', 'Start', 'End', 'Strand', 'Length'], axis=1)
     featurecounts_mirbase = featurecounts_mirbase.iloc[2:] # Drop the first 2 rows, which is readme info from featurecounts and not data
+    print(featurecounts_mirbase.info())
 
 
     # Create index column for featurecounts
-    featurecounts_mirbase['index'] = featurecounts_mirbase['Geneid'].str.split('|')
+    featurecounts_mirbase['index'] = featurecounts_mirbase['Geneid'].str.split(';')
     featurecounts_mirbase['index'] = featurecounts_mirbase['index'].apply(lambda x : x[3])
     featurecounts_mirbase['index'] = featurecounts_mirbase['index'].str.replace('Derives_from=MI', '')
 
     # Create 5p/3p columns
-    featurecounts_mirbase['5p/3p'] = featurecounts_mirbase['Geneid'].str.split('|')
+    featurecounts_mirbase['5p/3p'] = featurecounts_mirbase['Geneid'].str.split(';')
     featurecounts_mirbase['5p/3p'] = featurecounts_mirbase['5p/3p'].apply(lambda x : x[2])
     featurecounts_mirbase['5p/3p'] = featurecounts_mirbase['5p/3p'].str[-2:]
     featurecounts_mirbase = featurecounts_mirbase.drop('Geneid', axis=1)
@@ -503,21 +505,32 @@ if (species == 'Elegans') or (species == 'elegans'):
     counts_no_5p3p_filler['sum_FC_s'] = 0
     counts_no_5p3p_filler['sum_FC_s > 100?'] = 0
     star_df = star_df.append(counts_no_5p3p_filler)
+    print("mature", mature_df.info())
+    print("star", star_df.info())
 
     # Create index column for mirbase
+    print("1!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+    print(mirbase_intersections_table.info())
     mirbase_intersections_table['index'] = mirbase_intersections_table['Description_mirbase'].str.split(';')
     mirbase_intersections_table['index'] = mirbase_intersections_table['index'].apply(lambda x : x[0])
     mirbase_intersections_table['index'] = mirbase_intersections_table['index'].str.replace('ID=MI', '')
+    print("2!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+    print(mirbase_intersections_table.info())
+    print(mirbase_intersections_table['index'].head())
 
     # Merge mirbase results and mirbase featurecounts results
     mirbase_m_intersections_table = pd.merge(mirbase_intersections_table, mature_df, on='index', how='left')
     mirbase_fc_intersections_table = pd.merge(mirbase_m_intersections_table, star_df, on='index', how='left')
     mirbase_fc_intersections_table = mirbase_fc_intersections_table.drop('index', axis=1)
+    print("3!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+    print(mirbase_fc_intersections_table.info())
 
     # filter by sum_fc_m < threshold
     mirbase_fc_intersections_table = mirbase_fc_intersections_table[mirbase_fc_intersections_table['sum_FC_m'] > sum_fc_thres]
 
     # Extract readcounts columns
+    print(mirbase_fc_intersections_table["Description_mirdeep"])
+    print(mirbase_fc_intersections_table.info())
     mirbase_fc_intersections_table['RC_m mirdeep'] = mirbase_fc_intersections_table["Description_mirdeep"].str.split(';', expand=True)[1]
     mirbase_fc_intersections_table['RC_s mirdeep'] = mirbase_fc_intersections_table["Description_mirdeep"].str.split(';', expand=True)[2]
     mirbase_fc_intersections_table['RC_m sRNAbench'] = mirbase_fc_intersections_table["Description_sRNAbench"].str.split(';', expand=True)[1]
@@ -758,7 +771,7 @@ unified = unified[columns]
 # --- Extract seed
 unified['Seed'] = unified['Description_mirdeep'].str.split(';', expand=True)[4]
 unified['Seed'] = unified['Description_sRNAbench'].str.split(';', expand=True)[4]
-unified['Seed'] = unified['Seed'].str.split('|', expand=True)[0] # Remove sense / antisense / overlap
+unified['Seed'] = unified['Seed'].str.split(';', expand=True)[0] # Remove sense / antisense / overlap
 
 seed_families = pd.read_csv('/sise/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/mirbase_data/cel-mirgenedb-families.csv')
 seed_families = seed_families[['MiRBase ID', 'Family', 'Seed']]
