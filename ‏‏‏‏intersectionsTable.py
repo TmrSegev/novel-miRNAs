@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import sys
+import gffpandas.gffpandas as gffpd
 
 """
 GETTING INPUTS
@@ -35,6 +36,7 @@ featurecounts_mirbase_path = None
 remaining1_mirdeep_path = None
 remaining2_mirdeep_path = None
 remaining_sRNAbench_path = None
+mirbase_gff_path = None
 libraries = None
 sum_fc_thres = 100
 for i in range(1, len(sys.argv), 2):
@@ -61,6 +63,8 @@ for i in range(1, len(sys.argv), 2):
         remaining2_mirdeep_path = sys.argv[i + 1]
     elif arg == '-rs':
         remaining_sRNAbench_path = sys.argv[i + 1]
+    elif arg == '-mgff':
+        mirbase_gff_path = sys.argv[i + 1]
     elif arg == '-l':
         libraries = sys.argv[i + 1].split(',')
     elif arg == '--sum-fc-thres':
@@ -210,7 +214,6 @@ if (species == 'Elegans') or (species == 'elegans'):
     mirbase_intersections_table['T/F_sRNAbench'] = (mirbase_intersections_table['Description_sRNAbench'] != '.').astype(
         int)  # Used for classifying types
     # mirbase_intersections_table.to_csv("mirbase_intersections_table", sep='\t')
-    print(mirbase_intersections_table.info())
 
 # -----ADD BLAST RESULTS-----
 # ---miRdeep:
@@ -427,7 +430,6 @@ if (species == 'Elegans') or (species == 'elegans'):
     featurecounts_mirbase = pd.read_csv(featurecounts_mirbase_path, sep='\t', names=['Geneid', 'Chr', 'Start', 'End', 'Strand', 'Length'] + libraries)
     featurecounts_mirbase = featurecounts_mirbase.drop(['Chr', 'Start', 'End', 'Strand', 'Length'], axis=1)
     featurecounts_mirbase = featurecounts_mirbase.iloc[2:] # Drop the first 2 rows, which is readme info from featurecounts and not data
-    print(featurecounts_mirbase.info())
 
 
     # Create index column for featurecounts
@@ -505,32 +507,21 @@ if (species == 'Elegans') or (species == 'elegans'):
     counts_no_5p3p_filler['sum_FC_s'] = 0
     counts_no_5p3p_filler['sum_FC_s > 100?'] = 0
     star_df = star_df.append(counts_no_5p3p_filler)
-    print("mature", mature_df.info())
-    print("star", star_df.info())
 
     # Create index column for mirbase
-    print("1!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-    print(mirbase_intersections_table.info())
     mirbase_intersections_table['index'] = mirbase_intersections_table['Description_mirbase'].str.split(';')
     mirbase_intersections_table['index'] = mirbase_intersections_table['index'].apply(lambda x : x[0])
     mirbase_intersections_table['index'] = mirbase_intersections_table['index'].str.replace('ID=MI', '')
-    print("2!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-    print(mirbase_intersections_table.info())
-    print(mirbase_intersections_table['index'].head())
 
     # Merge mirbase results and mirbase featurecounts results
     mirbase_m_intersections_table = pd.merge(mirbase_intersections_table, mature_df, on='index', how='left')
     mirbase_fc_intersections_table = pd.merge(mirbase_m_intersections_table, star_df, on='index', how='left')
     mirbase_fc_intersections_table = mirbase_fc_intersections_table.drop('index', axis=1)
-    print("3!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-    print(mirbase_fc_intersections_table.info())
 
     # filter by sum_fc_m < threshold
     mirbase_fc_intersections_table = mirbase_fc_intersections_table[mirbase_fc_intersections_table['sum_FC_m'] > sum_fc_thres]
 
     # Extract readcounts columns
-    print(mirbase_fc_intersections_table["Description_mirdeep"])
-    print(mirbase_fc_intersections_table.info())
     mirbase_fc_intersections_table['RC_m mirdeep'] = mirbase_fc_intersections_table["Description_mirdeep"].str.split(';', expand=True)[1]
     mirbase_fc_intersections_table['RC_s mirdeep'] = mirbase_fc_intersections_table["Description_mirdeep"].str.split(';', expand=True)[2]
     mirbase_fc_intersections_table['RC_m sRNAbench'] = mirbase_fc_intersections_table["Description_sRNAbench"].str.split(';', expand=True)[1]
@@ -605,36 +596,8 @@ mirdeep_blast_fc_intersections_table['star_size'] = mirdeep_blast_fc_intersectio
 #---sRNAbench:
 remaining_sRNAbench = pd.read_csv(remaining_sRNAbench_path, sep='\t')
 sRNAbench_blast_fc_intersections_table['5pseq'] = remaining_sRNAbench['5pseq'].str.replace('T', 'U')
-# sRNAbench_blast_fc_intersections_table['5pseq'] = sRNAbench_blast_fc_intersections_table['5pseq'].fillna(np.nan).replace([np.nan], [None])
 sRNAbench_blast_fc_intersections_table['3pseq'] = remaining_sRNAbench['3pseq'].str.replace('T', 'U')
-# sRNAbench_blast_fc_intersections_table['3pseq'] = sRNAbench_blast_fc_intersections_table['3pseq'].fillna(np.nan).replace([np.nan], [None])
 sRNAbench_blast_fc_intersections_table['hairpinSeq'] = remaining_sRNAbench['hairpinSeq'].str.replace('T', 'U')
-#
-# #Removing flank and adjusting start/end
-# def start_5p(row):
-#     if row['5pseq'] is not None:
-#         return row['hairpinSeq'].find(row['5pseq'])
-#     else:
-#         return 0
-#
-# sRNAbench_blast_fc_intersections_table['start_5p'] = sRNAbench_blast_fc_intersections_table.apply(lambda row : start_5p(row), axis=1)
-#
-# def end_3p(row):
-#     if row['3pseq'] is not None:
-#         return row['hairpinSeq'].find(row['3pseq']) + len(row['3pseq'])
-#     else:
-#         return len(row['hairpinSeq'])
-#
-# sRNAbench_blast_fc_intersections_table['end_3p'] = sRNAbench_blast_fc_intersections_table.apply(lambda row : end_3p(row), axis=1)
-#
-# def cut_hairpin(row):
-#     return row['hairpinSeq'][row['start_5p']:row['end_3p']]
-#
-# sRNAbench_blast_fc_intersections_table['hairpinSeq'] = sRNAbench_blast_fc_intersections_table.apply(lambda row : cut_hairpin(row), axis=1)
-# # sRNAbench_blast_fc_intersections_table['hairpinSeq'] = sRNAbench_blast_fc_intersections_table['hairpinSeq'].str[sRNAbench_blast_fc_intersections_table['start_5p']:sRNAbench_blast_fc_intersections_table['end_3p']]
-# sRNAbench_blast_fc_intersections_table['Start_sRNAbench'] = sRNAbench_blast_fc_intersections_table['Start_sRNAbench'] + sRNAbench_blast_fc_intersections_table['start_5p']
-# sRNAbench_blast_fc_intersections_table['End_sRNAbench'] = sRNAbench_blast_fc_intersections_table['End_sRNAbench'] - (len(sRNAbench_blast_fc_intersections_table['hairpinSeq']) - sRNAbench_blast_fc_intersections_table['end_3p'])
-
 
 # Extract loop size
 def loop_size_sRNAbench(row):
@@ -648,6 +611,25 @@ def loop_size_sRNAbench(row):
 sRNAbench_blast_fc_intersections_table['loop_size'] = sRNAbench_blast_fc_intersections_table.apply(lambda row : loop_size_sRNAbench(row), axis=1)
 sRNAbench_blast_fc_intersections_table['mature_size'] = np.where(sRNAbench_blast_fc_intersections_table['mature'] == '5p', sRNAbench_blast_fc_intersections_table['5pseq'].str.len(), sRNAbench_blast_fc_intersections_table['3pseq'].str.len())
 sRNAbench_blast_fc_intersections_table['star_size'] = np.where(sRNAbench_blast_fc_intersections_table['mature'] == '5p', sRNAbench_blast_fc_intersections_table['3pseq'].str.len(), sRNAbench_blast_fc_intersections_table['5pseq'].str.len())
+
+# ---Mirbase
+if (species == 'Elegans') or (species == 'elegans'):
+    mirbase_fc_intersections_table['hairpinSeq'] = mirbase_fc_intersections_table['Description_mirbase'].str.split(';', expand=True)[3]
+    mirbase_fc_intersections_table['Derives_from'] = mirbase_fc_intersections_table['Description_mirbase'].str.split(';', expand=True)[0]
+    mirbase_fc_intersections_table['Derives_from'] = mirbase_fc_intersections_table['Derives_from'].str.split('=', expand=True)[1]
+    annotation = gffpd.read_gff3(mirbase_gff_path)
+    gff = annotation.df
+    gff = gff[gff['type'] == 'miRNA'].copy()
+    gff['Derives_from'] = gff['attributes'].str.split(';', expand=True)[3]
+    gff['Derives_from'] = gff['Derives_from'].str.split('=', expand=True)[1]
+    gff['sequence'] = gff['attributes'].str.split(';', expand=True)[4]
+    gff['5p/3p'] = gff['attributes'].str.split(';', expand=True)[5]
+    gff.loc[gff['5p/3p'] == '5p', '5pseq'] = gff['sequence']
+    gff.loc[gff['5p/3p'] == '3p', '3pseq'] = gff['sequence']
+    print(gff[['5pseq', '3pseq', 'Derives_from']])
+    # create pivot table or group by!!!
+    print(gff.groupby('Derives_from'))
+    mirbase_fc_intersections_table = pd.merge(mirbase_fc_intersections_table, gff[['5pseq', '3pseq', 'Derives_from']], left_on='Derives_from', right_on='Derives_from', how='left')
 
 
 # -----REORDER COLUMNS:-----
@@ -663,7 +645,8 @@ if (species == 'Elegans') or (species == 'elegans'):
                                                                      'Chr_sRNAbench', 'Start_sRNAbench', 'End_sRNAbench', 'Strand_sRNAbench', 'Description_sRNAbench', 'T/F_sRNAbench'] +
                                                                     libraries_mature + ['sum_FC_m', 'RC_m mirdeep', 'RC_m sRNAbench', 'Diff Sum_FC_m / RC_m mirdeep', 'Diff Sum_FC_m / RC_m sRNAbench'] +
                                                                     libraries_star + ['sum_FC_s', 'sum_FC_s > 100?', 'RC_s mirdeep', 'RC_s sRNAbench', 'Diff Sum_FC_s / RC_s mirdeep', 'Diff Sum_FC_s / RC_s sRNAbench'] +
-                                                                    mature_rpm + ['sum_FC_m_rpm', 'mean_m_rpm'] + star_rpm + ['sum_FC_s_rpm', 'mean_s_rpm']
+                                                                    mature_rpm + ['sum_FC_m_rpm', 'mean_m_rpm'] + star_rpm + ['sum_FC_s_rpm', 'mean_s_rpm'] +
+                                                                    ['5pseq', '3pseq', 'hairpinSeq']
                                                                     ]
 else:
     elegans_columns_mirdeep = []
@@ -769,25 +752,17 @@ unified = unified[columns]
 
 
 # --- Extract seed
-unified['Seed'] = unified['Description_mirdeep'].str.split(';', expand=True)[4]
-unified['Seed'] = unified['Description_sRNAbench'].str.split(';', expand=True)[4]
-unified['Seed'] = unified['Seed'].str.split(';', expand=True)[0] # Remove sense / antisense / overlap
+unified['Seed'] = np.where(unified["mature"] == '5p', unified["5pseq"].str[1:8], unified["3pseq"].str[1:8])
 
 seed_families = pd.read_csv('/sise/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/mirbase_data/cel-mirgenedb-families.csv')
-seed_families = seed_families[['MiRBase ID', 'Family', 'Seed']]
-# seed_families.loc[len(seed_families)] = ['test-mir-71', 'TEST', 'UACCUUG']
-unified = pd.merge(unified, seed_families, left_on='Seed', right_on='MiRBase ID', how='left')
-unified = pd.merge(unified, seed_families, left_on='Seed_x', right_on='Seed', how='left')
+seed_families = seed_families[['Family', 'Seed']]
+unified = pd.merge(unified, seed_families, left_on='Seed', right_on='Seed', how='left')
 # unified = unified.drop_duplicates(subset='Description')
-unified['Family_x'].fillna(' ', inplace=True)
-unified['Family_y'].fillna(' ', inplace=True)
-unified['Family'] = unified['Family_x'] + unified['Family_y']
-unified['Family'] = unified['Family'].str.replace('  ', 'UNKNOWN')
+unified['Family'].fillna(' ', inplace=True)
+unified['Family'] = unified['Family'].str.replace(' ', 'UNKNOWN')
 
-unified = unified.drop(['Seed', 'MiRBase ID_x', 'Family_x', 'Family_y'], axis=1)
-unified = unified.rename(columns={'Seed_x':'Candidate seed/ID', 'Seed_y':'Seed_mirGeneDB', 'MiRBase ID_y':'MiRBase ID_mirGeneDB'})
 unified = unified.dropna(axis=1, thresh=1) # drop empty columns if there are any
-unified['Seed'] = np.where(unified["mature"] == '5p', unified["5pseq"].str[1:8], unified["3pseq"].str[1:8])
+# unified['Seed'] = np.where(unified["mature"] == '5p', unified["5pseq"].str[1:8], unified["3pseq"].str[1:8])
 unified = unified.reindex(columns=[col for col in unified.columns if col != 'Type'] + ['Type']) # move 'type' column to last position
 
 # --- Removing duplicates
