@@ -789,4 +789,5 @@ unified.to_excel(writer, sheet_name='all_candidates')
 blast_mirdeep_orig.to_excel(writer, sheet_name='blast_miRdeep')
 blast_sRNAbench_orig.to_excel(writer, sheet_name='blast_sRNAbench')
 writer.save()
+print("test")
 
