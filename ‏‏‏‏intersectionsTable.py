@@ -441,7 +441,7 @@ if (species == 'Elegans') or (species == 'elegans'):
     featurecounts_mirbase['5p/3p'] = featurecounts_mirbase['Geneid'].str.split(';')
     featurecounts_mirbase['5p/3p'] = featurecounts_mirbase['5p/3p'].apply(lambda x : x[2])
     featurecounts_mirbase['5p/3p'] = featurecounts_mirbase['5p/3p'].str[-2:]
-    featurecounts_mirbase = featurecounts_mirbase.drop('Geneid', axis=1)
+    # featurecounts_mirbase = featurecounts_mirbase.drop('Geneid', axis=1)
 
     # Casting libraries columns to int64
     featurecounts_mirbase = featurecounts_mirbase.astype(cast_dict)
@@ -467,8 +467,8 @@ if (species == 'Elegans') or (species == 'elegans'):
     numeric_counts_mb_3p = counts_mb_3p[libraries_3p].astype(int)
     counts_mb_3p['sum'] = numeric_counts_mb_3p.sum(axis=1)
 
-    # Create empty mature df and star df, iterate the rows of 5p and 3p and add to the relavant.
-    mature_df = pd.DataFrame(columns=libraries_mature)
+    # Create empty mature df and star df, iterate the rows of 5p and 3p and add to the relevant.
+    mature_df = pd.DataFrame(columns=libraries_mature + ['mature'])
     star_df = pd.DataFrame(columns=libraries_star)
     for i in range(0, len(counts_mb_5p)):
         row_5p = counts_mb_5p.iloc[i]
@@ -478,13 +478,15 @@ if (species == 'Elegans') or (species == 'elegans'):
             row_5p = row_5p.rename(rename_dict)
             rename_dict = dict(zip(libraries_3p, libraries_star))
             row_3p = row_3p.rename(rename_dict)
+            row_5p['mature'] = '5p'
             mature_df = mature_df.append(row_5p)
             star_df = star_df.append(row_3p)
-        else: # else 3p is the mature
+        elif row_5p['sum'] <= row_3p['sum']: # else 3p is the mature
             rename_dict = dict(zip(libraries_5p, libraries_star))
             row_5p = row_5p.rename(rename_dict)
             rename_dict = dict(zip(libraries_3p, libraries_mature))
             row_3p = row_3p.rename(rename_dict)
+            row_3p['mature'] = '3p'
             mature_df = mature_df.append(row_3p)
             star_df = star_df.append(row_5p)
 
@@ -496,13 +498,14 @@ if (species == 'Elegans') or (species == 'elegans'):
     counts_no_5p3p = counts_no_5p3p.drop('5p/3p', axis=1)
     rename_dict = dict(zip(libraries, libraries_mature))
     counts_no_5p3p = counts_no_5p3p.rename(columns=rename_dict)
+    counts_no_5p3p['mature'] = counts_no_5p3p['Geneid'].str.split(';', expand=True)[5]
     counts_no_5p3p['sum_FC_m'] = counts_no_5p3p[libraries_mature].sum(axis=1)
     mature_df = mature_df.append(counts_no_5p3p)
 
     counts_no_5p3p_filler = counts_no_5p3p.copy()
     rename_dict = dict(zip(libraries_mature, libraries_star))
     counts_no_5p3p_filler = counts_no_5p3p_filler.rename(columns=rename_dict)
-    counts_no_5p3p_filler = counts_no_5p3p_filler.drop('sum_FC_m', axis=1)
+    counts_no_5p3p_filler = counts_no_5p3p_filler.drop(['sum_FC_m', 'mature'], axis=1)
     counts_no_5p3p_filler[libraries_star] = 0
     counts_no_5p3p_filler['sum_FC_s'] = 0
     counts_no_5p3p_filler['sum_FC_s > 100?'] = 0
@@ -600,7 +603,7 @@ sRNAbench_blast_fc_intersections_table['3pseq'] = remaining_sRNAbench['3pseq'].s
 sRNAbench_blast_fc_intersections_table['hairpinSeq'] = remaining_sRNAbench['hairpinSeq'].str.replace('T', 'U')
 
 # Extract loop size
-def loop_size_sRNAbench(row):
+def loop_size(row):
     if (row["hairpinSeq"].find(str(row['5pseq'])) == -1) or (row["hairpinSeq"].find(str(row['3pseq'])) == -1):
         return -1
     index_end_5p = len((str(row['5pseq'])))
@@ -608,7 +611,7 @@ def loop_size_sRNAbench(row):
     loop_size = index_start_3p - index_end_5p
     return loop_size
 
-sRNAbench_blast_fc_intersections_table['loop_size'] = sRNAbench_blast_fc_intersections_table.apply(lambda row : loop_size_sRNAbench(row), axis=1)
+sRNAbench_blast_fc_intersections_table['loop_size'] = sRNAbench_blast_fc_intersections_table.apply(lambda row : loop_size(row), axis=1)
 sRNAbench_blast_fc_intersections_table['mature_size'] = np.where(sRNAbench_blast_fc_intersections_table['mature'] == '5p', sRNAbench_blast_fc_intersections_table['5pseq'].str.len(), sRNAbench_blast_fc_intersections_table['3pseq'].str.len())
 sRNAbench_blast_fc_intersections_table['star_size'] = np.where(sRNAbench_blast_fc_intersections_table['mature'] == '5p', sRNAbench_blast_fc_intersections_table['3pseq'].str.len(), sRNAbench_blast_fc_intersections_table['5pseq'].str.len())
 
@@ -626,11 +629,17 @@ if (species == 'Elegans') or (species == 'elegans'):
     gff['5p/3p'] = gff['attributes'].str.split(';', expand=True)[5]
     gff.loc[gff['5p/3p'] == '5p', '5pseq'] = gff['sequence']
     gff.loc[gff['5p/3p'] == '3p', '3pseq'] = gff['sequence']
-    print(gff[['5pseq', '3pseq', 'Derives_from']])
-    # create pivot table or group by!!!
-    print(gff.groupby('Derives_from'))
-    mirbase_fc_intersections_table = pd.merge(mirbase_fc_intersections_table, gff[['5pseq', '3pseq', 'Derives_from']], left_on='Derives_from', right_on='Derives_from', how='left')
+    seq5p = gff[['Derives_from', '5pseq']]
+    seq3p = gff[['Derives_from', '3pseq']]
+    seq5p = seq5p.dropna()
+    seq3p = seq3p.dropna()
+    seq5p3p = pd.merge(seq5p, seq3p, left_on='Derives_from', right_on='Derives_from', how='outer')
+    mirbase_fc_intersections_table = pd.merge(mirbase_fc_intersections_table, seq5p3p, left_on='Derives_from', right_on='Derives_from', how='left')
 
+    mirbase_fc_intersections_table['loop_size'] = mirbase_fc_intersections_table.apply(lambda row : loop_size(row), axis=1)
+    mirbase_fc_intersections_table['mature_size'] = np.where(mirbase_fc_intersections_table['mature'] == '5p', mirbase_fc_intersections_table['5pseq'].str.len(), mirbase_fc_intersections_table['3pseq'].str.len())
+    mirbase_fc_intersections_table['star_size'] = np.where(mirbase_fc_intersections_table['mature'] == '5p', mirbase_fc_intersections_table['3pseq'].str.len(), mirbase_fc_intersections_table['5pseq'].str.len())
+    mirbase_fc_intersections_table['star_size'] = mirbase_fc_intersections_table['star_size'].fillna(0)
 
 # -----REORDER COLUMNS:-----
 
@@ -646,7 +655,7 @@ if (species == 'Elegans') or (species == 'elegans'):
                                                                     libraries_mature + ['sum_FC_m', 'RC_m mirdeep', 'RC_m sRNAbench', 'Diff Sum_FC_m / RC_m mirdeep', 'Diff Sum_FC_m / RC_m sRNAbench'] +
                                                                     libraries_star + ['sum_FC_s', 'sum_FC_s > 100?', 'RC_s mirdeep', 'RC_s sRNAbench', 'Diff Sum_FC_s / RC_s mirdeep', 'Diff Sum_FC_s / RC_s sRNAbench'] +
                                                                     mature_rpm + ['sum_FC_m_rpm', 'mean_m_rpm'] + star_rpm + ['sum_FC_s_rpm', 'mean_s_rpm'] +
-                                                                    ['5pseq', '3pseq', 'hairpinSeq']
+                                                                    ['5pseq', '3pseq', 'hairpinSeq', 'mature', 'mature_size', 'star_size', 'loop_size']
                                                                     ]
 else:
     elegans_columns_mirdeep = []
