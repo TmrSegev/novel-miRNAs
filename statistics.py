@@ -10,6 +10,7 @@ from scipy.stats import ttest_ind
 
 def families_by_type(df):
     families_by_type = pd.pivot_table(df, values='Description', index='Family', columns='Type', aggfunc='count')
+    print(families_by_type)
     families_by_type.fillna(0, inplace=True)
     families_by_type = families_by_type.drop("UNKNOWN", axis=0)
     families_by_type.sort_values('Family', inplace=True)
@@ -156,6 +157,8 @@ if __name__ == '__main__':
                   )
             sys.exit()
     all = pd.read_excel(all_path, sheet_name="all_candidates")
+    all['Description'] = all[['Description_mirdeep', 'Description_sRNAbench', 'Description_mirbase']].astype(str).agg(', '.join, axis=1)
+    print(all['Description'])
     families_by_type(all)
     unknown_families_by_type(all)
     boxplot_by_type(all)

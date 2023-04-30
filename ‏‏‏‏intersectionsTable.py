@@ -763,15 +763,14 @@ unified = unified[columns]
 # --- Extract seed
 unified['Seed'] = np.where(unified["mature"] == '5p', unified["5pseq"].str[1:8], unified["3pseq"].str[1:8])
 
-seed_families = pd.read_csv('/sise/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/mirbase_data/cel-mirgenedb-families.csv')
+seed_families = pd.read_csv('/sise/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/mirbase_data/Seeds.txt', sep='\t')
 seed_families = seed_families[['Family', 'Seed']]
+seed_families = seed_families.drop_duplicates(subset='Seed')
 unified = pd.merge(unified, seed_families, left_on='Seed', right_on='Seed', how='left')
-# unified = unified.drop_duplicates(subset='Description')
 unified['Family'].fillna(' ', inplace=True)
 unified['Family'] = unified['Family'].str.replace(' ', 'UNKNOWN')
 
 unified = unified.dropna(axis=1, thresh=1) # drop empty columns if there are any
-# unified['Seed'] = np.where(unified["mature"] == '5p', unified["5pseq"].str[1:8], unified["3pseq"].str[1:8])
 unified = unified.reindex(columns=[col for col in unified.columns if col != 'Type'] + ['Type']) # move 'type' column to last position
 
 # --- Removing duplicates
