@@ -329,10 +329,14 @@ mirdeep_blast_fc_intersections_table['Diff Sum_FC_s / RC_s mirdeep'] = mirdeep_b
 mirdeep_blast_fc_intersections_table['Diff Sum_FC_s / RC_s sRNAbench'] = mirdeep_blast_fc_intersections_table['sum_FC_s'] / mirdeep_blast_fc_intersections_table['RC_s sRNAbench']
 
 # Normalize featurecounts to reads per million
-total = mirdeep_blast_fc_intersections_table[libraries_mature + libraries_star].sum()
 mature_rpm = [column + "_rpm" for column in libraries_mature]
 star_rpm = [column + "_rpm" for column in libraries_star]
-mirdeep_blast_fc_intersections_table[mature_rpm + star_rpm] = round((mirdeep_blast_fc_intersections_table[libraries_mature + libraries_star] / total) * 1000000, 0)
+
+for i in range(0, len(libraries)):
+    library_m = libraries_mature[i]
+    library_s = libraries_star[i]
+    total = mirdeep_blast_fc_intersections_table[[library_m, library_s]].sum().sum()
+    mirdeep_blast_fc_intersections_table[[mature_rpm[i], star_rpm[i]]] = round((mirdeep_blast_fc_intersections_table[[library_m, library_s]] / total) * 1000000, 0)
 
 mirdeep_blast_fc_intersections_table['sum_FC_m_rpm'] = np.zeros(len(mirdeep_blast_fc_intersections_table))
 for library in mature_rpm:
@@ -413,8 +417,11 @@ sRNAbench_blast_fc_intersections_table['Diff Sum_FC_s / RC_s mirdeep'] = sRNAben
 sRNAbench_blast_fc_intersections_table['Diff Sum_FC_s / RC_s sRNAbench'] = sRNAbench_blast_fc_intersections_table['sum_FC_s'] / sRNAbench_blast_fc_intersections_table['RC_s sRNAbench']
 
 # Normalize featurecounts to reads per million
-total = sRNAbench_blast_fc_intersections_table[libraries_mature + libraries_star].sum()
-sRNAbench_blast_fc_intersections_table[mature_rpm + star_rpm] = round((sRNAbench_blast_fc_intersections_table[libraries_mature + libraries_star] / total) * 1000000, 0)
+for i in range(0, len(libraries)):
+    library_m = libraries_mature[i]
+    library_s = libraries_star[i]
+    total = sRNAbench_blast_fc_intersections_table[[library_m, library_s]].sum().sum()
+    sRNAbench_blast_fc_intersections_table[[mature_rpm[i], star_rpm[i]]] = round((sRNAbench_blast_fc_intersections_table[[library_m, library_s]] / total) * 1000000, 0)
 
 sRNAbench_blast_fc_intersections_table['sum_FC_m_rpm'] = np.zeros(len(sRNAbench_blast_fc_intersections_table))
 for library in mature_rpm:
@@ -545,8 +552,11 @@ if (species == 'Elegans') or (species == 'elegans'):
     # Normalize featurecounts to reads per million
     cast_dict = {k: 'int64' for k in libraries_mature + libraries_star}
     mirbase_fc_intersections_table = mirbase_fc_intersections_table.astype(cast_dict)
-    total = mirbase_fc_intersections_table[libraries_mature + libraries_star].sum()
-    mirbase_fc_intersections_table[mature_rpm + star_rpm] = round((mirbase_fc_intersections_table[libraries_mature + libraries_star] / total) * 1000000, 0)
+    for i in range(0, len(libraries)):
+        library_m = libraries_mature[i]
+        library_s = libraries_star[i]
+        total = mirbase_fc_intersections_table[[library_m, library_s]].sum().sum()
+        mirbase_fc_intersections_table[[mature_rpm[i], star_rpm[i]]] = round((mirbase_fc_intersections_table[[library_m, library_s]] / total) * 1000000, 0)
 
     mirbase_fc_intersections_table['sum_FC_m_rpm'] = np.zeros(len(mirbase_fc_intersections_table))
     for library in mature_rpm:
