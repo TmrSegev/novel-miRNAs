@@ -296,7 +296,7 @@ def run(inputs, output, threshold_tp, threshold_s, exclude_c, fasta_path, seed_p
     gff3_columns = ['seqid', 'source', 'type', 'start', 'end', 'score', 'strand', 'phase', 'attributes']
     gff3 = pd.DataFrame(columns=gff3_columns)
     gff3_pre_only = pd.DataFrame(columns=gff3_columns)
-    output_pre_only = "Elegans_mirdeep_pre_only.gff3"
+    output_pre_only = "{}_mirdeep_pre_only.gff3".format(species)
 
     filtered_input, removed_input = filterInputs(inputs, threshold_s, threshold_tp, exclude_c)
 
@@ -442,6 +442,7 @@ if __name__ == '__main__':
     fasta_path = None
     exclude_c = None
     seed_path = None
+    species = None
     args = []
 
     i = 1
@@ -453,6 +454,8 @@ if __name__ == '__main__':
             output = sys.argv[i + 1]
         elif arg == '-seed':
             seed_path = sys.argv[i + 1]
+        elif arg == '-s':
+            species = sys.argv[i + 1]
         elif arg == '--filter-tp':
             threshold_tp = sys.argv[i + 1]
         elif arg == '--filter-s':
