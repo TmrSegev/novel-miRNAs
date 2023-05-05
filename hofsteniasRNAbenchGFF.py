@@ -43,14 +43,16 @@ def run(input, output, fasta_path=None, seed_path=None):
     # gff3_pre_only = gff3_pre_only.astype({"end": int})
     output_pre_only = "{}_sRNAbench_pre_only.gff3".format(species)
 
-    table = pd.DataFrame()
-    print(table.info())
+    table = None
     folders = ["Hofstenia_EC1", "Hofstenia_EC2", "Hofstenia_EC3", "Hofstenia_GA1", "Hofstenia_GA2", "Hofstenia_GA3", "Hofstenia_DI1", "Hofstenia_DI2", "Hofstenia_DI3", "Hofstenia_PDi1", "Hofstenia_PDi2", "Hofstenia_PDi3", "Hofstenia_PDii1", "Hofstenia_PDii2", "Hofstenia_PDii3", "Hofstenia_PL1", "Hofstenia_PL2", "Hofstenia_PL3", "Hofstenia_PH1", "Hofstenia_PH2", "Hofstenia_PH3", "Hofstenia_HL1", "Hofstenia_HL2", "Hofstenia_HL3", "Hofstenia_IST1", "Hofstenia_IST2", "Hofstenia_IST3", "Hofstenia_AMP1", "Hofstenia_AMP2", "Hofstenia_AMP3", "Hofstenia_SMA1", "Hofstenia_SMA2", "Hofstenia_SMA3"]
     for folder in folders:
         to_add = pd.read_csv("/sise/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/sRNAtoolboxDB/out/" + folder + "/sRNAbench_remaining.csv", sep='\t')
-        print(to_add.info())
-        table = pd.concat([table, to_add])
-        print(table.info())
+        if table is None:
+            table = to_add
+        else:
+            table = pd.concat([table, to_add], ignore_index=True)
+        print(table.head(5))
+        print(table.tail(5))
 
     if seed_path:
         seed_file = pd.read_csv(seed_path, sep='\t')
@@ -96,8 +98,11 @@ def run(input, output, fasta_path=None, seed_path=None):
         name5p += f'|index={intersection_index}'
         name3p += f'|index={intersection_index}'
 
+        print(1)
         if seed_path is not None:
+            print(2)
             if not pd.isnull(seq5p):
+                print(3)
                 seq5p_seed = seq5p[1:8].upper().replace("T", "U")
                 try:
                     name5p += '|' + seed_file[seed_file['Seed'] == seq5p_seed]["Family"].iloc[0]
@@ -110,6 +115,7 @@ def run(input, output, fasta_path=None, seed_path=None):
                     name3p += '|' + seed_file[seed_file['Seed'] == seq3p_seed]["Family"].iloc[0]
                 except:
                     name3p += '|' + seq3p_seed
+        print(5)
 
         if fasta_path is not None:
             if not pd.isnull(seq5p) and mature_seq == 5:
@@ -123,6 +129,7 @@ def run(input, output, fasta_path=None, seed_path=None):
                 fasta_file = ''
 
         if mature_seq == 5:
+            print(name5p)
             seed = name5p.split('|')[4]
             gff_row = [[f'{seqId}', '.', 'pre_miRNA', str(start), str(end), '.', strand, '.', f'ID={name};RC_m={rc_mature};RC_s={rc_star};index={intersection_index};{seed};{origin}']]
         if mature_seq == 3:
@@ -183,7 +190,6 @@ def run(input, output, fasta_path=None, seed_path=None):
 
 
 if __name__ == '__main__':
-    input = None
     output = None
     fasta_path = None
     seed_path = None
@@ -191,9 +197,7 @@ if __name__ == '__main__':
     args = []
     for i in range(1, len(sys.argv), 2):
         arg = sys.argv[i]
-        if arg == '-i':
-            input = sys.argv[i + 1]
-        elif arg == '-o':
+        if arg == '-o':
             output = sys.argv[i + 1]
         elif arg == '-seed':
             seed_path = sys.argv[i + 1]
@@ -212,9 +216,7 @@ if __name__ == '__main__':
 
             sys.exit()
 
-    if not input:
-        raise ('Input path is required (-i <path>)')
     if not output:
         raise ('Output path is required (-o <path>)')
-    run(input, output, fasta_path, seed_path)
+    run(output, fasta_path, seed_path)
 # See PyCharm help at https://www.jetbrains.com/help/pycharm/
