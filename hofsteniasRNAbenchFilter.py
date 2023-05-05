@@ -135,8 +135,8 @@ def run(input, additional=None):
     table['start'] = table['start'] + table['start_5p']
     table = table.drop(['start_5p', 'end_3p'], axis=1)
 
-    table.to_csv('sRNAbench_remaining.csv', sep='\t')
-    deleted_input.to_csv('sRNAbench_removed.csv', sep='\t')
+    table.to_csv('sRNAbench_remaining.csv', sep='\t', index=False)
+    deleted_input.to_csv('sRNAbench_removed.csv', sep='\t', index = False)
 
 if __name__ == '__main__':
     input = None
