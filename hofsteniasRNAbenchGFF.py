@@ -25,7 +25,7 @@ def handleGivenName(name, df, column):
 
 
 
-def run(input, output, fasta_path=None, seed_path=None):
+def run(output, fasta_path=None, seed_path=None):
     """
     This Function will create GFF3 file from the sRNAbench output.
     :param seed_path: a path to the seed file.
@@ -43,6 +43,7 @@ def run(input, output, fasta_path=None, seed_path=None):
     # gff3_pre_only = gff3_pre_only.astype({"end": int})
     output_pre_only = "{}_sRNAbench_pre_only.gff3".format(species)
 
+    # Uniting all remaining files
     table = None
     folders = ["Hofstenia_EC1", "Hofstenia_EC2", "Hofstenia_EC3", "Hofstenia_GA1", "Hofstenia_GA2", "Hofstenia_GA3", "Hofstenia_DI1", "Hofstenia_DI2", "Hofstenia_DI3", "Hofstenia_PDi1", "Hofstenia_PDi2", "Hofstenia_PDi3", "Hofstenia_PDii1", "Hofstenia_PDii2", "Hofstenia_PDii3", "Hofstenia_PL1", "Hofstenia_PL2", "Hofstenia_PL3", "Hofstenia_PH1", "Hofstenia_PH2", "Hofstenia_PH3", "Hofstenia_HL1", "Hofstenia_HL2", "Hofstenia_HL3", "Hofstenia_IST1", "Hofstenia_IST2", "Hofstenia_IST3", "Hofstenia_AMP1", "Hofstenia_AMP2", "Hofstenia_AMP3", "Hofstenia_SMA1", "Hofstenia_SMA2", "Hofstenia_SMA3"]
     for folder in folders:
@@ -51,8 +52,15 @@ def run(input, output, fasta_path=None, seed_path=None):
             table = to_add
         else:
             table = pd.concat([table, to_add], ignore_index=True)
-        print(table.head(5))
-        print(table.tail(5))
+
+    # Filtering by coordinates
+    table = table.sort_values(['start', 'end'])
+
+    for index, row in table.iterrows():
+        table['overlaps'] = (row['end'] - table['start'])/(row['end'] - row['start'])
+        overlaps = table[(table['overlaps'] >= 0.6) & (table['overlaps'] <= 1)].tail(-1)
+        table = table.drop(overlaps.index)
+
 
     if seed_path:
         seed_file = pd.read_csv(seed_path, sep='\t')
@@ -98,11 +106,8 @@ def run(input, output, fasta_path=None, seed_path=None):
         name5p += f'|index={intersection_index}'
         name3p += f'|index={intersection_index}'
 
-        print(1)
         if seed_path is not None:
-            print(2)
             if not pd.isnull(seq5p):
-                print(3)
                 seq5p_seed = seq5p[1:8].upper().replace("T", "U")
                 try:
                     name5p += '|' + seed_file[seed_file['Seed'] == seq5p_seed]["Family"].iloc[0]
@@ -115,7 +120,6 @@ def run(input, output, fasta_path=None, seed_path=None):
                     name3p += '|' + seed_file[seed_file['Seed'] == seq3p_seed]["Family"].iloc[0]
                 except:
                     name3p += '|' + seq3p_seed
-        print(5)
 
         if fasta_path is not None:
             if not pd.isnull(seq5p) and mature_seq == 5:
@@ -129,7 +133,6 @@ def run(input, output, fasta_path=None, seed_path=None):
                 fasta_file = ''
 
         if mature_seq == 5:
-            print(name5p)
             seed = name5p.split('|')[4]
             gff_row = [[f'{seqId}', '.', 'pre_miRNA', str(start), str(end), '.', strand, '.', f'ID={name};RC_m={rc_mature};RC_s={rc_star};index={intersection_index};{seed};{origin}']]
         if mature_seq == 3:
