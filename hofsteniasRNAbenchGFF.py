@@ -54,11 +54,12 @@ def run(output, fasta_path=None, seed_path=None):
             table = pd.concat([table, to_add], ignore_index=True)
 
     # Filtering by coordinates
-    table = table.sort_values(['start', 'end'])
+    table = table.sort_values(['seqName', 'start', 'end'])
 
     for index, row in table.iterrows():
         table['overlaps'] = (row['end'] - table['start'])/(row['end'] - row['start'])
         overlaps = table[(table['overlaps'] >= 0.6) & (table['overlaps'] <= 1)].tail(-1)
+        overlaps = overlaps[overlaps['seqName'] == row['seqName']]
         table = table.drop(overlaps.index)
 
 
