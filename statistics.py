@@ -51,7 +51,7 @@ def unknown_families_by_type(df):
     plt.savefig("{}_unique_seed_candidates_by_type.png".format(species), dpi=300)
 
 
-def boxplot_by_type(df):
+def boxplot_by_type(df, name):
     plt.clf()
     types = list(df['Type'].unique())
     types.sort()
@@ -72,7 +72,7 @@ def boxplot_by_type(df):
         y = df[columns][d]
         x = np.random.normal(i + 1, 0.04, len(y))
         plt.scatter(x, y)
-    plt.savefig("{}_boxplots_by_type.png".format(species), dpi=300)
+    plt.savefig("{}_boxplots_by_type_{}.png".format(species, name), dpi=300, bbox_inches='tight')
 
 
 def boxplot_known_unknown(df):
@@ -158,12 +158,13 @@ if __name__ == '__main__':
             sys.exit()
     all = pd.read_excel(all_path, sheet_name="all_candidates")
     all['Description'] = all[['Description_mirdeep', 'Description_sRNAbench', 'Description_mirbase']].astype(str).agg(', '.join, axis=1)
-    print(all['Description'])
-    families_by_type(all)
-    unknown_families_by_type(all)
-    boxplot_by_type(all)
-    boxplot_known_unknown(all)
+    # families_by_type(all)
+    # unknown_families_by_type(all)
+    boxplot_by_type(all, "all")
+    no_novel451 = all[~all['Description'].str.contains("novel451")].copy()
+    boxplot_by_type(no_novel451, "no_novel451")
+    # boxplot_known_unknown(all)
     # normal_dist(all)
     # wilcoxon_test(all)
     # t_test(all)
-    mann_whitney(all)
+    # mann_whitney(all)
