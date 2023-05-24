@@ -38,6 +38,8 @@ def run(output, fasta_path, seed_path):
     gff3 = pd.DataFrame(columns=gff3_columns)
     gff3_pre_only = pd.DataFrame(columns=gff3_columns)
     output_pre_only = "{}_mirdeep_pre_only.gff3".format(species)
+    fasta_pre_only_path = fasta_path.split('.fasta')[0]
+    fasta_pre_only_path += "_pre_only.fasta"
 
     filtered_input = []
     for i in range(1, 3):
@@ -75,7 +77,9 @@ def run(output, fasta_path, seed_path):
 
     if fasta_path is not None:
         fasta_file = ''
+        fasta_pre_only_file = ''
         open(fasta_path, 'w').close()
+        open(fasta_pre_only_path, 'w').close()
 
     intersection_index = -1  # Used later to intersect the table with miRdeep, blast and featurecounts results.
     for input in filtered_input:
@@ -137,14 +141,21 @@ def run(output, fasta_path, seed_path):
             if fasta_path is not None:
                 if (seq5p != '-') & (mature_seq == 5):
                     fasta_file += f'>{seq5p_id}\n{seq5p}\n'
+                    fasta_pre_only_file += f'>{seq5p_id}\n{hairpin}\n'
 
                 if (seq3p != '-') & (mature_seq == 3):
                     fasta_file += f'>{seq3p_id}\n{seq3p}\n'
+                    fasta_pre_only_file += f'>{seq3p_id}\n{hairpin}\n'
 
                 if len(fasta_file) > 100000:
                     with open(fasta_path, 'a+') as f:
                         f.write(fasta_file)
                     fasta_file = ''
+
+                if len(fasta_pre_only_file) > 100000:
+                    with open(fasta_pre_only_path, 'a+') as f:
+                        f.write(fasta_pre_only_file)
+                    fasta_pre_only_file = ''
 
             start = int(positions.split('..')[0]) + 1
             end = int(positions.split('..')[1])
@@ -191,6 +202,12 @@ def run(output, fasta_path, seed_path):
 
     with open(output_pre_only, 'w') as file:
         file.write(version)
+
+    if fasta_path is not None:
+        with open(fasta_path, 'a+') as f:
+            f.write(fasta_file)
+        with open(fasta_pre_only_path, 'a+') as f:
+            f.write(fasta_pre_only_file)
 
     gff3.to_csv(output, index=False, header=False, mode="a", sep='\t')
     gff3_pre_only.to_csv(output_pre_only, index=False, header=False, mode="a", sep='\t')
