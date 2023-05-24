@@ -1,25 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="PublishConfigData" autoUpload="Always" serverName="stome@132.72.65.199:22 (2)" remoteFilesAllowedToDisappearOnAutoupload="false">
+  <component name="PublishConfigData" autoUpload="Always" serverName="stome@132.72.65.199:22 password" remoteFilesAllowedToDisappearOnAutoupload="false">
     <serverData>
-      <paths name="stome@132.72.65.199:22">
+      <paths name="stome@132.72.65.199:22 password">
         <serverdata>
           <mappings>
-            <mapping deploy="/tmp/pycharm_project_762" local="$PROJECT_DIR$" />
-          </mappings>
-        </serverdata>
-      </paths>
-      <paths name="stome@132.72.65.199:22 (2)">
-        <serverdata>
-          <mappings>
-            <mapping deploy="/tmp/pycharm_project_361" local="$PROJECT_DIR$" />
-          </mappings>
-        </serverdata>
-      </paths>
-      <paths name="stome@post.bgu.ac.il@132.72.65.199:22">
-        <serverdata>
-          <mappings>
-            <mapping local="$PROJECT_DIR$" web="/" />
+            <mapping deploy="/tmp/pycharm_project_253" local="$PROJECT_DIR$" />
           </mappings>
         </serverdata>
       </paths>
