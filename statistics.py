@@ -65,8 +65,8 @@ def boxplot_by_type(df, name):
     plt.ylabel("log10_mean_m_rpm")
     plt.yticks(ticks= np.arange(0, 6), labels=10 ** np.arange(0, 6))
     plt.title("{} boxplots by type".format(species))
-    plt.xticks(rotation=45)
-    plt.tight_layout()
+    plt.xticks(rotation=90)
+    #plt.tight_layout()
     print(enumerate(df[columns]))
     for i, d in enumerate(df[columns]):
         y = df[columns][d]
@@ -115,8 +115,10 @@ def mann_whitney(df):
             for j in range(i + 1, len(types) + 1):
                 disti = np.log10(df.loc[df['Type'] == i, 'mean_m_rpm'])
                 distj = np.log10(df.loc[df['Type'] == j, 'mean_m_rpm'])
-                res = stats.mannwhitneyu(disti, distj, alternative="two-sided")
-                file.write("Type " + str(i) + " vs Type " + str(j) + ":    " + str(res) + '\n')
+                res_less = stats.mannwhitneyu(disti, distj, alternative="less")
+                res_great = stats.mannwhitneyu(disti, distj, alternative="greater")
+                min_p = min(res_less.pvalue, res_great.pvalue)
+                file.write("Type " + str(i) + " vs Type " + str(j) + ":    " + str(min_p) + '\t' + ("significant" if min_p <= 0.05 else "non-significant") + '\n')
 
 def t_test(df):
     types = list(df['Type'].unique())
@@ -167,4 +169,4 @@ if __name__ == '__main__':
     # normal_dist(all)
     # wilcoxon_test(all)
     # t_test(all)
-    # mann_whitney(all)
+    mann_whitney(no_novel451)
