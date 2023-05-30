@@ -7,7 +7,7 @@ from Bio import SeqIO
 def get_seq_data(path, start_end_mark=False):
     seq = {}
     for seq_record in SeqIO.parse(path, "fasta"):
-        seq_id = seq_record.id.split('_')[:-1][0]
+        seq_id = seq_record.id.split('|')[:-1][0]
         if start_end_mark:
             seq[seq_id] = ('S' + "".join(str(seq_record.seq)) + 'E')
         else:
@@ -26,8 +26,8 @@ def create_setting_ini(seed):
     seed = {seed}
     short_window_size = 14
     long_window_size = 65
-    fasta_file_path = /home/romams/gpt2/fasta_example.fa
-    output_file_name = results_caenorhabditis_elegans
+    fasta_file_path = /sise/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/Hofstenia/scripts/Hofstenia_mirdeep_pre_only.fasta
+    output_file_name = results_hofstenia_mirdeep
     output_path = .
     db_file_name = output_mir35_mode0_13_1_2023.csv
     organism_name_in_db = Caenorhabditis elegans
@@ -69,8 +69,8 @@ def clean(seq):
 
 if __name__ == '__main__':
     precursors = get_seq_data('/sise/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/Hofstenia/scripts/Hofstenia_mirdeep_pre_only.fasta', start_end_mark=False)
-    mature = get_seq_data('/sise/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/Hofstenia/scripts/Hofstenia_mirdeep_pre_only.fasta', start_end_mark=False)
-    gen_seq = open("star_mature_generated_output.txt",).readlines()
+    mature = get_seq_data('/sise/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/Hofstenia/scripts/Hofstenia_mirdeep.fasta', start_end_mark=False)
+    # gen_seq = open("star_mature_generated_output.txt",).readlines()
     gen_dict = build_dict()
     neg_dict = build_dict()
     mirdb_dict = build_dict()
