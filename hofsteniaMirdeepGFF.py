@@ -63,13 +63,17 @@ def run(output, fasta_path, seed_path):
         table['start'] = table['start'].astype(int)
         table['end'] = table['positions'].str.split('.', expand=True)[2]
         table['end'] = table['end'].astype(int)
+        table['overlaps'] = np.zeros(len(table))
 
         for index, row in table.iterrows():
-            table['overlaps'] = (row['end'] - table['start']) / (row['end'] - row['start'])
-            overlaps = table[(table['overlaps'] >= 0.6) & (table['overlaps'] <= 1)].tail(-1)
-            overlaps = overlaps[overlaps['chr'] == row['chr']]
-            table = table.drop(overlaps.index)
-
+            if index in table.index:
+                table['distance'] = (row['end'] - table['start']) / (row['end'] - row['start'])
+                overlaps = table[(table['distance'] >= 0.6) & (table['distance'] <= 1)].tail(-1)
+                # table.loc[table['provisional id'] == row['provisional id']] = len(overlaps)
+                table.loc[index, 'overlaps'] = len(overlaps)
+                overlaps = overlaps[overlaps['chr'] == row['chr']]
+                table = table.drop(overlaps.index)
+        print(table['overlaps'].value_counts().sort_index(ascending=False))
         filtered_input.append(table)
 
     if seed_path is not None:
@@ -95,6 +99,7 @@ def run(output, fasta_path, seed_path):
             hairpin = row['consensus precursor sequence']
             rc_mature = row['mature read count']
             rc_star = row['star read count']
+            overlaps = int(row['overlaps'])
 
             star_position = hairpin.index(star_seq)
             mature_position = hairpin.index(mature_seq)
@@ -161,10 +166,10 @@ def run(output, fasta_path, seed_path):
             end = int(positions.split('..')[1])
             if mature_seq == 5:
                 seed = seq5p_id.split('|')[5]
-                gff_row = [[f'{name}', '.', 'pre_miRNA', str(start), str(end), '.', strand, '.', f'ID={seq_id};RC_m={rc_mature};RC_s={rc_star};index={intersection_index};{seed}']]
+                gff_row = [[f'{name}', '.', 'pre_miRNA', str(start), str(end), '.', strand, '.', f'ID={seq_id};RC_m={rc_mature};RC_s={rc_star};index={intersection_index};{seed};{overlaps}']]
             if mature_seq == 3:
                 seed = seq3p_id.split('|')[5]
-                gff_row = [[f'{name}', '.', 'pre_miRNA', str(start), str(end), '.', strand, '.', f'ID={seq_id};RC_m={rc_mature};RC_s={rc_star};index={intersection_index};{seed}']]
+                gff_row = [[f'{name}', '.', 'pre_miRNA', str(start), str(end), '.', strand, '.', f'ID={seq_id};RC_m={rc_mature};RC_s={rc_star};index={intersection_index};{seed};{overlaps}']]
             gff3_pre_only = gff3_pre_only.append(gff_row)
 
             if strand == '+':
