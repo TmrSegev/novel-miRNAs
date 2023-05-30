@@ -7,7 +7,7 @@ import RNA
 import pandas as pd
 from subprocess import Popen
 from Bio import pairwise2
-os.chdir(r"/home/romams/gpt2/ziv")
+os.chdir(r"/sise/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/Hofstenia/scripts")
 
 dirpath = os.getcwd()
 res = {}
