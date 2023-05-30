@@ -57,13 +57,16 @@ def run(output, fasta_path=None, seed_path=None):
 
     # Filtering by coordinates
     table = table.sort_values(['seqName', 'start', 'end'])
+    table['overlaps'] = np.zeros(len(table))
 
     for index, row in table.iterrows():
-        table['overlaps'] = (row['end'] - table['start'])/(row['end'] - row['start'])
-        overlaps = table[(table['overlaps'] >= 0.6) & (table['overlaps'] <= 1)].tail(-1)
-        overlaps = overlaps[overlaps['seqName'] == row['seqName']]
-        table = table.drop(overlaps.index)
-
+        if index in table.index:
+            table['distance'] = (row['end'] - table['start']) / (row['end'] - row['start'])
+            overlaps = table[(table['distance'] >= 0.6) & (table['distance'] <= 1)].tail(-1)
+            table.loc[index, 'overlaps'] = len(overlaps)
+            overlaps = overlaps[overlaps['seqName'] == row['seqName']]
+            table = table.drop(overlaps.index)
+    print(table['overlaps'].value_counts().sort_index(ascending=False))
 
     if seed_path:
         seed_file = pd.read_csv(seed_path, sep='\t')
@@ -88,6 +91,7 @@ def run(output, fasta_path=None, seed_path=None):
         start = row['start']
         end = row['end']
         origin = row['origin']
+        overlaps = int(row['overlaps'])
 
         if row['5pRC'] >= row['3pRC']:
             name5p += '|m'
@@ -146,10 +150,10 @@ def run(output, fasta_path=None, seed_path=None):
 
         if mature_seq == 5:
             seed = name5p.split('|')[4]
-            gff_row = [[f'{seqId}', '.', 'pre_miRNA', str(start), str(end), '.', strand, '.', f'ID={name};RC_m={rc_mature};RC_s={rc_star};index={intersection_index};{seed};{origin}']]
+            gff_row = [[f'{seqId}', '.', 'pre_miRNA', str(start), str(end), '.', strand, '.', f'ID={name};RC_m={rc_mature};RC_s={rc_star};index={intersection_index};{seed};{origin};{overlaps}']]
         if mature_seq == 3:
             seed = name3p.split('|')[4]
-            gff_row = [[f'{seqId}', '.', 'pre_miRNA', str(start), str(end), '.', strand, '.', f'ID={name};RC_m={rc_mature};RC_s={rc_star};index={intersection_index};{seed};{origin}']]
+            gff_row = [[f'{seqId}', '.', 'pre_miRNA', str(start), str(end), '.', strand, '.', f'ID={name};RC_m={rc_mature};RC_s={rc_star};index={intersection_index};{seed};{origin};{overlaps}']]
         gff3_pre_only = gff3_pre_only.append(gff_row)
 
         if strand == '+':
