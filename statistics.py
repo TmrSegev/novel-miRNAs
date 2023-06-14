@@ -142,6 +142,47 @@ def normal_dist(df):
         ax.set_title("Type {}".format(type))
     plt.savefig("{}_normal_dist.png".format(species), dpi=300)
 
+def create_all_candidatess_fasta(df):
+    fasta_path = "all_candidates_mature.fasta"
+    fasta_pre_only_path = "all_candidates_hairpin.fasta"
+    fasta_file = ''
+    fasta_pre_only_file = ''
+    open(fasta_path, 'w').close()
+    print("INITIAL")
+    open(fasta_pre_only_path, 'w').close()
+
+    for index, row in df.iterrows():
+        seq5p = row['5pseq']
+        mature_seq = row['mature']
+        seq3p = row['3pseq']
+        hairpin = row['hairpinSeq']
+        name = row['Description']
+        if not pd.isnull(seq5p) and mature_seq == '5p':
+            fasta_file += f'>{name}\n{seq5p}\n'
+            fasta_pre_only_file += f'>{name}\n{hairpin}\n'
+        if not pd.isnull(seq3p) and mature_seq == '3p':
+            fasta_file += f'>{name}\n{seq3p}\n'
+            fasta_pre_only_file += f'>{name}\n{hairpin}\n'
+
+        if len(fasta_file) > 100000:
+            print("MID PRINTING")
+            print(fasta_file)
+            with open(fasta_path, 'a+') as f:
+                f.write(fasta_file)
+            fasta_file = ''
+
+        if len(fasta_pre_only_file) > 100000:
+            with open(fasta_pre_only_path, 'a+') as f:
+                f.write(fasta_pre_only_file)
+            fasta_pre_only_file = ''
+
+    with open(fasta_path, 'a+') as f:
+        print("END PRINTING")
+        print(fasta_file)
+        f.write(fasta_file)
+    with open(fasta_pre_only_path, 'a+') as f:
+        f.write(fasta_pre_only_file)
+
 
 if __name__ == '__main__':
     species = None
@@ -170,3 +211,4 @@ if __name__ == '__main__':
     # wilcoxon_test(all)
     # t_test(all)
     mann_whitney(no_novel451)
+    create_all_candidatess_fasta(no_novel451)
