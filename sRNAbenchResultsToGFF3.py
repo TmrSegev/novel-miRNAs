@@ -24,7 +24,7 @@ def handleGivenName(name, df, column):
     return name
 
 
-def filterNovel451(novel451, novel):
+def filterNovel451(novel451, novel, threshold_mc):
     """
     :param novel451: dataframe of the novel451.txt additional input.
     :param novel: dataframe of the novel.txt input.
@@ -33,7 +33,7 @@ def filterNovel451(novel451, novel):
     for index_451, row_451 in novel451.iterrows():
         seq3p = row_451['3pseq']
         seq5p = row_451['5pseq']
-        if max(row_451['3pRC'], row_451['5pRC']) < 100:
+        if max(row_451['3pRC'], row_451['5pRC']) < threshold_mc:
             row_451["Removal Reason"] = 'Weak mature signal'
             deleted_input = deleted_input.append(row_451)
             novel451.drop(index_451, inplace=True)
@@ -52,14 +52,14 @@ def filterNovel451(novel451, novel):
                 break
     return novel451, deleted_input
 
-def filterNovel(novel):
+def filterNovel(novel, threshold_mc):
     """
     :param novel451: dataframe of the novel451.txt additional input.
     :param novel: dataframe of the novel.txt input.
     """
     deleted_input = pd.DataFrame(columns=novel.columns)
     for index, row in novel.iterrows():
-        if max(row['3pRC'], row['5pRC']) < 100:
+        if max(row['3pRC'], row['5pRC']) < threshold_mc:
             row["Removal Reason"] = 'Weak mature signal'
             deleted_input = deleted_input.append(row)
             novel.drop(index, inplace=True)
@@ -90,7 +90,7 @@ def cut_hairpin(row):
     return row['hairpinSeq'][row['start_5p']:row['end_3p']]
 
 
-def run(input, output, additional=None, fasta_path=None, seed_path=None):
+def run(input, output, threshold_mc, additional=None, fasta_path=None, seed_path=None):
     """
     This Function will create GFF3 file from the sRNAbench output.
     :param seed_path: a path to the seed file.
@@ -109,7 +109,7 @@ def run(input, output, additional=None, fasta_path=None, seed_path=None):
     output_pre_only = "{}_sRNAbench_pre_only.gff3".format(species)
     table = pd.read_csv(input, sep='\t')
     table["origin"] = "novel"
-    table, deleted_input = filterNovel(table)
+    table, deleted_input = filterNovel(table, threshold_mc)
 
     if seed_path:
         seed_file = pd.read_csv(seed_path, sep='\t')
@@ -121,7 +121,7 @@ def run(input, output, additional=None, fasta_path=None, seed_path=None):
     if additional:
         table_to_add = pd.read_csv(additional, sep='\t')
         table_to_add["origin"] = "novel451"
-        table_to_add, table_to_delete = filterNovel451(table_to_add, table)
+        table_to_add, table_to_delete = filterNovel451(table_to_add, table, threshold_mc)
         deleted_input = deleted_input.append(table_to_delete)
         table = table.append(table_to_add)
 
@@ -301,6 +301,7 @@ if __name__ == '__main__':
     fasta_path = None
     seed_path = None
     species = None
+    threshold_mc = None
     args = []
     for i in range(1, len(sys.argv), 2):
         arg = sys.argv[i]
@@ -316,6 +317,8 @@ if __name__ == '__main__':
             fasta_path = sys.argv[i + 1]
         elif arg == '-s':
             species = sys.argv[i + 1]
+        elif arg == '--filter-mc':
+            threshold_mc = sys.argv[i + 1]
         elif arg == '--help' or arg == '-h':
             print(f'Manual:\n'
                   f' -i <path>: sRNAbench prediction output, like novel.txt/novel451.txt.\n'
@@ -323,6 +326,7 @@ if __name__ == '__main__':
                   f' -o <path>: output path.\n'
                   f' -seed <path> : classify the reads by seed file, should be separated by tab with columns.\n'
                   f' --create-fasta <path>: create fasta file from the gff3 table.\n'
+                  f' --filter-mc <int>: Filter if max(mature read count, star read count) < threshold of filter-mc.\n'
                   )
 
             sys.exit()
@@ -331,5 +335,9 @@ if __name__ == '__main__':
         raise ('Input path is required (-i <path>)')
     if not output:
         raise ('Output path is required (-o <path>)')
-    run(input, output, add, fasta_path, seed_path)
+
+    if threshold_mc is not None:
+        threshold_mc = float(threshold_mc)
+
+    run(input, output, threshold_mc, add, fasta_path, seed_path)
 # See PyCharm help at https://www.jetbrains.com/help/pycharm/

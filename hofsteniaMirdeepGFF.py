@@ -64,17 +64,22 @@ def run(output, fasta_path, seed_path):
         table['end'] = table['positions'].str.split('.', expand=True)[2]
         table['end'] = table['end'].astype(int)
         table['overlaps'] = np.zeros(len(table))
+        no_overlaps = pd.DataFrame(columns=table.columns)
 
         for index, row in table.iterrows():
             if index in table.index:
                 table['distance'] = (row['end'] - table['start']) / (row['end'] - row['start'])
                 overlaps = table[(table['distance'] >= 0.6) & (table['distance'] <= 1)].tail(-1)
-                # table.loc[table['provisional id'] == row['provisional id']] = len(overlaps)
-                table.loc[index, 'overlaps'] = len(overlaps)
                 overlaps = overlaps[overlaps['chr'] == row['chr']]
-                table = table.drop(overlaps.index)
+                table.loc[index, 'overlaps'] = len(overlaps)
+                if len(overlaps) == 0:
+                    no_overlaps = no_overlaps.append(row)
+                    table = table.drop(index)
+                else:
+                    table = table.drop(overlaps.index)
         print(table['overlaps'].value_counts().sort_index(ascending=False))
         filtered_input.append(table)
+        no_overlaps.to_csv('removed_mirdeep_{}_no_overlaps.csv'.format(i), sep='\t')
 
     if seed_path is not None:
         seed_file = pd.read_csv(seed_path, sep="\t")

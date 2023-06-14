@@ -3,6 +3,8 @@
 import sys
 import pandas as pd
 import numpy as np
+# from Bio import pairwise2
+# from Bio.pairwise2 import format_alignment
 
 
 def filterNovel451(novel451, novel):
@@ -56,6 +58,9 @@ def filterNovel(novel):
 def start_5p(row):
     if row['5pseq'] != "nan":
         return row['hairpinSeq'].find(row['5pseq'])
+        # for a in pairwise2.align.globalms(row['hairpinSeq'], row['5pseq'], 1, -1, -1, -1, penalize_end_gaps=False):
+        #   print(format_alignment(*a))
+        #  return row['hairpinSeq'].find(row['5pseq'])
     else:
         return 0
 
@@ -68,7 +73,10 @@ def end_3p(row):
 
 
 def cut_hairpin(row):
-    return row['hairpinSeq'][row['start_5p']:row['end_3p']]
+    ans = row['hairpinSeq'][row['start_5p']:row['end_3p']]
+    if len(ans) < 20:
+        print(row['hairpinSeq'], '\n', row['start_5p'], '\n', row['end_3p'])
+    return ans
 
 
 def run(input, additional=None):
@@ -128,6 +136,12 @@ def run(input, additional=None):
     table['start_5p'] = table.apply(lambda row : start_5p(row), axis=1)
 
     table['end_3p'] = table.apply(lambda row : end_3p(row), axis=1)
+
+    remove_no_find = table[(table['start_5p'] == -1) | (table['end_3p'] == -1)]
+    print(remove_no_find)
+
+    remove_no_find.to_csv('sRNAbench_removed_no_find.csv', sep='\t', index=False)
+    table = table[(table['start_5p'] != -1) & (table['end_3p'] != -1)]
 
     table['hairpinSeq'] = table.apply(lambda row : cut_hairpin(row), axis=1)
     # table['hairpinSeq'] = table['hairpinSeq'].str[table['start_5p']:table['end_3p']]
