@@ -65,7 +65,7 @@ def writeRemovedFasta(removed_input, seed_path, seed_file, fasta_path):
         f.write(removed_fasta_file)
 
 
-def filterInputs(inputs_arr, score_threshold, true_positive_threshold, exclude_counts):
+def filterInputs(inputs_arr, score_threshold, true_positive_threshold, exclude_counts, threshold_mc):
     """
     This Function filtering the inputs Dataframe by threshold
     :param inputs_arr: inputs array
@@ -189,10 +189,10 @@ def filterInputs(inputs_arr, score_threshold, true_positive_threshold, exclude_c
             total_reads_left = total_reads_left_after_true_positive_filtering
 
         # filter mature / star
-        to_delete = input[(input['mature read count'] < 100) & (input['star read count'] < 100)]
-        to_delete['Removal Reason'] = 'max(mature read count, star read count) < 100'
+        to_delete = input[(input['mature read count'] < threshold_mc) & (input['star read count'] < threshold_mc)]
+        to_delete['Removal Reason'] = 'max(mature read count, star read count) < threshold_mc'
         deleted_input = deleted_input.append(to_delete)
-        input = input[(input['mature read count'] >= 100) | (input['star read count'] >= 100)]
+        input = input[(input['mature read count'] >= threshold_mc) | (input['star read count'] >= threshold_mc)]
 
         total_reads_left_after_mature_star_filtering = len(input.index)
         filtered_percent = "%.2f" % (
@@ -278,7 +278,7 @@ def getSeqId(row):
     return seq_id
 
 
-def run(inputs, output, threshold_tp, threshold_s, exclude_c, fasta_path, seed_path):
+def run(inputs, output, threshold_tp, threshold_s, exclude_c, fasta_path, seed_path, threshold_mc):
     f"""
     This function creates gff3 file from the inputs, This function will add to the miRNA ID -m / -s if its mature/star,
     -number which the number its the frequency of this seq among its type (mature/star)
@@ -298,7 +298,7 @@ def run(inputs, output, threshold_tp, threshold_s, exclude_c, fasta_path, seed_p
     gff3_pre_only = pd.DataFrame(columns=gff3_columns)
     output_pre_only = "{}_mirdeep_pre_only.gff3".format(species)
 
-    filtered_input, removed_input = filterInputs(inputs, threshold_s, threshold_tp, exclude_c)
+    filtered_input, removed_input = filterInputs(inputs, threshold_s, threshold_tp, exclude_c, threshold_mc)
 
     if seed_path is not None:
         seed_file = pd.read_csv(seed_path, sep="\t")
@@ -443,6 +443,7 @@ if __name__ == '__main__':
     exclude_c = None
     seed_path = None
     species = None
+    threshold_mc = None
     args = []
 
     i = 1
@@ -460,6 +461,8 @@ if __name__ == '__main__':
             threshold_tp = sys.argv[i + 1]
         elif arg == '--filter-s':
             threshold_s = sys.argv[i + 1]
+        elif arg == '--filter-mc':
+            threshold_mc = sys.argv[i + 1]
         elif arg == '--create-fasta':
             fasta_path = sys.argv[i + 1]
         elif arg == '--exclude-c':
@@ -480,6 +483,7 @@ if __name__ == '__main__':
                   f' --filter-s <float> : threshold for score, default: None.\n'
                   f' --exclude-c <int> : term to ignore the score filter threshold if total counts are higher, default: '
                   f'None.\n '
+                  f' --filter-mc <int>: Filter if max(mature read count, star read count) < threshold of filter-mc.\n'
                   f' --csv-save : will save the inner tables of miRDeep2 output results as csv.\n'
                   f' --create-fasta <path>: create fasta file from the gff3 table.\n')
             sys.exit()
@@ -503,7 +507,10 @@ if __name__ == '__main__':
     if threshold_s is not None:
         threshold_s = float(threshold_s)
 
+    if threshold_mc is not None:
+        threshold_mc = float(threshold_mc)
+
     if exclude_c is not None:
         exclude_c = int(exclude_c)
 
-    run(inputs, output, threshold_tp, threshold_s, exclude_c, fasta_path, seed_path)
+    run(inputs, output, threshold_tp, threshold_s, exclude_c, fasta_path, seed_path, threshold_mc)

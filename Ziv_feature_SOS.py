@@ -3,11 +3,18 @@ import random
 import pandas as pd
 import Ziv_Git
 from Bio import SeqIO
+import sys
+
 
 def get_seq_data(path, start_end_mark=False):
     seq = {}
     for seq_record in SeqIO.parse(path, "fasta"):
-        seq_id = seq_record.id.split('|')[:-1][0]
+        if species == "Elegans":
+            seq_id = seq_record.id.split(';')
+            print(seq_id)
+            seq_id = seq_id[0]
+        else:
+            seq_id = seq_record.id.split('|')[:-1][0]
         if start_end_mark:
             seq[seq_id] = ('S' + "".join(str(seq_record.seq)) + 'E')
         else:
@@ -68,8 +75,30 @@ def clean(seq):
 
 
 if __name__ == '__main__':
-    precursors = get_seq_data('/sise/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/Hofstenia/scripts/Hofstenia_mirdeep_pre_only.fasta', start_end_mark=False)
-    mature = get_seq_data('/sise/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/Hofstenia/scripts/Hofstenia_mirdeep.fasta', start_end_mark=False)
+    precursors = None
+    mature = None
+    species = None
+    args = []
+
+    i = 1
+    while i < len(sys.argv):
+        arg = sys.argv[i]
+        if arg == '--precursors':
+            precursors = sys.argv[i + 1]
+        elif arg == '--mature':
+            mature = sys.argv[i + 1]
+        elif arg == '--species':
+            species = sys.argv[i + 1]
+        elif arg == '--help' or arg == '-h':
+            print(f'Manual:\n'
+                  f' --precursors <path> : fasta file path of precursors sequences.\n'
+                  f' --mature <path> : fasta file path of mature sequences, with the same names as the precursors.\n'
+                  f' --species <name>: name of the species.\n')
+            sys.exit()
+        i += 2
+
+    precursors = get_seq_data(precursors, start_end_mark=False)
+    mature = get_seq_data(mature, start_end_mark=False)
     # gen_seq = open("star_mature_generated_output.txt",).readlines()
     gen_dict = build_dict()
     neg_dict = build_dict()
@@ -88,7 +117,7 @@ if __name__ == '__main__':
             continue
     print("mir",len(mirdb_dict['Chr']),"\n")
     print(mirdb_dict)
-    pd.DataFrame(mirdb_dict).to_csv("mirdb_df.csv")
+    pd.DataFrame(mirdb_dict).to_csv("mirdb_df_{}.csv".format(species))
     # for i,seq in enumerate(gen_seq):
     #     seed = find_gen_seed(seq)
     #     seq = clean(seq)

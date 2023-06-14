@@ -45,28 +45,47 @@ def run(output, fasta_path=None, seed_path=None):
     fasta_pre_only_path = fasta_path.split('.fasta')[0]
     fasta_pre_only_path += "_pre_only.fasta"
 
-    # Uniting all remaining files
+    # Uniting all remaining files, and all removed no find files
     table = None
+    removed_no_find = None
     folders = ["Hofstenia_EC1", "Hofstenia_EC2", "Hofstenia_EC3", "Hofstenia_GA1", "Hofstenia_GA2", "Hofstenia_GA3", "Hofstenia_DI1", "Hofstenia_DI2", "Hofstenia_DI3", "Hofstenia_PDi1", "Hofstenia_PDi2", "Hofstenia_PDi3", "Hofstenia_PDii1", "Hofstenia_PDii2", "Hofstenia_PDii3", "Hofstenia_PL1", "Hofstenia_PL2", "Hofstenia_PL3", "Hofstenia_PH1", "Hofstenia_PH2", "Hofstenia_PH3", "Hofstenia_HL1", "Hofstenia_HL2", "Hofstenia_HL3", "Hofstenia_IST1", "Hofstenia_IST2", "Hofstenia_IST3", "Hofstenia_AMP1", "Hofstenia_AMP2", "Hofstenia_AMP3", "Hofstenia_SMA1", "Hofstenia_SMA2", "Hofstenia_SMA3"]
     for folder in folders:
         to_add = pd.read_csv("/sise/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/sRNAtoolboxDB/out/" + folder + "/sRNAbench_remaining.csv", sep='\t')
+        to_add_no_find = pd.read_csv("/sise/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/sRNAtoolboxDB/out/" + folder + "/sRNAbench_removed_no_find.csv", sep='\t')
         if table is None:
             table = to_add
         else:
             table = pd.concat([table, to_add], ignore_index=True)
 
+        if removed_no_find is None:
+            removed_no_find = to_add_no_find
+        else:
+            removed_no_find = pd.concat([removed_no_find, to_add_no_find], ignore_index=True)
+
+    removed_no_find.to_csv("all_sRNAbench_removed_no_find.csv", sep='\t', index=False)
+
+
     # Filtering by coordinates
     table = table.sort_values(['seqName', 'start', 'end'])
     table['overlaps'] = np.zeros(len(table))
+    no_overlaps = pd.DataFrame(columns=table.columns)
 
+    print(table.info())
     for index, row in table.iterrows():
         if index in table.index:
+            if len(row['hairpinSeq']) < 20:
+                print(row)
             table['distance'] = (row['end'] - table['start']) / (row['end'] - row['start'])
             overlaps = table[(table['distance'] >= 0.6) & (table['distance'] <= 1)].tail(-1)
-            table.loc[index, 'overlaps'] = len(overlaps)
             overlaps = overlaps[overlaps['seqName'] == row['seqName']]
-            table = table.drop(overlaps.index)
+            table.loc[index, 'overlaps'] = len(overlaps)
+            if len(overlaps) == 0:
+                no_overlaps = no_overlaps.append(row)
+                table = table.drop(index)
+            else:
+                table = table.drop(overlaps.index)
     print(table['overlaps'].value_counts().sort_index(ascending=False))
+    no_overlaps.to_csv('removed_sRNAbench_no_overlaps.csv', sep='\t')
 
     if seed_path:
         seed_file = pd.read_csv(seed_path, sep='\t')
