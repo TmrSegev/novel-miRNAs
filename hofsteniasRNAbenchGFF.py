@@ -86,6 +86,7 @@ def run(output, fasta_path=None, seed_path=None):
                 table = table.drop(overlaps.index)
     print(table['overlaps'].value_counts().sort_index(ascending=False))
     no_overlaps.to_csv('removed_sRNAbench_no_overlaps.csv', sep='\t')
+    table.to_csv('sRNAbench_all_remaining_filtered.csv', sep='\t', index=False)
 
     if seed_path:
         seed_file = pd.read_csv(seed_path, sep='\t')

@@ -80,6 +80,9 @@ def run(output, fasta_path, seed_path):
         print(table['overlaps'].value_counts().sort_index(ascending=False))
         filtered_input.append(table)
         no_overlaps.to_csv('removed_mirdeep_{}_no_overlaps.csv'.format(i), sep='\t')
+        table = table.rename({"tag id":"provisional id", "estimated probability that the miRNA is a true positive":"estimated probability that the miRNA candidate is a true positive"}, axis=1)
+    all_remaining = pd.concat([filtered_input[0], table], ignore_index=True)
+    all_remaining.to_csv('mirdeep_all_remaining_filtered.csv', sep='\t', index=False)
 
     if seed_path is not None:
         seed_file = pd.read_csv(seed_path, sep="\t")
