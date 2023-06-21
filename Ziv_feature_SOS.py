@@ -48,7 +48,7 @@ def build_dict():
                   'Mature_connections': [], 'Mature_BP_ratio': [], 'Mature_max_bulge': [], 'Loop_length': [],
                   'Fold': [], 'Mature': [],'Mature_Length': [], '3p/5p': [], 'Hairpin_seq_trimmed': [], 'Star': [], 'Start_star': [],
                   'End_star': [], 'Star_length': [], 'Star_connections': [], 'Star_BP_ratio': [], 'Star_max_bulge': [],
-                  'Hairpin_seq_trimmed_length': [], 'Window': [], 'Max_bulge_symmetry': []}
+                  'Hairpin_seq_trimmed_length': [], 'Window': [], 'Max_bulge_symmetry': [], 'Valid mir': []}
 
 def find_seed(name,seq):
     start_mature_inx = seq.index(mature[name])
@@ -78,6 +78,7 @@ if __name__ == '__main__':
     precursors = None
     mature = None
     species = None
+    all_remaining_path = None
     args = []
 
     i = 1
@@ -89,16 +90,21 @@ if __name__ == '__main__':
             mature = sys.argv[i + 1]
         elif arg == '--species':
             species = sys.argv[i + 1]
+        elif arg == '--all-remaining':
+            all_remaining_path = sys.argv[i + 1]
         elif arg == '--help' or arg == '-h':
             print(f'Manual:\n'
                   f' --precursors <path> : fasta file path of precursors sequences.\n'
                   f' --mature <path> : fasta file path of mature sequences, with the same names as the precursors.\n'
-                  f' --species <name>: name of the species.\n')
+                  f' --species <name>: name of the species.\n'
+                  f' --all-remaining <path>: path to the all remaining filtered csv file.\n')
             sys.exit()
         i += 2
 
     precursors = get_seq_data(precursors, start_end_mark=False)
     mature = get_seq_data(mature, start_end_mark=False)
+    all_remaining = pd.read_csv(all_remaining_path, sep='\t')
+    #ziv_features = pd.DataFrame()
     # gen_seq = open("star_mature_generated_output.txt",).readlines()
     gen_dict = build_dict()
     neg_dict = build_dict()
@@ -112,12 +118,28 @@ if __name__ == '__main__':
                 print(out_dict)
             for k,v in out_dict['new'].items():
                 mirdb_dict[k].append(v)
+            #ziv_features = ziv_features.append(mirdb_df)
         except Exception as e:
             print(e,name,seq,out_dict)
+            exception_dict = build_dict()
+            for k,v in exception_dict.items():
+                mirdb_dict[k].append(v)
+            # row = pd.DataFrame(columns=list(mirdb_dict.keys()))
+            # row.loc[0] = ''
             continue
     print("mir",len(mirdb_dict['Chr']),"\n")
     print(mirdb_dict)
-    pd.DataFrame(mirdb_dict).to_csv("mirdb_df_{}.csv".format(species))
+    # #all_remaining = all_remaining.rename({"consensus precursor sequence":"Strand"}, axis=1)
+    # print(all_remaining.info())
+    mirdb_df = pd.DataFrame(mirdb_dict)
+    print(mirdb_df.info())
+    # print(output.info())
+    print(all_remaining.info())
+    #print(ziv_features.info())
+    all_remaining.reset_index(inplace=True, drop=True)
+    mirdb_df.reset_index(inplace=True, drop=True)
+    output = pd.concat([all_remaining, mirdb_df], axis=1)
+    output.to_csv("all_remaining_after_ziv_{}.csv".format(species))
     # for i,seq in enumerate(gen_seq):
     #     seed = find_gen_seed(seq)
     #     seq = clean(seq)

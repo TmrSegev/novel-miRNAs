@@ -78,6 +78,7 @@ def run(output, fasta_path, seed_path):
                 else:
                     table = table.drop(overlaps.index)
         print(table['overlaps'].value_counts().sort_index(ascending=False))
+        table = table.drop(["distance"], axis=1)
         filtered_input.append(table)
         no_overlaps.to_csv('removed_mirdeep_{}_no_overlaps.csv'.format(i), sep='\t')
         table = table.rename({"tag id":"provisional id", "estimated probability that the miRNA is a true positive":"estimated probability that the miRNA candidate is a true positive"}, axis=1)

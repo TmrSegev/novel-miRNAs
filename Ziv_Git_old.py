@@ -128,7 +128,7 @@ def ct_file_parser_5p(ct_df, start_mature, end_mature, param):
             index_i += 1
             repair_index_start_mature += 1
             increased_start_mature = True
-        end_hairpin = int(ct_df.loc[index_i+1][4]) - 1 #modified +1 because no index 0
+        end_hairpin = int(ct_df.loc[index_i+1][4]) - 1 #modified +1 +1 because no index 0
         repair_index_end_star = repair_index_start_mature
 
         index_i = end_mature
@@ -448,13 +448,15 @@ def filter_candidates(true_mature=None):
 
         hairpin = value['Hairpin_seq']
 
-        if true_mature:  # modified because seed appear twice
+
+
+        m = hairpin.find(seed)
+        if m <= 0:
+            del res[key]
+            continue
+        if true_mature: #modified because mol with same seed mol
             mature = true_mature
         else:
-            m = hairpin.find(seed)
-            if m <= 0:
-                del res[key]
-                continue
             mature = hairpin[m - 1:m + 21]
 
         # if len(hairpin) <= len(mature): #modified
@@ -608,7 +610,6 @@ def filter_candidates(true_mature=None):
             res[key]['Mature_BP_ratio'] = '%.2f' % mature_bp_ratio
             res[key]['Mature_max_bulge'] = '%.2f' % mature_max_bulge
             res[key]['Loop_length'] = loop_size
-            res[key]['Valid mir'] = loop_size > 0
             res[key]['Fold'] = fold
 
             res[key]['Mature'] = mature
@@ -633,7 +634,6 @@ def filter_candidates(true_mature=None):
             res[key]['Window'] = window
 
             res[key]['Max_bulge_symmetry'] = max_bulge_symmetry
-
             # res[key]['start_mature'] = start_mature
             # res[key]['end_mature'] = end_mature
 
