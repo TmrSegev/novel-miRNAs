@@ -501,10 +501,14 @@ def filter_candidates(true_mature=None):
 
             # find indexes of the seed, mature, and hairpin
             if true_mature:
-                start_mature = hairpin.find(true_mature)
+                start_mature = hairpin.find(true_mature) + 1
                 start_seed, end_seed = start_mature + 1, start_mature + 8
-                end_mature = min(end_seed + 14, len(ct_df))
+                end_mature = min(start_mature + len(true_mature) - 1, len(ct_df))
+                if true_mature == "UGAUAUGUUGUUUGAAUGCCCCU":
+                    print("UGAUAUGUUGUUUGAAUGCCCCU", start_mature, end_mature)
+                    print("start_mature:", start_mature, "start + len:", start_mature + len(true_mature), "len(ct_df:", len(ct_df))
             else:
+                print("row 511, this should NOT be printed")
                 start_seed, end_seed = find_seed(seed, window_hairpin)
 
                 start_mature = start_seed - 1
@@ -602,6 +606,9 @@ def filter_candidates(true_mature=None):
             #########################################
 
             mature = mature_df[1].str.cat()
+            if true_mature == "UGAUAUGUUGUUUGAAUGCCCCU":
+                print(mature)
+                print(mature_df)
 
             # loop_seq = get_loop(ct_df, start_loop, end_loop, loop_size)
             res[key]['Mature_connections'] = mature_numbers_of_connections

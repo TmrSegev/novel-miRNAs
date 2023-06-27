@@ -70,7 +70,6 @@ def run(output, fasta_path=None, seed_path=None):
     table['overlaps'] = np.zeros(len(table))
     no_overlaps = pd.DataFrame(columns=table.columns)
 
-    print(table.info())
     for index, row in table.iterrows():
         if index in table.index:
             if len(row['hairpinSeq']) < 20:
