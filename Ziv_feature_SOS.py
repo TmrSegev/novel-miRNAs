@@ -10,9 +10,9 @@ def get_seq_data(path, start_end_mark=False):
     seq = {}
     for seq_record in SeqIO.parse(path, "fasta"):
         if species == "Elegans":
-            seq_id = seq_record.id.split(';')
-            print(seq_id)
-            seq_id = seq_id[0]
+            # seq_id = seq_record.description.split(';')
+            seq_id = seq_record.description
+            # seq_id = seq_id[0]
         else:
             seq_id = seq_record.id.split('|')[:-1][0]
         if start_end_mark:
@@ -33,8 +33,8 @@ def create_setting_ini(seed):
     seed = {seed}
     short_window_size = 14
     long_window_size = 65
-    fasta_file_path = /sise/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/Hofstenia/scripts/Hofstenia_mirdeep_pre_only.fasta
-    output_file_name = results_hofstenia_mirdeep
+    fasta_file_path = {precursors}
+    output_file_name = results_hofstenia
     output_path = .
     db_file_name = output_mir35_mode0_13_1_2023.csv
     organism_name_in_db = Caenorhabditis elegans
@@ -103,7 +103,10 @@ if __name__ == '__main__':
 
     precursors = get_seq_data(precursors, start_end_mark=False)
     mature = get_seq_data(mature, start_end_mark=False)
-    all_remaining = pd.read_csv(all_remaining_path, sep='\t')
+    if species == "Elegans":
+        all_remaining = pd.read_excel(all_remaining_path, sheet_name="all_candidates")
+    else:
+        all_remaining = pd.read_csv(all_remaining_path, sep='\t')
     #ziv_features = pd.DataFrame()
     # gen_seq = open("star_mature_generated_output.txt",).readlines()
     gen_dict = build_dict()
@@ -129,13 +132,7 @@ if __name__ == '__main__':
             continue
     print("mir",len(mirdb_dict['Chr']),"\n")
     print(mirdb_dict)
-    # #all_remaining = all_remaining.rename({"consensus precursor sequence":"Strand"}, axis=1)
-    # print(all_remaining.info())
     mirdb_df = pd.DataFrame(mirdb_dict)
-    print(mirdb_df.info())
-    # print(output.info())
-    print(all_remaining.info())
-    #print(ziv_features.info())
     all_remaining.reset_index(inplace=True, drop=True)
     mirdb_df.reset_index(inplace=True, drop=True)
     output = pd.concat([all_remaining, mirdb_df], axis=1)

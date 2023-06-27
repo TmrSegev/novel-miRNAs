@@ -143,6 +143,7 @@ def normal_dist(df):
     plt.savefig("{}_normal_dist.png".format(species), dpi=300)
 
 def create_all_candidatess_fasta(df):
+    print(df.info())
     fasta_path = "all_candidates_mature.fasta"
     fasta_pre_only_path = "all_candidates_hairpin.fasta"
     fasta_file = ''
@@ -172,6 +173,7 @@ def create_all_candidatess_fasta(df):
             fasta_file = ''
 
         if len(fasta_pre_only_file) > 100000:
+            print("MID PRINTING2")
             with open(fasta_pre_only_path, 'a+') as f:
                 f.write(fasta_pre_only_file)
             fasta_pre_only_file = ''
@@ -211,4 +213,4 @@ if __name__ == '__main__':
     # wilcoxon_test(all)
     # t_test(all)
     mann_whitney(no_novel451)
-    create_all_candidatess_fasta(no_novel451)
+    create_all_candidatess_fasta(all)
