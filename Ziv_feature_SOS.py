@@ -48,7 +48,7 @@ def build_dict():
                   'Mature_connections': [], 'Mature_BP_ratio': [], 'Mature_max_bulge': [], 'Loop_length': [],
                   'Fold': [], 'Mature': [],'Mature_Length': [], '3p/5p': [], 'Hairpin_seq_trimmed': [], 'Star': [], 'Start_star': [],
                   'End_star': [], 'Star_length': [], 'Star_connections': [], 'Star_BP_ratio': [], 'Star_max_bulge': [],
-                  'Hairpin_seq_trimmed_length': [], 'Window': [], 'Max_bulge_symmetry': [], 'Valid mir': []}
+                  'Hairpin_seq_trimmed_length': [], 'Max_bulge_symmetry': [], 'Valid mir': []}
 
 def find_seed(name,seq):
     start_mature_inx = seq.index(mature[name])

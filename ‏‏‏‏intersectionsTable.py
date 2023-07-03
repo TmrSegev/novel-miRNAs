@@ -787,6 +787,9 @@ unified = unified.reindex(columns=[col for col in unified.columns if col != 'Typ
 # mask = unified.duplicated(subset=unified.columns.drop('Seed_mirGeneDB'), keep=False)
 # unified = unified.loc[~mask | (unified['Seed'] == unified['Seed_mirGeneDB'])]
 
+# --- Removing novel451
+unified = unified[~unified['Description_sRNAbench'].str.contains("novel451")]
+
 # -----SAVE TO EXCEL-----
 
 writer = pd.ExcelWriter('intersections_table_{}.xlsx'.format(species))
