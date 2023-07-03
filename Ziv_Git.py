@@ -471,185 +471,186 @@ def filter_candidates(true_mature=None):
 
         finish_filter = False
 
-        for window in windows:
-            if mature_3p:
-                window_hairpin = hairpin[long_window_size - window:len(hairpin)]
-            if mature_5p:
-                window_hairpin = hairpin[:len(hairpin) - (long_window_size - window)]
+        # for window in windows:
+        #     if mature_3p:
+        #         window_hairpin = hairpin[long_window_size - window:len(hairpin)]
+        #     if mature_5p:
+        #         window_hairpin = hairpin[:len(hairpin) - (long_window_size - window)]
 
             # if len(window_hairpin) <= len(mature):
             #     break
 
-            fold = fold_candidates_by_seq(window_hairpin)
+        # fold = fold_candidates_by_seq(window_hairpin)
+        fold = fold_candidates_by_seq(hairpin)
 
-            with open('ct.txt', 'w') as infile:
-                infile.write('>' + key + '\n')
-                infile.write(window_hairpin + '\n')
-                infile.write(fold)
+        with open('ct.txt', 'w') as infile:
+            infile.write('>' + key + '\n')
+            infile.write(hairpin + '\n')
+            infile.write(fold)
 
-            # cmd = "RNAfold --noPS ct.txt | b2ct > ct_file.ct"
-            cmd = "~/.conda/envs/my_env/bin/RNAfold --noPS ct.txt | ~/.conda/envs/my_env/bin/b2ct > ct_file.ct"  #TODO change env name
-            p = Popen(cmd, shell=True)
-            p.communicate()
+        # cmd = "RNAfold --noPS ct.txt | b2ct > ct_file.ct"
+        cmd = "~/.conda/envs/my_env/bin/RNAfold --noPS ct.txt | ~/.conda/envs/my_env/bin/b2ct > ct_file.ct"  #TODO change env name
+        p = Popen(cmd, shell=True)
+        p.communicate()
 
-            ct_df = pd.read_csv('ct_file.ct', delimiter='\s+', header=None, names=[0, 1, 2, 3, 4, 5])
-            ct_df = ct_df.iloc[1:]
-            ct_df.astype({4: 'int'}).dtypes
+        ct_df = pd.read_csv('ct_file.ct', delimiter='\s+', header=None, names=[0, 1, 2, 3, 4, 5])
+        ct_df = ct_df.iloc[1:]
+        ct_df.astype({4: 'int'}).dtypes
 
-            if len(ct_df) == 0:
-                continue
-
-            # find indexes of the seed, mature, and hairpin
-            if true_mature:
-                start_mature = hairpin.find(true_mature) + 1
-                start_seed, end_seed = start_mature + 1, start_mature + 8
-                end_mature = min(start_mature + len(true_mature) - 1, len(ct_df))
-                if true_mature == "UGAUAUGUUGUUUGAAUGCCCCU":
-                    print("UGAUAUGUUGUUUGAAUGCCCCU", start_mature, end_mature)
-                    print("start_mature:", start_mature, "start + len:", start_mature + len(true_mature), "len(ct_df:", len(ct_df))
-            else:
-                print("row 511, this should NOT be printed")
-                start_seed, end_seed = find_seed(seed, window_hairpin)
-
-                start_mature = start_seed - 1
-                end_mature = min(end_seed + 14, len(ct_df))
-
-            # minimum 16 base pairings in duplex
-            mature_df = ct_df.loc[start_mature:end_mature]
-
-            max_bulge_symmetry = find_max_bulge_symmetry(mature_df)
-
-            # if max_bulge_symmetry > dict_filter_params['max_bulge_symmetry']:
-            #     continue
-
-            mature_numbers_of_connections, mature_max_bulge = mature_complimentarity(mature_df)
-            mature_bp_ratio = mature_numbers_of_connections / float(len(mature))
-
-            # if mature_bp_ratio < 0.68 or mature_max_bulge > dict_filter_params[  #modified
-            #     'max_mature_bulge']:  # 15 connections, dict_filter_params['min_mature_bp_ratio']
-            #     continue
-
-            if mature_3p:
-                # find indexes of start and end of the hairpin from ct file
-                hairpin_boundries = ct_file_parser_3p(ct_df, start_mature, end_mature, param)
-            if mature_5p:
-                hairpin_boundries = ct_file_parser_5p(ct_df, start_mature, end_mature, param)
-
-            # if hairpin_boundries['valid'] is False: #modified
-            #     continue
-
-            # cut the hairpin with the new indexes
-            cutted_hairpin = window_hairpin[hairpin_boundries['start_hairpin']:hairpin_boundries['end_hairpin'] + 1]
-
-            # if len(cutted_hairpin) < dict_filter_params['min_trimmed_hairpin_length']: #modified
-            #     continue
-
-            if mature_3p:
-                # find the indexes of the loop
-                start_loop, end_loop = find_loop_size_3p(ct_df, start_mature)
-            if mature_5p:
-                start_loop, end_loop = find_loop_size_5p(ct_df, end_mature)
-
-            loop_size = end_loop - start_loop
-
-            # if loop_size < dict_filter_params['min_loop_length'] or loop_size > dict_filter_params['max_loop_length']:
-            #     # del res[key]
-            #     continue
-
-            # if mature_3p:
-            #     start_star = hairpin_boundries['start_star']
-            #     end_star = hairpin_boundries['end_star']
-            #     star_length = end_star - start_star
-            #
-            # if mature_5p:
-            #     start_star = hairpin_boundries['start_star']
-            #     end_star = hairpin_boundries['end_star']
-            #     star_length = end_star - start_star
-
-            start_star = hairpin_boundries['start_star']
-            end_star = hairpin_boundries['end_star']
-            star_length = end_star - start_star
-
-            # if star_length < dict_filter_params['min_star_length'] or star_length > dict_filter_params[
-            #     'max_star_length']:
-            #     continue
-
-            star_df = ct_df.loc[start_star + 1:end_star + 1]
-            star_numbers_of_connections, star_max_bulge = star_complimentarity(star_df)
-            star_bp_ratio = star_numbers_of_connections / float(len(star_df)) if len(star_df)>0 else 0
-
-            # if star_bp_ratio < dict_filter_params['min_star_bp_ratio'] or star_max_bulge > dict_filter_params[
-            #     'max_star_bulge']:  # 15 connections, dict_filter_params['min_mature_bp_ratio']
-            #     continue
-
-            star = window_hairpin[start_star:end_star + 1]
-            # if mature_3p:
-            #     star = window_hairpin[start_star:end_star+1]
-            # if mature_5p:
-            #     star = window_hairpin[start_star:end_star+1]
-
-            ##########################################
-            # fold = fold_candidates_by_seq(cutted_hairpin)
-            #
-            # with open('ct.txt', 'w') as infile:
-            #     infile.write('>' + key + '\n')
-            #     infile.write(cutted_hairpin + '\n')
-            #     infile.write(fold)
-            #
-            # cmd = "RNAfold --noPS ct.txt | b2ct > ct_file.ct"
-            # p = Popen(cmd, shell=True)
-            # p.communicate()
-            #
-            # ct_df = pd.read_csv('ct_file.ct', delimiter='\s+', header=None, names=[0, 1, 2, 3, 4, 5])
-            # ct_df = ct_df.iloc[1:]
-            # ct_df.astype({4: 'int'}).dtypes
-            #########################################
-
-            mature = mature_df[1].str.cat()
-            if true_mature == "UGAUAUGUUGUUUGAAUGCCCCU":
-                print(mature)
-                print(mature_df)
-
-            # loop_seq = get_loop(ct_df, start_loop, end_loop, loop_size)
-            res[key]['Mature_connections'] = mature_numbers_of_connections
-            res[key]['Mature_BP_ratio'] = '%.2f' % mature_bp_ratio
-            res[key]['Mature_max_bulge'] = '%.2f' % mature_max_bulge
-            res[key]['Loop_length'] = loop_size
-            res[key]['Valid mir'] = loop_size > 0
-            res[key]['Fold'] = fold
-
-            res[key]['Mature'] = mature
-            res[key]['Mature_Length'] = len(mature) #modified
-
-            if mature_3p:
-                res[key]['3p/5p'] = '3p'
-                # res[key]['Mature_5p'] = ''
-            if mature_5p:
-                res[key]['3p/5p'] = '5p'
-                # res[key]['Mature_3p'] = ''
-            res[key]['Hairpin_seq_trimmed'] = cutted_hairpin
-
-            res[key]['Star'] = star
-            res[key]['Start_star'] = start_star
-            res[key]['End_star'] = end_star
-            res[key]['Star_length'] = star_length
-            res[key]['Star_connections'] = star_numbers_of_connections
-            res[key]['Star_BP_ratio'] = '%.2f' % star_bp_ratio
-            res[key]['Star_max_bulge'] = '%.2f' % star_max_bulge
-            res[key]['Hairpin_seq_trimmed_length'] = len(cutted_hairpin)
-            res[key]['Window'] = window
-
-            res[key]['Max_bulge_symmetry'] = max_bulge_symmetry
-
-            # res[key]['start_mature'] = start_mature
-            # res[key]['end_mature'] = end_mature
-
-            finish_filter = True
-            break
-
-        if finish_filter is False:
-            del res[key]
+        if len(ct_df) == 0:
             continue
+
+        # find indexes of the seed, mature, and hairpin
+        if true_mature:
+            start_mature = hairpin.find(true_mature) + 1
+            start_seed, end_seed = start_mature + 1, start_mature + 8
+            end_mature = min(start_mature + len(true_mature) - 1, len(ct_df))
+            if true_mature == "UGAUAUGUUGUUUGAAUGCCCCU":
+                print("UGAUAUGUUGUUUGAAUGCCCCU", start_mature, end_mature)
+                print("start_mature:", start_mature, "start + len:", start_mature + len(true_mature), "len(ct_df:", len(ct_df))
+        else:
+            print("row 511, this should NOT be printed")
+            #start_seed, end_seed = find_seed(seed, window_hairpin)
+            start_seed, end_seed = find_seed(seed, hairpin)
+
+            start_mature = start_seed - 1
+            end_mature = min(end_seed + 14, len(ct_df))
+
+        # minimum 16 base pairings in duplex
+        mature_df = ct_df.loc[start_mature:end_mature]
+
+        max_bulge_symmetry = find_max_bulge_symmetry(mature_df)
+
+        # if max_bulge_symmetry > dict_filter_params['max_bulge_symmetry']:
+        #     continue
+
+        mature_numbers_of_connections, mature_max_bulge = mature_complimentarity(mature_df)
+        mature_bp_ratio = mature_numbers_of_connections / float(len(mature))
+
+        # if mature_bp_ratio < 0.68 or mature_max_bulge > dict_filter_params[  #modified
+        #     'max_mature_bulge']:  # 15 connections, dict_filter_params['min_mature_bp_ratio']
+        #     continue
+
+        if mature_3p:
+            # find indexes of start and end of the hairpin from ct file
+            hairpin_boundries = ct_file_parser_3p(ct_df, start_mature, end_mature, param)
+        if mature_5p:
+            hairpin_boundries = ct_file_parser_5p(ct_df, start_mature, end_mature, param)
+        print(hairpin_boundries)
+
+        # if hairpin_boundries['valid'] is False: #modified
+        #     continue
+
+        # cut the hairpin with the new indexes
+       # cutted_hairpin = window_hairpin[hairpin_boundries['start_hairpin']:hairpin_boundries['end_hairpin'] + 1]
+        #cutted_hairpin = hairpin[hairpin_boundries['start_hairpin']:hairpin_boundries['end_hairpin'] + 1]
+
+        # if len(cutted_hairpin) < dict_filter_params['min_trimmed_hairpin_length']: #modified
+        #     continue
+
+        if mature_3p:
+            # find the indexes of the loop
+            start_loop, end_loop = find_loop_size_3p(ct_df, start_mature)
+        if mature_5p:
+            start_loop, end_loop = find_loop_size_5p(ct_df, end_mature)
+
+        loop_size = end_loop - start_loop
+
+        # if loop_size < dict_filter_params['min_loop_length'] or loop_size > dict_filter_params['max_loop_length']:
+        #     # del res[key]
+        #     continue
+
+        # if mature_3p:
+        #     start_star = hairpin_boundries['start_star']
+        #     end_star = hairpin_boundries['end_star']
+        #     star_length = end_star - start_star
+        #
+        # if mature_5p:
+        #     start_star = hairpin_boundries['start_star']
+        #     end_star = hairpin_boundries['end_star']
+        #     star_length = end_star - start_star
+
+        start_star = hairpin_boundries['start_star']
+        end_star = hairpin_boundries['end_star']
+        star_length = end_star - start_star
+
+        # if star_length < dict_filter_params['min_star_length'] or star_length > dict_filter_params[
+        #     'max_star_length']:
+        #     continue
+
+        star_df = ct_df.loc[start_star + 1:end_star + 1]
+        star_numbers_of_connections, star_max_bulge = star_complimentarity(star_df)
+        star_bp_ratio = star_numbers_of_connections / float(len(star_df)) if len(star_df)>0 else 0
+
+        # if star_bp_ratio < dict_filter_params['min_star_bp_ratio'] or star_max_bulge > dict_filter_params[
+        #     'max_star_bulge']:  # 15 connections, dict_filter_params['min_mature_bp_ratio']
+        #     continue
+
+        star = hairpin[start_star:end_star + 1]
+        # if mature_3p:
+        #     star = window_hairpin[start_star:end_star+1]
+        # if mature_5p:
+        #     star = window_hairpin[start_star:end_star+1]
+
+        ##########################################
+        # fold = fold_candidates_by_seq(cutted_hairpin)
+        #
+        # with open('ct.txt', 'w') as infile:
+        #     infile.write('>' + key + '\n')
+        #     infile.write(cutted_hairpin + '\n')
+        #     infile.write(fold)
+        #
+        # cmd = "RNAfold --noPS ct.txt | b2ct > ct_file.ct"
+        # p = Popen(cmd, shell=True)
+        # p.communicate()
+        #
+        # ct_df = pd.read_csv('ct_file.ct', delimiter='\s+', header=None, names=[0, 1, 2, 3, 4, 5])
+        # ct_df = ct_df.iloc[1:]
+        # ct_df.astype({4: 'int'}).dtypes
+        #########################################
+
+        mature = mature_df[1].str.cat()
+
+        # loop_seq = get_loop(ct_df, start_loop, end_loop, loop_size)
+        res[key]['Mature_connections'] = mature_numbers_of_connections
+        res[key]['Mature_BP_ratio'] = '%.2f' % mature_bp_ratio
+        res[key]['Mature_max_bulge'] = '%.2f' % mature_max_bulge
+        res[key]['Loop_length'] = loop_size
+        res[key]['Valid mir'] = loop_size > 0
+        res[key]['Fold'] = fold
+
+        res[key]['Mature'] = mature
+        res[key]['Mature_Length'] = len(mature) #modified
+
+        if mature_3p:
+            res[key]['3p/5p'] = '3p'
+            # res[key]['Mature_5p'] = ''
+        if mature_5p:
+            res[key]['3p/5p'] = '5p'
+            # res[key]['Mature_3p'] = ''
+        res[key]['Hairpin_seq_trimmed'] = hairpin
+
+        res[key]['Star'] = star
+        res[key]['Start_star'] = start_star
+        res[key]['End_star'] = end_star
+        res[key]['Star_length'] = star_length
+        res[key]['Star_connections'] = star_numbers_of_connections
+        res[key]['Star_BP_ratio'] = '%.2f' % star_bp_ratio
+        res[key]['Star_max_bulge'] = '%.2f' % star_max_bulge
+        res[key]['Hairpin_seq_trimmed_length'] = len(hairpin)
+        #res[key]['Window'] = window
+
+        res[key]['Max_bulge_symmetry'] = max_bulge_symmetry
+
+        # res[key]['start_mature'] = start_mature
+        # res[key]['end_mature'] = end_mature
+
+        # finish_filter = True
+        # break
+
+        # if finish_filter is False:
+        #     del res[key]
+        #     continue
 
     # print("candidates found in this phase (filter_candidates): " + str(len(res)))
 
