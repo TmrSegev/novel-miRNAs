@@ -214,3 +214,4 @@ if __name__ == '__main__':
     # t_test(all)
     mann_whitney(no_novel451)
     create_all_candidatess_fasta(all)
+    #pd.to_csv("all_candidates_{}.csv".format(species), sep='\t', index=False)
