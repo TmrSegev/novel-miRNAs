@@ -143,13 +143,14 @@ def normal_dist(df):
     plt.savefig("{}_normal_dist.png".format(species), dpi=300)
 
 def create_all_candidatess_fasta(df):
-    print(df.info())
     fasta_path = "all_candidates_mature.fasta"
+    fasta_star_path = "all_candidates_star.fasta"
     fasta_pre_only_path = "all_candidates_hairpin.fasta"
     fasta_file = ''
+    fasta_star_file = ''
     fasta_pre_only_file = ''
     open(fasta_path, 'w').close()
-    print("INITIAL")
+    open(fasta_star_path, 'w').close()
     open(fasta_pre_only_path, 'w').close()
 
     for index, row in df.iterrows():
@@ -160,28 +161,32 @@ def create_all_candidatess_fasta(df):
         name = row['Description']
         if not pd.isnull(seq5p) and mature_seq == '5p':
             fasta_file += f'>{name}\n{seq5p}\n'
+            fasta_star_file += f'>{name}\n{seq3p}\n'
             fasta_pre_only_file += f'>{name}\n{hairpin}\n'
         if not pd.isnull(seq3p) and mature_seq == '3p':
             fasta_file += f'>{name}\n{seq3p}\n'
+            fasta_star_file += f'>{name}\n{seq5p}\n'
             fasta_pre_only_file += f'>{name}\n{hairpin}\n'
 
         if len(fasta_file) > 100000:
-            print("MID PRINTING")
-            print(fasta_file)
             with open(fasta_path, 'a+') as f:
                 f.write(fasta_file)
             fasta_file = ''
 
+        if len(fasta_star_file) > 100000:
+            with open(fasta_star_path, 'a+') as f:
+                f.write(fasta_star_file)
+            fasta_star_file = ''
+
         if len(fasta_pre_only_file) > 100000:
-            print("MID PRINTING2")
             with open(fasta_pre_only_path, 'a+') as f:
                 f.write(fasta_pre_only_file)
             fasta_pre_only_file = ''
 
     with open(fasta_path, 'a+') as f:
-        print("END PRINTING")
-        print(fasta_file)
         f.write(fasta_file)
+    with open(fasta_star_path, 'a+') as f:
+        f.write(fasta_star_file)
     with open(fasta_pre_only_path, 'a+') as f:
         f.write(fasta_pre_only_file)
 
