@@ -77,6 +77,7 @@ def clean(seq):
 if __name__ == '__main__':
     precursors = None
     mature = None
+    star = None
     species = None
     all_remaining_path = None
     args = []
@@ -92,6 +93,8 @@ if __name__ == '__main__':
             species = sys.argv[i + 1]
         elif arg == '--all-remaining':
             all_remaining_path = sys.argv[i + 1]
+        elif arg == '--star':
+            star = sys.argv[i + 1]
         elif arg == '--help' or arg == '-h':
             print(f'Manual:\n'
                   f' --precursors <path> : fasta file path of precursors sequences.\n'
@@ -103,6 +106,7 @@ if __name__ == '__main__':
 
     precursors = get_seq_data(precursors, start_end_mark=False)
     mature = get_seq_data(mature, start_end_mark=False)
+    star = get_seq_data(star, start_end_mark=False)
     if species == "Elegans":
         all_remaining = pd.read_excel(all_remaining_path, sheet_name="all_candidates")
     else:
@@ -116,7 +120,7 @@ if __name__ == '__main__':
         seed = find_seed(name,seq)
         create_setting_ini(seed)
         try:
-            out_dict=Ziv_Git.start_filtering(seq,true_mature=mature[name])
+            out_dict=Ziv_Git.start_filtering(seq,true_mature=mature[name], true_star=star[name])
             if i == 678:
                 print(out_dict)
             for k,v in out_dict['new'].items():

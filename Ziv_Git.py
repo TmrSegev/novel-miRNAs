@@ -426,7 +426,7 @@ def find_seed(seed, seq):
         return start, end
 
 
-def filter_candidates(true_mature=None):
+def filter_candidates(true_mature=None, true_star=None):
     param,windows,settings,seed, short_window_size, long_window_size, max_energy, input_filter_parameters, organism_name_in_db = build_global_variables()
     if settings.has_option('mode_1', 'input_filter_parameters'):
         input_filter_parameters = settings.get('mode_1', 'input_filter_parameters')
@@ -570,9 +570,16 @@ def filter_candidates(true_mature=None):
         #     end_star = hairpin_boundries['end_star']
         #     star_length = end_star - start_star
 
-        start_star = hairpin_boundries['start_star']
-        end_star = hairpin_boundries['end_star']
-        star_length = end_star - start_star
+        if true_star != "nan":
+            start_star = hairpin.find(true_star)
+            star_length = len(true_star)
+            end_star = hairpin.find(true_star) + star_length
+        else:
+            print(true_mature)
+            start_star = hairpin_boundries['start_star']
+            end_star = hairpin_boundries['end_star']
+            print("start_Star:", start_star, "end_star:", end_star)
+            star_length = end_star - start_star
 
         # if star_length < dict_filter_params['min_star_length'] or star_length > dict_filter_params[
         #     'max_star_length']:
@@ -585,8 +592,10 @@ def filter_candidates(true_mature=None):
         # if star_bp_ratio < dict_filter_params['min_star_bp_ratio'] or star_max_bulge > dict_filter_params[
         #     'max_star_bulge']:  # 15 connections, dict_filter_params['min_mature_bp_ratio']
         #     continue
-
-        star = hairpin[start_star:end_star + 1]
+        if true_star != "nan":
+            star = true_star
+        else:
+            star = hairpin[start_star:end_star + 1]
         # if mature_3p:
         #     star = window_hairpin[start_star:end_star+1]
         # if mature_5p:
@@ -616,7 +625,7 @@ def filter_candidates(true_mature=None):
         res[key]['Mature_BP_ratio'] = '%.2f' % mature_bp_ratio
         res[key]['Mature_max_bulge'] = '%.2f' % mature_max_bulge
         res[key]['Loop_length'] = loop_size
-        res[key]['Valid mir'] = loop_size > 0
+        res[key]['Valid mir'] = hairpin_boundries['valid']
         res[key]['Fold'] = fold
 
         res[key]['Mature'] = mature
@@ -916,7 +925,7 @@ def create_html_file():
 
 
 # start = time.clock()
-def start_filtering(seq, true_mature=None):
+def start_filtering(seq, true_mature=None, true_star=None):
     # settings = configparser.ConfigParser()
     # settings._interpolation = configparser.ExtendedInterpolation()
     # settings.read('settings.ini')
@@ -931,7 +940,7 @@ def start_filtering(seq, true_mature=None):
            'Hairpin_seq': str(seq)}
     res['new'] = obj
     # find_candidates_by_seed()
-    filter_candidates(true_mature)
+    filter_candidates(true_mature, true_star)
     return res
 # print(start_filtering())
 # print(len(res))
