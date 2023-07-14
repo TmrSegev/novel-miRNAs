@@ -207,7 +207,10 @@ if __name__ == '__main__':
                   )
             sys.exit()
     all = pd.read_excel(all_path, sheet_name="all_candidates")
-    all['Description'] = all[['Description_mirdeep', 'Description_sRNAbench', 'Description_mirbase']].astype(str).agg(', '.join, axis=1)
+    if species == "elegans" or species == "Elegans":
+        all['Description'] = all[['Description_mirdeep', 'Description_sRNAbench', 'Description_mirbase']].astype(str).agg(', '.join, axis=1)
+    else:
+        all['Description'] = all[['Description_mirdeep', 'Description_sRNAbench']].astype(str).agg(', '.join, axis=1)
     # families_by_type(all)
     # unknown_families_by_type(all)
     boxplot_by_type(all, "all")

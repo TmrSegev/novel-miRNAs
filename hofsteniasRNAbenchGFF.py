@@ -42,8 +42,9 @@ def run(output, fasta_path=None, seed_path=None):
     # gff3_pre_only = gff3_pre_only.astype({"start": int})
     # gff3_pre_only = gff3_pre_only.astype({"end": int})
     output_pre_only = "{}_sRNAbench_pre_only.gff3".format(species)
-    fasta_pre_only_path = fasta_path.split('.fasta')[0]
-    fasta_pre_only_path += "_pre_only.fasta"
+    fasta_prefix = fasta_path.split('.fasta')[0]
+    fasta_pre_only_path = fasta_prefix + "_pre_only.fasta"
+    fasta_star_path = fasta_prefix + "_star.fasta"
 
     # Uniting all remaining files, and all removed no find files
     table = None
@@ -93,8 +94,10 @@ def run(output, fasta_path=None, seed_path=None):
     if fasta_path is not None:
         fasta_file = ''
         fasta_pre_only_file = ''
+        fasta_star_file = ''
         open(fasta_path, 'w').close()
         open(fasta_pre_only_path, 'w').close()
+        open(fasta_star_path, 'w').close()
 
     intersection_index = -1 # Used later to intersect the table with miRdeep, blast and featurecounts results.
     for index, row in table.iterrows():
@@ -152,9 +155,11 @@ def run(output, fasta_path=None, seed_path=None):
         if fasta_path is not None:
             if not pd.isnull(seq5p) and mature_seq == 5:
                 fasta_file += f'>{name5p}\n{seq5p}\n'
+                fasta_star_file += f'>{name5p}\n{seq3p}\n'
                 fasta_pre_only_file += f'>{name5p}\n{hairpin}\n'
             if not pd.isnull(seq3p) and mature_seq == 3:
                 fasta_file += f'>{name3p}\n{seq3p}\n'
+                fasta_star_file += f'>{name3p}\n{seq5p}\n'
                 fasta_pre_only_file += f'>{name3p}\n{hairpin}\n'
 
             if len(fasta_file) > 100000:
@@ -166,6 +171,11 @@ def run(output, fasta_path=None, seed_path=None):
                 with open(fasta_pre_only_path, 'a+') as f:
                     f.write(fasta_pre_only_file)
                 fasta_pre_only_file = ''
+
+            if len(fasta_star_file) > 100000:
+                with open(fasta_star_path, 'a+') as f:
+                    f.write(fasta_star_file)
+                fasta_star_file = ''
 
         if mature_seq == 5:
             seed = name5p.split('|')[4]
@@ -224,6 +234,8 @@ def run(output, fasta_path=None, seed_path=None):
             f.write(fasta_file)
         with open(fasta_pre_only_path, 'a+') as f:
             f.write(fasta_pre_only_file)
+        with open(fasta_star_path, 'a+') as f:
+            f.write(fasta_star_file)
 
     gff3.to_csv(output, index=False, header=False, mode="a", sep='\t')
     gff3_pre_only.to_csv(output_pre_only, index=False, header=False, mode="a", sep='\t')
