@@ -3,6 +3,9 @@
 import sys
 import pandas as pd
 import numpy as np
+from Bio import pairwise2
+from Bio.pairwise2 import format_alignment
+import re
 
 ids_dic = {}
 
@@ -74,14 +77,16 @@ def filterNovel(novel, threshold_mc):
 
 def start_5p(row):
     if row['5pseq'] != "nan":
-        return row['hairpinSeq'].find(row['5pseq'])
+        for a in pairwise2.align.globalms(row['hairpinSeq'], row['5pseq'], 1, -1, -1, -1, penalize_end_gaps=False):
+            return re.search(r"[ATCG]", a.seqB).start()
     else:
         return 0
 
 
 def end_3p(row):
     if row['3pseq'] != "nan":
-        return row['hairpinSeq'].find(row['3pseq']) + len(row['3pseq'])
+        for a in pairwise2.align.globalms(row['hairpinSeq'], row['3pseq'], 1, -1, -1, -1, penalize_end_gaps=False):
+            return re.search(r"[ATCG]", a.seqB).start() + len(row['3pseq'])
     else:
         return len(row['hairpinSeq'])
 

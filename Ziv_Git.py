@@ -1,3 +1,5 @@
+from collections import defaultdict
+
 from Bio import SeqIO
 import re
 import os
@@ -426,6 +428,47 @@ def find_seed(seed, seq):
         return start, end
 
 
+def count_kmers(sequence, k, minmax):
+    """Count kmer occurrences in a given sequence.
+
+    Parameters
+    ----------
+    read : string
+        A single DNA sequence.
+    k : int
+        The value of k for which to count kmers.
+
+    Returns
+    -------
+    counts : dictionary, {'string': int}
+        A dictionary of counts keyed by their individual kmers (strings
+        of length k).
+
+    """
+    # Start with an empty dictionary
+    # counts = {}
+    counts = defaultdict(int)
+
+    # Calculate how many kmers of length k there are
+    num_kmers = len(sequence) - k + 1
+    # Loop over the kmer start positions
+    for i in range(num_kmers):
+        # Slice the string to get the kmer
+        kmer = sequence[i:i+k]
+        ## Add the kmer to the dictionary if it's not there
+        # if kmer not in counts:
+        #     counts[kmer] = 0
+        # Increment the count for this kmer
+        counts[kmer] += 1
+    # Return the final counts
+    if minmax == "max":
+        return max(counts.values())
+    elif minmax == "min":
+        return min(counts.values())
+    else:
+        raise Exception("Wrong minmax value")
+
+
 def filter_candidates(true_mature=None, true_star=None):
     param,windows,settings,seed, short_window_size, long_window_size, max_energy, input_filter_parameters, organism_name_in_db = build_global_variables()
     if settings.has_option('mode_1', 'input_filter_parameters'):
@@ -536,7 +579,6 @@ def filter_candidates(true_mature=None, true_star=None):
             hairpin_boundries = ct_file_parser_3p(ct_df, start_mature, end_mature, param)
         if mature_5p:
             hairpin_boundries = ct_file_parser_5p(ct_df, start_mature, end_mature, param)
-        print(hairpin_boundries)
 
         # if hairpin_boundries['valid'] is False: #modified
         #     continue
@@ -575,10 +617,8 @@ def filter_candidates(true_mature=None, true_star=None):
             star_length = len(true_star)
             end_star = hairpin.find(true_star) + star_length
         else:
-            print(true_mature)
             start_star = hairpin_boundries['start_star']
             end_star = hairpin_boundries['end_star']
-            print("start_Star:", start_star, "end_star:", end_star)
             star_length = end_star - start_star
 
         # if star_length < dict_filter_params['min_star_length'] or star_length > dict_filter_params[
@@ -620,6 +660,13 @@ def filter_candidates(true_mature=None, true_star=None):
 
         mature = mature_df[1].str.cat()
 
+        min_one_mer_mature = count_kmers(mature, 1, "min") / len(mature)
+        min_one_mer_hairpin = count_kmers(hairpin, 1, "min") / len(hairpin)
+        max_one_mer_mature = count_kmers(mature, 1, "max") / len(mature)
+        max_two_mer_mature = count_kmers(mature, 2, "max") / len(mature)
+        max_one_mer_hairpin = count_kmers(hairpin, 1, "max") / len(hairpin)
+        max_two_mer_hairpin = count_kmers(hairpin, 2, "max") / len(hairpin)
+
         # loop_seq = get_loop(ct_df, start_loop, end_loop, loop_size)
         res[key]['Mature_connections'] = mature_numbers_of_connections
         res[key]['Mature_BP_ratio'] = '%.2f' % mature_bp_ratio
@@ -650,6 +697,12 @@ def filter_candidates(true_mature=None, true_star=None):
         #res[key]['Window'] = window
 
         res[key]['Max_bulge_symmetry'] = max_bulge_symmetry
+        res[key]['min_one_mer_mature'] = min_one_mer_mature
+        res[key]['min_one_mer_hairpin'] = min_one_mer_hairpin
+        res[key]['max_one_mer_mature'] = max_one_mer_mature
+        res[key]['max_two_mer_mature'] = max_two_mer_mature
+        res[key]['max_one_mer_hairpin'] = max_one_mer_hairpin
+        res[key]['max_two_mer_hairpin'] = max_two_mer_hairpin
 
         # res[key]['start_mature'] = start_mature
         # res[key]['end_mature'] = end_mature

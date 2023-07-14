@@ -1,15 +1,18 @@
 import os
 import random
+
+import matplotlib.pyplot as plt
 import pandas as pd
 import Ziv_Git
 from Bio import SeqIO
 import sys
+import numpy as np
 
 
 def get_seq_data(path, start_end_mark=False):
     seq = {}
     for seq_record in SeqIO.parse(path, "fasta"):
-        if species == "Elegans":
+        if species != "Hofstenia":
             # seq_id = seq_record.description.split(';')
             seq_id = seq_record.description
             # seq_id = seq_id[0]
@@ -48,7 +51,7 @@ def build_dict():
                   'Mature_connections': [], 'Mature_BP_ratio': [], 'Mature_max_bulge': [], 'Loop_length': [],
                   'Fold': [], 'Mature': [],'Mature_Length': [], '3p/5p': [], 'Hairpin_seq_trimmed': [], 'Star': [], 'Start_star': [],
                   'End_star': [], 'Star_length': [], 'Star_connections': [], 'Star_BP_ratio': [], 'Star_max_bulge': [],
-                  'Hairpin_seq_trimmed_length': [], 'Max_bulge_symmetry': [], 'Valid mir': []}
+                  'Hairpin_seq_trimmed_length': [], 'Max_bulge_symmetry': [], 'min_one_mer_mature': [], 'min_one_mer_hairpin': [], 'max_one_mer_mature': [], 'max_two_mer_mature': [], 'max_one_mer_hairpin': [], 'max_two_mer_hairpin': [], 'Valid mir': []}
 
 def find_seed(name,seq):
     start_mature_inx = seq.index(mature[name])
@@ -72,7 +75,13 @@ def clean(seq):
         seq = seq.replace(char,"")
     return seq.split("\n")[0]
 
-
+def plot_series(series, ticks):
+    series.plot.hist()
+    plt.title(series.name)
+    print("min:", series.min(), "max:", series.max())
+    plt.xticks(np.arange(series.min(), series.max() + ticks, ticks))
+    plt.savefig("./figures/{}.png".format(series.name), dpi=300)
+    plt.clf()
 
 if __name__ == '__main__':
     precursors = None
@@ -107,7 +116,7 @@ if __name__ == '__main__':
     precursors = get_seq_data(precursors, start_end_mark=False)
     mature = get_seq_data(mature, start_end_mark=False)
     star = get_seq_data(star, start_end_mark=False)
-    if species == "Elegans":
+    if species != "Hofstenia":
         all_remaining = pd.read_excel(all_remaining_path, sheet_name="all_candidates")
     else:
         all_remaining = pd.read_csv(all_remaining_path, sep='\t')
@@ -120,14 +129,15 @@ if __name__ == '__main__':
         seed = find_seed(name,seq)
         create_setting_ini(seed)
         try:
-            out_dict=Ziv_Git.start_filtering(seq,true_mature=mature[name], true_star=star[name])
+            out_dict=Ziv_Git.start_filtering(seq, true_mature=mature[name], true_star=star[name])
             if i == 678:
                 print(out_dict)
             for k,v in out_dict['new'].items():
                 mirdb_dict[k].append(v)
             #ziv_features = ziv_features.append(mirdb_df)
         except Exception as e:
-            print(e,name,seq,out_dict)
+            #print(e,name,seq,out_dict)
+            print(e, name, seq)
             exception_dict = build_dict()
             for k,v in exception_dict.items():
                 mirdb_dict[k].append(v)
@@ -141,6 +151,28 @@ if __name__ == '__main__':
     mirdb_df.reset_index(inplace=True, drop=True)
     output = pd.concat([all_remaining, mirdb_df], axis=1)
     output.to_csv("all_remaining_after_ziv_{}.csv".format(species))
+    if species != "Hofstenia":
+        if species == "Elegans":
+            mirgenedb = output[(output['Description_mirgenedb'] != '.') & (output['Valid mir'] == True)]
+        else:
+            mirgenedb = output[output['Valid mir'] == True]
+        plot_series(mirgenedb['Hairpin_seq_trimmed_length'], 5.0)
+        plot_series(mirgenedb['Mature_connections'], 1.0)
+        plot_series(mirgenedb['Mature_BP_ratio'].astype('float'), 0.05)
+        plot_series(mirgenedb['Mature_max_bulge'].astype('float'), 1.0)
+        plot_series(mirgenedb['Loop_length'], 2.0)
+        plot_series(mirgenedb['Mature_Length'], 1.0)
+        plot_series(mirgenedb['Star_length'], 1.0)
+        plot_series(mirgenedb['Star_connections'], 1.0)
+        plot_series(mirgenedb['Star_BP_ratio'].astype('float'), 0.05)
+        plot_series(mirgenedb['Star_max_bulge'].astype('float'), 1.0)
+        plot_series(mirgenedb['Max_bulge_symmetry'], 1.0)
+        plot_series(mirgenedb['min_one_mer_hairpin'], 0.05)
+        plot_series(mirgenedb['max_one_mer_hairpin'], 0.05)
+        # mirgenedb['End_hairpin'].plot.hist()
+        # plt.xticks(np.arange(mirgenedb['End_hairpin'].min(), mirgenedb['End_hairpin'].max() + 1, 5.0))
+        # plt.savefig("./figures/hairpin_length.png", dpi=300)
+        # plt.clf()
     # for i,seq in enumerate(gen_seq):
     #     seed = find_gen_seed(seq)
     #     seq = clean(seq)

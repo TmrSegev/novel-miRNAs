@@ -764,9 +764,10 @@ i1, i2, i3 = columns.index('mature'), columns.index('5pseq'), columns.index('3ps
 columns[i1], columns[i2], columns[i3] = columns[i2], columns[i3], columns[i1]
 # reorder sRNAbench and mirbase description columns
 columns.remove('Description_sRNAbench')
-columns.remove('Description_mirbase')
 columns.insert(columns.index('Description_mirdeep') + 1, 'Description_sRNAbench')
-columns.insert(columns.index('Description_mirdeep') + 2, 'Description_mirbase')
+if (species == 'Elegans') or (species == 'elegans'):
+    columns.remove('Description_mirbase')
+    columns.insert(columns.index('Description_mirdeep') + 2, 'Description_mirbase')
 unified = unified[columns]
 
 
@@ -801,5 +802,4 @@ unified.to_excel(writer, sheet_name='all_candidates')
 blast_mirdeep_orig.to_excel(writer, sheet_name='blast_miRdeep')
 blast_sRNAbench_orig.to_excel(writer, sheet_name='blast_sRNAbench')
 writer.save()
-print("test")
 
