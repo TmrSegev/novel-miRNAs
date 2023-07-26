@@ -309,7 +309,8 @@ mirdeep_blast_fc_intersections_table = pd.merge(mirdeep_blast_m_intersections_ta
 mirdeep_blast_fc_intersections_table = mirdeep_blast_fc_intersections_table.drop('index', axis=1)
 
 # filter by sum_fc_m < threshold
-mirdeep_blast_fc_intersections_table = mirdeep_blast_fc_intersections_table[mirdeep_blast_fc_intersections_table['sum_FC_m'] > sum_fc_thres]
+#mirdeep_blast_fc_intersections_table["sum_FC_m > thres"] = np.where(mirdeep_blast_fc_intersections_table[mirdeep_blast_fc_intersections_table['sum_FC_m'] > sum_fc_thres], 1, 0)
+mirdeep_blast_fc_intersections_table["sum_FC_m > thres"] = np.where(mirdeep_blast_fc_intersections_table['sum_FC_m'] > sum_fc_thres, 1, 0)
 
 # Extract readcounts columns
 mirdeep_blast_fc_intersections_table['RC_m mirdeep'] = mirdeep_blast_fc_intersections_table["Description_mirdeep"].str.split(';', expand=True)[1]
@@ -397,7 +398,8 @@ sRNAbench_blast_fc_intersections_table = pd.merge(sRNAbench_blast_m_intersection
 sRNAbench_blast_fc_intersections_table = sRNAbench_blast_fc_intersections_table.drop('index', axis=1)
 
 # filter by sum_fc_m < threshold
-sRNAbench_blast_fc_intersections_table = sRNAbench_blast_fc_intersections_table[sRNAbench_blast_fc_intersections_table['sum_FC_m'] > sum_fc_thres]
+# sRNAbench_blast_fc_intersections_table["sum_FC_m > thres"] = np.where(sRNAbench_blast_fc_intersections_table[sRNAbench_blast_fc_intersections_table['sum_FC_m'] > sum_fc_thres], 1, 0)
+sRNAbench_blast_fc_intersections_table["sum_FC_m > thres"] = np.where(sRNAbench_blast_fc_intersections_table['sum_FC_m'] > sum_fc_thres, 1, 0)
 
 # Extract readcounts columns
 sRNAbench_blast_fc_intersections_table['RC_m mirdeep'] = sRNAbench_blast_fc_intersections_table["Description_mirdeep"].str.split(';', expand=True)[1]
@@ -529,7 +531,8 @@ if (species == 'Elegans') or (species == 'elegans'):
     mirbase_fc_intersections_table = mirbase_fc_intersections_table.drop('index', axis=1)
 
     # filter by sum_fc_m < threshold
-    mirbase_fc_intersections_table = mirbase_fc_intersections_table[mirbase_fc_intersections_table['sum_FC_m'] > sum_fc_thres]
+    mirbase_fc_intersections_table["sum_FC_m > thres"] = np.where(mirbase_fc_intersections_table['sum_FC_m'] > sum_fc_thres, 1, 0)
+    # mirbase_fc_intersections_table["sum_FC_m > thres"] = np.where(mirbase_fc_intersections_table[mirbase_fc_intersections_table['sum_FC_m'] > sum_fc_thres], 1, 0)
 
     # Extract readcounts columns
     mirbase_fc_intersections_table['RC_m mirdeep'] = mirbase_fc_intersections_table["Description_mirdeep"].str.split(';', expand=True)[1]
@@ -614,6 +617,7 @@ sRNAbench_blast_fc_intersections_table['hairpinSeq'] = remaining_sRNAbench['hair
 
 # Extract loop size
 def loop_size(row):
+    print(row["hairpinSeq"])
     if (row["hairpinSeq"].find(str(row['5pseq'])) == -1) or (row["hairpinSeq"].find(str(row['3pseq'])) == -1):
         return -1
     index_end_5p = len((str(row['5pseq'])))
@@ -662,7 +666,7 @@ if (species == 'Elegans') or (species == 'elegans'):
                                                                      'Chr_mirgenedb', 'Start_mirgenedb', 'End_mirgenedb', 'Strand_mirgenedb', 'Description_mirgenedb', 'T/F_mirgenedb',
                                                                      'Chr_mirdeep', 'Start_mirdeep', 'End_mirdeep', 'Strand_mirdeep', 'Description_mirdeep', 'T/F_mirdeep',
                                                                      'Chr_sRNAbench', 'Start_sRNAbench', 'End_sRNAbench', 'Strand_sRNAbench', 'Description_sRNAbench', 'T/F_sRNAbench'] +
-                                                                    libraries_mature + ['sum_FC_m', 'RC_m mirdeep', 'RC_m sRNAbench', 'Diff Sum_FC_m / RC_m mirdeep', 'Diff Sum_FC_m / RC_m sRNAbench'] +
+                                                                    libraries_mature + ['sum_FC_m', 'sum_FC_m > thres', 'RC_m mirdeep', 'RC_m sRNAbench', 'Diff Sum_FC_m / RC_m mirdeep', 'Diff Sum_FC_m / RC_m sRNAbench'] +
                                                                     libraries_star + ['sum_FC_s', 'sum_FC_s > 100?', 'RC_s mirdeep', 'RC_s sRNAbench', 'Diff Sum_FC_s / RC_s mirdeep', 'Diff Sum_FC_s / RC_s sRNAbench'] +
                                                                     mature_rpm + ['sum_FC_m_rpm', 'mean_m_rpm'] + star_rpm + ['sum_FC_s_rpm', 'mean_s_rpm'] +
                                                                     ['5pseq', '3pseq', 'hairpinSeq', 'mature', 'mature_size', 'star_size', 'loop_size']
@@ -675,7 +679,7 @@ else:
 mirdeep_blast_fc_intersections_table = mirdeep_blast_fc_intersections_table[['Chr_mirdeep', 'Start_mirdeep', 'End_mirdeep', 'Strand_mirdeep', 'Description_mirdeep',
                                                                              'query_accession','subject_accession', 'alignment_length', 'query_start', 'query_end', 'e_value',
                                                                              'Chr_sRNAbench', 'Start_sRNAbench', 'End_sRNAbench', 'Strand_sRNAbench', 'Description_sRNAbench'] + elegans_columns_mirdeep +
-                                                                             libraries_mature + ['sum_FC_m', 'RC_m mirdeep', 'RC_m sRNAbench', 'Diff Sum_FC_m / RC_m mirdeep', 'Diff Sum_FC_m / RC_m sRNAbench'] +
+                                                                             libraries_mature + ['sum_FC_m', 'sum_FC_m > thres', 'RC_m mirdeep', 'RC_m sRNAbench', 'Diff Sum_FC_m / RC_m mirdeep', 'Diff Sum_FC_m / RC_m sRNAbench'] +
                                                                              libraries_star + ['sum_FC_s', 'sum_FC_s > 100?', 'RC_s mirdeep', 'RC_s sRNAbench', 'Diff Sum_FC_s / RC_s mirdeep', 'Diff Sum_FC_s / RC_s sRNAbench'] +
                                                                              mature_rpm + ['sum_FC_m_rpm', 'mean_m_rpm'] + star_rpm + ['sum_FC_s_rpm', 'mean_s_rpm'] +
                                                                              ['consensus mature sequence', 'consensus star sequence', 'consensus precursor sequence', 'mature', 'mature_size', 'star_size', 'loop_size']
@@ -684,7 +688,7 @@ mirdeep_blast_fc_intersections_table = mirdeep_blast_fc_intersections_table[['Ch
 sRNAbench_blast_fc_intersections_table = sRNAbench_blast_fc_intersections_table[['Chr_sRNAbench', 'Start_sRNAbench', 'End_sRNAbench', 'Strand_sRNAbench', 'Description_sRNAbench',
                                                                              'query_accession','subject_accession', 'alignment_length', 'query_start', 'query_end', 'e_value',
                                                                              'Chr_mirdeep', 'Start_mirdeep', 'End_mirdeep', 'Strand_mirdeep', 'Description_mirdeep'] + elegans_columns_sRNAbench +
-                                                                             libraries_mature + ['sum_FC_m', 'RC_m sRNAbench', 'RC_m mirdeep', 'Diff Sum_FC_m / RC_m sRNAbench', 'Diff Sum_FC_m / RC_m mirdeep'] +
+                                                                             libraries_mature + ['sum_FC_m', 'sum_FC_m > thres', 'RC_m sRNAbench', 'RC_m mirdeep', 'Diff Sum_FC_m / RC_m sRNAbench', 'Diff Sum_FC_m / RC_m mirdeep'] +
                                                                              libraries_star + ['sum_FC_s', 'sum_FC_s > 100?', 'RC_s sRNAbench', 'RC_s mirdeep', 'Diff Sum_FC_s / RC_s sRNAbench', 'Diff Sum_FC_s / RC_s mirdeep'] +
                                                                              mature_rpm + ['sum_FC_m_rpm', 'mean_m_rpm'] + star_rpm + ['sum_FC_s_rpm', 'mean_s_rpm'] +
                                                                              ['5pseq', '3pseq', 'hairpinSeq', 'mature', 'mature_size', 'star_size', 'loop_size']
@@ -789,7 +793,8 @@ unified = unified.reindex(columns=[col for col in unified.columns if col != 'Typ
 # unified = unified.loc[~mask | (unified['Seed'] == unified['Seed_mirGeneDB'])]
 
 # --- Removing novel451
-unified = unified[~unified['Description_sRNAbench'].str.contains("novel451")]
+# unified = unified[~unified['Description_sRNAbench'].str.contains("novel451")]
+unified["novel451"] = np.where(unified['Description_sRNAbench'].str.contains("novel451"), 1, 0)
 
 # -----SAVE TO EXCEL-----
 
