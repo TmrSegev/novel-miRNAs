@@ -78,7 +78,7 @@ def clean(seq):
 def plot_series(series, ticks):
     series.plot.hist()
     plt.title(series.name)
-    print("min:", series.min(), "max:", series.max())
+    print("name:", series.name, "min:", series.min(), "max:", series.max())
     plt.xticks(np.arange(series.min(), series.max() + ticks, ticks))
     plt.savefig("./figures/{}.png".format(series.name), dpi=300)
     plt.clf()
@@ -116,7 +116,9 @@ if __name__ == '__main__':
     precursors = get_seq_data(precursors, start_end_mark=False)
     mature = get_seq_data(mature, start_end_mark=False)
     star = get_seq_data(star, start_end_mark=False)
-    if species != "Hofstenia":
+    if species == "miRGeneDB":
+        all_remaining = pd.DataFrame()
+    elif species != "Hofstenia":
         all_remaining = pd.read_excel(all_remaining_path, sheet_name="all_candidates")
     else:
         all_remaining = pd.read_csv(all_remaining_path, sep='\t')
@@ -125,6 +127,8 @@ if __name__ == '__main__':
     gen_dict = build_dict()
     neg_dict = build_dict()
     mirdb_dict = build_dict()
+    print(all_remaining.info())
+    print("lenprecursors:", len(precursors))
     for i,(name,seq) in enumerate(precursors.items()):
         seed = find_seed(name,seq)
         create_setting_ini(seed)
@@ -144,13 +148,11 @@ if __name__ == '__main__':
             # row = pd.DataFrame(columns=list(mirdb_dict.keys()))
             # row.loc[0] = ''
             continue
-    print("mir",len(mirdb_dict['Chr']),"\n")
-    print(mirdb_dict)
     mirdb_df = pd.DataFrame(mirdb_dict)
     all_remaining.reset_index(inplace=True, drop=True)
     mirdb_df.reset_index(inplace=True, drop=True)
     output = pd.concat([all_remaining, mirdb_df], axis=1)
-    output.to_csv("all_remaining_after_ziv_{}.csv".format(species))
+    output.to_csv("all_remaining_after_ziv_{}.csv".format(species), index=False)
     if species != "Hofstenia":
         if species == "Elegans":
             mirgenedb = output[(output['Description_mirgenedb'] != '.') & (output['Valid mir'] == True)]
