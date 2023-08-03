@@ -53,6 +53,12 @@ def build_dict():
                   'End_star': [], 'Star_length': [], 'Star_connections': [], 'Star_BP_ratio': [], 'Star_max_bulge': [],
                   'Hairpin_seq_trimmed_length': [], 'Max_bulge_symmetry': [], 'min_one_mer_mature': [], 'min_one_mer_hairpin': [], 'max_one_mer_mature': [], 'max_two_mer_mature': [], 'max_one_mer_hairpin': [], 'max_two_mer_hairpin': [], 'Valid mir': []}
 
+def build_exception_dict():
+    return {'Chr': -1, 'Start_hairpin': -1, 'End_hairpin': -1, 'Strand': -1, 'Hairpin_seq': -1,
+                  'Mature_connections': -1, 'Mature_BP_ratio': -1, 'Mature_max_bulge': -1, 'Loop_length': -1,
+                  'Fold': -1, 'Mature': -1,'Mature_Length': -1, '3p/5p': -1, 'Hairpin_seq_trimmed': -1, 'Star': -1, 'Start_star': -1,
+                  'End_star': -1, 'Star_length': -1, 'Star_connections': -1, 'Star_BP_ratio': -1, 'Star_max_bulge': -1,
+                  'Hairpin_seq_trimmed_length': -1, 'Max_bulge_symmetry': -1, 'min_one_mer_mature': -1, 'min_one_mer_hairpin': -1, 'max_one_mer_mature': -1, 'max_two_mer_mature': -1, 'max_one_mer_hairpin': -1, 'max_two_mer_hairpin': -1, 'Valid mir': -1}
 def find_seed(name,seq):
     start_mature_inx = seq.index(mature[name])
     return seq[start_mature_inx + 1:start_mature_inx + 8]
@@ -127,22 +133,20 @@ if __name__ == '__main__':
     gen_dict = build_dict()
     neg_dict = build_dict()
     mirdb_dict = build_dict()
-    print(all_remaining.info())
-    print("lenprecursors:", len(precursors))
     for i,(name,seq) in enumerate(precursors.items()):
         seed = find_seed(name,seq)
         create_setting_ini(seed)
         try:
             out_dict=Ziv_Git.start_filtering(seq, true_mature=mature[name], true_star=star[name])
-            if i == 678:
-                print(out_dict)
+            # if i == 678:
+            #     print(out_dict)
             for k,v in out_dict['new'].items():
                 mirdb_dict[k].append(v)
             #ziv_features = ziv_features.append(mirdb_df)
         except Exception as e:
             #print(e,name,seq,out_dict)
             print(e, name, seq)
-            exception_dict = build_dict()
+            exception_dict = build_exception_dict()
             for k,v in exception_dict.items():
                 mirdb_dict[k].append(v)
             # row = pd.DataFrame(columns=list(mirdb_dict.keys()))
@@ -152,7 +156,33 @@ if __name__ == '__main__':
     all_remaining.reset_index(inplace=True, drop=True)
     mirdb_df.reset_index(inplace=True, drop=True)
     output = pd.concat([all_remaining, mirdb_df], axis=1)
-    output.to_csv("all_remaining_after_ziv_{}.csv".format(species), index=False)
+    # output.to_csv("all_remaining_after_ziv_{}.csv".format(species), index=False)
+
+    print(output["Mature_BP_ratio"].value_counts())
+    output = output.astype({'Mature_BP_ratio': 'float', 'Mature_max_bulge': 'float', 'Star_BP_ratio': 'float', 'Star_max_bulge': 'float'})
+    writer = pd.ExcelWriter('all_remaining_after_ziv_{}.xlsx'.format(species))
+    output.to_excel(writer, sheet_name='(A) Unfiltered)', index=False)
+    sum_fc_thres_ok = output[output['sum_FC_m > thres'] == 1].copy()
+    sum_fc_thres_ok.to_excel(writer, sheet_name='(B) sum_FC>100', index=False)
+    no_novel451 = sum_fc_thres_ok[sum_fc_thres_ok['novel451'] == 0].copy()
+    no_novel451.to_excel(writer, sheet_name='(C) Novel451', index=False)
+    structural = no_novel451[no_novel451['Valid mir'] == True].copy()
+    structural = structural[(structural["Mature_connections"] >= 14) & (structural["Mature_connections"] <= 22)]
+    structural = structural[(structural["Mature_BP_ratio"] >= 0.6) & (structural["Mature_BP_ratio"] <= 0.96)]
+    structural = structural[(structural["Mature_max_bulge"] <= 4)]
+    structural = structural[(structural["Loop_length"] >= 10) & (structural["Loop_length"] <= 25)]
+    structural = structural[(structural["Mature_Length"] >= 19) & (structural["Mature_Length"] <= 26)]
+    structural = structural[(structural["Star_length"] >= 19) & (structural["Star_length"] <= 25)]
+    structural = structural[(structural["Star_connections"] >= 14) & (structural["Star_connections"] <= 23)]
+    structural = structural[(structural["Star_BP_ratio"] >= 0.6) & (structural["Star_BP_ratio"] <= 0.96)]
+    structural = structural[structural["Star_max_bulge"] <= 4]
+    structural = structural[structural["Hairpin_seq_trimmed_length"] >= 53]
+    structural = structural[structural["Max_bulge_symmetry"] <= 3]
+    structural = structural[structural["min_one_mer_hairpin"] >= 0.1]
+    structural = structural[structural["max_one_mer_hairpin"] <= 0.45]
+    structural.to_excel(writer, sheet_name='(D) Structural Features', index=False)
+    writer.save()
+
     if species != "Hofstenia":
         if species == "Elegans":
             mirgenedb = output[(output['Description_mirgenedb'] != '.') & (output['Valid mir'] == True)]
