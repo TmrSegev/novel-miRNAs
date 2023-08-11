@@ -10,7 +10,6 @@ from scipy.stats import ttest_ind
 
 def families_by_type(df):
     families_by_type = pd.pivot_table(df, values='Description', index='Family', columns='Type', aggfunc='count')
-    print(families_by_type)
     families_by_type.fillna(0, inplace=True)
     families_by_type = families_by_type.drop("UNKNOWN", axis=0)
     families_by_type.sort_values('Family', inplace=True)
@@ -67,7 +66,6 @@ def boxplot_by_type(df, name):
     plt.title("{} boxplots by type".format(species))
     plt.xticks(rotation=90)
     #plt.tight_layout()
-    print(enumerate(df[columns]))
     for i, d in enumerate(df[columns]):
         y = df[columns][d]
         x = np.random.normal(i + 1, 0.04, len(y))
@@ -190,6 +188,44 @@ def create_all_candidatess_fasta(df):
     with open(fasta_pre_only_path, 'a+') as f:
         f.write(fasta_pre_only_file)
 
+def clusters(df):
+    # Filtering by coordinates
+    df = df.sort_values(['Chr', 'Strand', 'Start', 'End'])
+    df['clusterIndex'] = np.zeros(len(df))
+    clusters_df = pd.DataFrame(columns=df.columns)
+    clusterIndex = 1
+    cluster_file = ""
+
+    # Calculate differences within each group
+    df['differences'] = df.groupby(['Chr', 'Strand'])['Start'].diff()
+    df.to_csv('{}_diff.csv'.format(species), sep='\t', index=True)
+
+    # Calculate clusters
+    for index, row in df.iterrows():
+        if index in df.index:
+            df['distance'] = df['Start'] - row['Start']
+            cluster = df[df['distance'].abs() <= 10000]
+            cluster = cluster[cluster['Chr'] == row['Chr']]
+            # df.loc[index, 'cluster'] = len(cluster)
+            if len(cluster) == 1:
+                # no_cluster = no_cluster.append(row)
+                df = df.drop(index)
+            else:
+                cluster['clusterIndex'] = clusterIndex
+                cluster_file += "Cluster index:" + str(clusterIndex) + "\nSeed families:" + str(cluster["Family"].value_counts().to_dict()) + "\nSeeds:" + str(cluster["Seed"].to_list()) + "\n\n"
+                clusters_df = clusters_df.append(cluster)
+                df = df.drop(cluster.index)
+                clusterIndex += 1
+    # print(df['cluster'].value_counts().sort_index(ascending=False))
+    df = df.drop(["distance"], axis=1)
+    clusters_df = clusters_df.drop(["distance"], axis=1)
+    # filtered_input.append(df)
+    with open('{}_clusters_info.txt'.format(species), 'w') as file:
+        file.write(cluster_file)
+    clusters_df.to_csv('{}_clusters.csv'.format(species), sep='\t', index=False)
+    # df = df.rename({"tag id": "provisional id",
+      #                    "estimated probability that the miRNA is a true positive": "estimated probability that the miRNA candidate is a true positive"},
+       #                  axis=1)
 
 if __name__ == '__main__':
     species = None
@@ -208,18 +244,19 @@ if __name__ == '__main__':
             sys.exit()
     all = pd.read_excel(all_path, sheet_name="(D) Structural Features")
     if species == "elegans" or species == "Elegans":
-        all['Description'] = all[['Description_mirdeep', 'Description_sRNAbench', 'Description_mirbase']].astype(str).agg(', '.join, axis=1)
+        all['Description'] = all[['Description_mirdeep', 'Description_sRNAbench', 'Description_mirbase']].astype(str).agg('. '.join, axis=1)
     else:
-        all['Description'] = all[['Description_mirdeep', 'Description_sRNAbench']].astype(str).agg(', '.join, axis=1)
-    families_by_type(all)
-    unknown_families_by_type(all)
-    boxplot_by_type(all, "all")
+        all['Description'] = all[['Description_mirdeep', 'Description_sRNAbench']].astype(str).agg('. '.join, axis=1)
+    families_by_type(all.copy())
+    unknown_families_by_type(all.copy())
+    boxplot_by_type(all.copy(), "all")
     # no_novel451 = all[~all['Description'].str.contains("novel451")].copy()
     # boxplot_by_type(no_novel451, "no_novel451")
-    boxplot_known_unknown(all)
+    boxplot_known_unknown(all.copy())
     # normal_dist(all)
     # wilcoxon_test(all)
     # t_test(all)
-    mann_whitney(all)
+    mann_whitney(all.copy())
+    clusters(all.copy())
     # create_all_candidatess_fasta(all)
     #pd.to_csv("all_candidates_{}.csv".format(species), sep='\t', index=False)
