@@ -188,17 +188,28 @@ def create_all_candidatess_fasta(df):
     with open(fasta_pre_only_path, 'a+') as f:
         f.write(fasta_pre_only_file)
 
+
+def save_back_to_all(sheet_dict, filepath):
+    # Save the changes back to the same sheet
+    with pd.ExcelWriter(filepath, engine='openpyxl') as writer:
+        writer.book = writer.book  # Needed for openpyxl compatibility
+        writer.sheets = {ws.title: ws for ws in writer.book.worksheets}
+        for sheet_name, df in sheet_dict.items():
+            df.to_excel(writer, sheet_name, index=False)
+
 def clusters(df):
     # Filtering by coordinates
     df = df.sort_values(['Chr', 'Strand', 'Start', 'End'])
-    df['clusterIndex'] = np.zeros(len(df))
+    df['Cluster_index'] = np.zeros(len(df))
+    df['Cluster_size'] = np.zeros(len(df))
     clusters_df = pd.DataFrame(columns=df.columns)
-    clusterIndex = 1
+    new_df = pd.DataFrame(columns=df.columns)
+    Cluster_index = 1
     cluster_file = ""
 
     # Calculate differences within each group
     df['differences'] = df.groupby(['Chr', 'Strand'])['Start'].diff()
-    df.to_csv('{}_diff.csv'.format(species), sep='\t', index=True)
+    df.to_excel('{}_diff.xlsx'.format(species), index=True)
 
     # Calculate clusters
     for index, row in df.iterrows():
@@ -209,23 +220,30 @@ def clusters(df):
             # df.loc[index, 'cluster'] = len(cluster)
             if len(cluster) == 1:
                 # no_cluster = no_cluster.append(row)
+                cluster['Cluster_index'] = -1
+                cluster['Cluster_size'] = len(cluster)
+                new_df = new_df.append(cluster)
                 df = df.drop(index)
             else:
-                cluster['clusterIndex'] = clusterIndex
-                cluster_file += "Cluster index:" + str(clusterIndex) + "\nSeed families:" + str(cluster["Family"].value_counts().to_dict()) + "\nSeeds:" + str(cluster["Seed"].to_list()) + "\n\n"
+                cluster['Cluster_index'] = Cluster_index
+                cluster['Cluster_size'] = len(cluster)
+                cluster_file += "Cluster index:" + str(Cluster_index) + "\nSeed families:" + str(cluster["Family"].value_counts().to_dict()) + "\nSeeds:" + str(cluster["Seed"].to_list()) + "\n\n"
                 clusters_df = clusters_df.append(cluster)
+                new_df = new_df.append(cluster)
                 df = df.drop(cluster.index)
-                clusterIndex += 1
+                Cluster_index += 1
     # print(df['cluster'].value_counts().sort_index(ascending=False))
     df = df.drop(["distance"], axis=1)
     clusters_df = clusters_df.drop(["distance"], axis=1)
+    new_df = new_df.drop(["distance"], axis=1)
     # filtered_input.append(df)
     with open('{}_clusters_info.txt'.format(species), 'w') as file:
         file.write(cluster_file)
+    clusters_df = clusters_df.drop(['Description', 'differences'], axis=1)
+    new_df = new_df.drop(['Description', 'differences'], axis=1)
+    new_df.sort_index(inplace=True)
+    sheet_dict["(D) Structural Features"] = new_df
     clusters_df.to_csv('{}_clusters.csv'.format(species), sep='\t', index=False)
-    # df = df.rename({"tag id": "provisional id",
-      #                    "estimated probability that the miRNA is a true positive": "estimated probability that the miRNA candidate is a true positive"},
-       #                  axis=1)
 
 if __name__ == '__main__':
     species = None
@@ -242,7 +260,10 @@ if __name__ == '__main__':
                   f' --all <path>: path to an intersection table excel which contains "all_candidates" sheet.\n'
                   )
             sys.exit()
-    all = pd.read_excel(all_path, sheet_name="(D) Structural Features")
+    xls = pd.ExcelFile(all_path)
+    sheet_dict = {sheet_name: xls.parse(sheet_name) for sheet_name in xls.sheet_names}
+    # all = pd.read_excel(all_path, sheet_name="(D) Structural Features")
+    all = sheet_dict["(D) Structural Features"]
     if species == "elegans" or species == "Elegans":
         all['Description'] = all[['Description_mirdeep', 'Description_sRNAbench', 'Description_mirbase']].astype(str).agg('. '.join, axis=1)
     else:
@@ -258,5 +279,6 @@ if __name__ == '__main__':
     # t_test(all)
     mann_whitney(all.copy())
     clusters(all.copy())
+    save_back_to_all(sheet_dict, all_path)
     # create_all_candidatess_fasta(all)
     #pd.to_csv("all_candidates_{}.csv".format(species), sep='\t', index=False)
