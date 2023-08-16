@@ -58,7 +58,7 @@ def build_exception_dict():
                   'Mature_connections': -1, 'Mature_BP_ratio': -1, 'Mature_max_bulge': -1, 'Loop_length': -1,
                   'Fold': -1, 'Mature': -1,'Mature_Length': -1, '3p/5p': -1, 'Hairpin_seq_trimmed': -1, 'Star': -1, 'Start_star': -1,
                   'End_star': -1, 'Star_length': -1, 'Star_connections': -1, 'Star_BP_ratio': -1, 'Star_max_bulge': -1,
-                  'Hairpin_seq_trimmed_length': -1, 'Max_bulge_symmetry': -1, 'min_one_mer_mature': -1, 'min_one_mer_hairpin': -1, 'max_one_mer_mature': -1, 'max_two_mer_mature': -1, 'max_one_mer_hairpin': -1, 'max_two_mer_hairpin': -1, 'Valid mir': -1}
+                  'Hairpin_seq_trimmed_length': -1, 'Max_bulge_symmetry': -1, 'min_one_mer_mature': -1, 'min_one_mer_hairpin': -1, 'max_one_mer_mature': -1, 'max_two_mer_mature': -1, 'max_one_mer_hairpin': -1, 'max_two_mer_hairpin': -1, 'Valid mir': False}
 def find_seed(name,seq):
     start_mature_inx = seq.index(mature[name])
     return seq[start_mature_inx + 1:start_mature_inx + 8]
@@ -158,7 +158,6 @@ if __name__ == '__main__':
     output = pd.concat([all_remaining, mirdb_df], axis=1)
     # output.to_csv("all_remaining_after_ziv_{}.csv".format(species), index=False)
 
-    print(output["Mature_BP_ratio"].value_counts())
     output = output.astype({'Mature_BP_ratio': 'float', 'Mature_max_bulge': 'float', 'Star_BP_ratio': 'float', 'Star_max_bulge': 'float'})
     writer = pd.ExcelWriter('all_remaining_after_ziv_{}.xlsx'.format(species))
     output.to_excel(writer, sheet_name='(A) Unfiltered)', index=False)
