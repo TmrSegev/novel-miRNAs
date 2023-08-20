@@ -98,8 +98,15 @@ for index, row in seed_candidates.iterrows():
     plt.title("index: " + str(index))
     plt.xticks(ticks=range(0, len(time)), labels=time)
     i += 1
+    if i == 7:
+        i = 1
+        if j == "":
+            j = 1
+        plt.savefig('{}_{}{}.png'.format(row['Seed'], row['Family'], j), dpi=300)
+        plt.clf()
+        j += 1
 
-plt.savefig('{}_{}.png'.format(row['Seed'], row['Family']), dpi=300)
+plt.savefig('{}_{}{}.png'.format(row['Seed'], row['Family'], j), dpi=300)
 
 # DATAQUEST WAY
 # plt.figure(figsize=(10, 12))
