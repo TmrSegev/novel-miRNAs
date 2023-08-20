@@ -85,7 +85,12 @@ def plot_series(series, ticks):
     series.plot.hist()
     plt.title(series.name)
     print("name:", series.name, "min:", series.min(), "max:", series.max())
-    plt.xticks(np.arange(series.min(), series.max() + ticks, ticks))
+    plt.xticks(np.arange(series.min(), series.max() + ticks, ticks), rotation=45)
+    mean = series.mean()
+    std = series.standart_deviation()
+    plt.axvline(mean, color="red")
+    plt.axvline(mean + std, color="yellow")
+    plt.axvline(mean - std, color="yellow")
     plt.savefig("./figures/{}.png".format(series.name), dpi=300)
     plt.clf()
 
