@@ -12,7 +12,6 @@ def save_back_to_all(sheet_dict, filepath):
     # Merge seeds by species columns
     overlap_columns = sheet_dict["(D) Structural Features"].columns.intersection(seeds_by_species.columns)
     overlap_columns = overlap_columns.drop(["Seed", "Family"])
-    print(overlap_columns)
     sheet_dict["(D) Structural Features"] = pd.merge(sheet_dict["(D) Structural Features"], seeds_by_species.drop(columns=overlap_columns), on=["Seed", "Family"], how="left")
 
     # Save the changes back to the same sheet
@@ -42,6 +41,7 @@ macrosperma_sheet_dict["(D) Structural Features"]['Species'] = "Seed_in_Macrospe
 sulstoni_sheet_dict["(D) Structural Features"]['Species'] = "Seed_in_Sulstoni"
 
 all = pd.concat([elegans_sheet_dict["(D) Structural Features"], macrosperma_sheet_dict["(D) Structural Features"], sulstoni_sheet_dict["(D) Structural Features"]])
+all.to_excel("all_species_candidates.xlsx", index=False)
 all['Description'] = all[['Description_mirdeep', 'Description_sRNAbench']].astype(str).agg(', '.join, axis=1)
 seeds_by_species = pd.pivot_table(all, values='Description', index=['Seed', 'Family'], columns='Species', aggfunc='count')
 seeds_by_species['Interspecies_seed_count'] = seeds_by_species.apply(count_non_nan_columns, axis=1)
@@ -85,7 +85,6 @@ unknown_unique['Sum'] = unknown_unique['Sum'].astype('int64')
 # unknown_unique['Sum'].plot.hist()
 # plt.savefig("candidate_counts_of_unknown_seeds_in_one_species.png", dpi=300)
 value_counts = unknown_unique['Sum'].value_counts().sort_index()
-print(unknown_unique['Sum'].value_counts())
 value_counts.plot.pie(figsize=(9, 9), autopct=autopct_format(value_counts.values), pctdistance=0.9, radius=1.2)
 plt.legend()
 plt.ylabel("")
@@ -95,7 +94,6 @@ plt.savefig("candidate_counts_of_unknown_seeds_in_any_one_species.png", dpi=300)
 
 plt.clf()
 value_counts = unknown_unique[unknown_unique["Seed_in_Elegans"] > 0]['Sum'].value_counts().sort_index()
-print(value_counts)
 value_counts.plot.pie(figsize=(9, 9), autopct=autopct_format(value_counts.values), pctdistance=0.9, radius=1.2)
 plt.legend()
 plt.ylabel("")
@@ -104,7 +102,6 @@ plt.savefig("candidate_counts_of_unknown_seeds_in_elegans.png", dpi=300)
 
 plt.clf()
 value_counts = unknown_unique[unknown_unique["Seed_in_Macrosperma"] > 0]['Sum'].value_counts().sort_index()
-print(value_counts)
 value_counts.plot.pie(figsize=(9, 9), autopct=autopct_format(value_counts.values), pctdistance=0.9, radius=1.2)
 plt.legend()
 plt.ylabel("")
@@ -113,7 +110,6 @@ plt.savefig("candidate_counts_of_unknown_seeds_in_macrosperma.png", dpi=300)
 
 plt.clf()
 value_counts = unknown_unique[unknown_unique["Seed_in_Sulstoni"] > 0]['Sum'].value_counts().sort_index()
-print(value_counts)
 value_counts.plot.pie(figsize=(9, 9), autopct=autopct_format(value_counts.values), pctdistance=0.9, radius=1.2)
 plt.legend()
 plt.ylabel("")
