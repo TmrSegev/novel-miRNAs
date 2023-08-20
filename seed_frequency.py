@@ -36,9 +36,9 @@ sulstoni_sheet_dict = {sheet_name: xls.parse(sheet_name) for sheet_name in xls.s
 # macrosperma = pd.read_excel("/sise/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/Ziv_Features/all_remaining_after_ziv_Macrosperma.xlsx", sheet_name="(D) Structural Features")
 # sulstoni = pd.read_excel("/sise/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/Ziv_Features/all_remaining_after_ziv_Sulstoni.xlsx", sheet_name="(D) Structural Features")
 
-elegans_sheet_dict["(D) Structural Features"]['Species'] = "Seed_in_Elegans"
-macrosperma_sheet_dict["(D) Structural Features"]['Species'] = "Seed_in_Macrosperma"
-sulstoni_sheet_dict["(D) Structural Features"]['Species'] = "Seed_in_Sulstoni"
+elegans_sheet_dict["(D) Structural Features"]['Species'] = "Elegans"
+macrosperma_sheet_dict["(D) Structural Features"]['Species'] = "Macrosperma"
+sulstoni_sheet_dict["(D) Structural Features"]['Species'] = "Sulstoni"
 
 all = pd.concat([elegans_sheet_dict["(D) Structural Features"], macrosperma_sheet_dict["(D) Structural Features"], sulstoni_sheet_dict["(D) Structural Features"]])
 all.to_excel("all_species_candidates.xlsx", index=False)
@@ -80,7 +80,7 @@ def autopct_format(values):
 
 
 plt.clf()
-unknown_unique['Sum'] = unknown_unique["Seed_in_Elegans"] + unknown_unique["Seed_in_Macrosperma"] + unknown_unique["Seed_in_Sulstoni"]
+unknown_unique['Sum'] = unknown_unique["Elegans"] + unknown_unique["Macrosperma"] + unknown_unique["Sulstoni"]
 unknown_unique['Sum'] = unknown_unique['Sum'].astype('int64')
 # unknown_unique['Sum'].plot.hist()
 # plt.savefig("candidate_counts_of_unknown_seeds_in_one_species.png", dpi=300)
@@ -93,7 +93,7 @@ plt.savefig("candidate_counts_of_unknown_seeds_in_any_one_species.png", dpi=300)
 
 
 plt.clf()
-value_counts = unknown_unique[unknown_unique["Seed_in_Elegans"] > 0]['Sum'].value_counts().sort_index()
+value_counts = unknown_unique[unknown_unique["Elegans"] > 0]['Sum'].value_counts().sort_index()
 value_counts.plot.pie(figsize=(9, 9), autopct=autopct_format(value_counts.values), pctdistance=0.9, radius=1.2)
 plt.legend()
 plt.ylabel("")
@@ -101,7 +101,7 @@ plt.title("Candidate counts of unknown seeds that are present only in Elegans")
 plt.savefig("candidate_counts_of_unknown_seeds_in_elegans.png", dpi=300)
 
 plt.clf()
-value_counts = unknown_unique[unknown_unique["Seed_in_Macrosperma"] > 0]['Sum'].value_counts().sort_index()
+value_counts = unknown_unique[unknown_unique["Macrosperma"] > 0]['Sum'].value_counts().sort_index()
 value_counts.plot.pie(figsize=(9, 9), autopct=autopct_format(value_counts.values), pctdistance=0.9, radius=1.2)
 plt.legend()
 plt.ylabel("")
@@ -109,7 +109,7 @@ plt.title("Candidate counts of unknown seeds that are present only in Macrosperm
 plt.savefig("candidate_counts_of_unknown_seeds_in_macrosperma.png", dpi=300)
 
 plt.clf()
-value_counts = unknown_unique[unknown_unique["Seed_in_Sulstoni"] > 0]['Sum'].value_counts().sort_index()
+value_counts = unknown_unique[unknown_unique["Sulstoni"] > 0]['Sum'].value_counts().sort_index()
 value_counts.plot.pie(figsize=(9, 9), autopct=autopct_format(value_counts.values), pctdistance=0.9, radius=1.2)
 plt.legend()
 plt.ylabel("")
