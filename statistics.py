@@ -197,53 +197,63 @@ def save_back_to_all(sheet_dict, filepath):
         for sheet_name, df in sheet_dict.items():
             df.to_excel(writer, sheet_name, index=False)
 
-def clusters(df):
-    # Filtering by coordinates
-    df = df.sort_values(['Chr', 'Strand', 'Start', 'End'])
-    df['Cluster_index'] = np.zeros(len(df))
-    df['Cluster_size'] = np.zeros(len(df))
-    clusters_df = pd.DataFrame(columns=df.columns)
-    new_df = pd.DataFrame(columns=df.columns)
-    Cluster_index = 1
-    cluster_file = ""
+def clusters():
+    for key in sheet_dict.keys():
+        # Filtering by coordinates
+        df = sheet_dict[key].copy()
+        df = df.sort_values(['Chr', 'Strand', 'Start', 'End'])
+        df['Cluster_index'] = np.zeros(len(df))
+        df['Cluster_size'] = np.zeros(len(df))
+        clusters_df = pd.DataFrame(columns=df.columns)
 
-    # Calculate differences within each group
-    df['differences'] = df.groupby(['Chr', 'Strand'])['Start'].diff()
-    df.to_excel('{}_diff.xlsx'.format(species), index=True)
+        print(key)
+        if "blast" not in key:
+            new_df = pd.DataFrame(columns=df.columns)
+            cluster_index = 1
+            cluster_file = ""
 
-    # Calculate clusters
-    for index, row in df.iterrows():
-        if index in df.index:
-            df['distance'] = df['Start'] - row['Start']
-            cluster = df[df['distance'].abs() <= 10000]
-            cluster = cluster[cluster['Chr'] == row['Chr']]
-            # df.loc[index, 'cluster'] = len(cluster)
-            if len(cluster) == 1:
-                # no_cluster = no_cluster.append(row)
-                cluster['Cluster_index'] = -1
-                cluster['Cluster_size'] = len(cluster)
-                new_df = new_df.append(cluster)
-                df = df.drop(index)
-            else:
-                cluster['Cluster_index'] = Cluster_index
-                cluster['Cluster_size'] = len(cluster)
-                cluster_file += "Cluster index:" + str(Cluster_index) + "\nSeed families:" + str(cluster["Family"].value_counts().to_dict()) + "\nSeeds:" + str(cluster["Seed"].to_list()) + "\n\n"
-                clusters_df = clusters_df.append(cluster)
-                new_df = new_df.append(cluster)
-                df = df.drop(cluster.index)
-                Cluster_index += 1
-    # print(df['cluster'].value_counts().sort_index(ascending=False))
-    df = df.drop(["distance"], axis=1)
-    clusters_df = clusters_df.drop(["distance"], axis=1)
-    new_df = new_df.drop(["distance"], axis=1)
-    # filtered_input.append(df)
-    with open('{}_clusters_info.txt'.format(species), 'w') as file:
-        file.write(cluster_file)
-    clusters_df = clusters_df.drop(['Description', 'differences'], axis=1)
-    new_df = new_df.drop(['Description', 'differences'], axis=1)
-    new_df.sort_index(inplace=True)
-    sheet_dict["(D) Structural Features"] = new_df
-    clusters_df.to_csv('{}_clusters.csv'.format(species), sep='\t', index=False)
+            # Calculate differences within each group
+            df['differences'] = df.groupby(['Chr', 'Strand'])['Start'].diff()
+            df['differences'] = df['differences'].fillna(0)
+            print(df['differences'])
+            # df.to_excel('{}_diff.xlsx'.format(species), index=True)
+
+            # Calculate clusters
+            for index, row in df.iterrows():
+                if index in df.index:
+                    df['distance'] = df['Start'] - row['Start']
+                    cluster = df[df['distance'].abs() <= 10000]
+                    cluster = cluster[cluster['Chr'] == row['Chr']]
+                    cluster = cluster[cluster['Strand'] == row['Strand']]
+                    # df.loc[index, 'cluster'] = len(cluster)
+                    if len(cluster) == 1:
+                        # no_cluster = no_cluster.append(row)
+                        cluster['Cluster_index'] = -1
+                        cluster['Cluster_size'] = len(cluster)
+                        new_df = new_df.append(cluster)
+                        df = df.drop(index)
+                    else:
+                        cluster['Cluster_index'] = cluster_index
+                        cluster['Cluster_size'] = len(cluster)
+                        cluster_file += "Cluster index:" + str(cluster_index) + "\nSeed families:" + str(cluster["Family"].value_counts().to_dict()) + "\nSeeds:" + str(cluster["Seed"].to_list()) + "\n\n"
+                        clusters_df = clusters_df.append(cluster)
+                        new_df = new_df.append(cluster)
+                        df = df.drop(cluster.index)
+                        cluster_index += 1
+            # print(df['cluster'].value_counts().sort_index(ascending=False))
+            df = df.drop(["distance"], axis=1)
+            clusters_df = clusters_df.drop(["distance"], axis=1)
+            new_df = new_df.drop(["distance"], axis=1)
+            # filtered_input.append(df)
+            with open('{}_clusters_info.txt'.format(species), 'w') as file:
+                file.write(cluster_file)
+            # clusters_df = clusters_df.drop(['Description', 'differences'], axis=1)
+            # new_df = new_df.drop(['Description', 'differences'], axis=1)
+            new_df.sort_index(inplace=True)
+            print(new_df.info())
+            new_df = new_df.sort_values(['Chr', 'Strand', 'Start', 'End'])
+            sheet_dict[key] = new_df
+            clusters_df.to_csv('{}_clusters.csv'.format(species), sep='\t', index=False)
 
 if __name__ == '__main__':
     species = None
@@ -278,7 +288,8 @@ if __name__ == '__main__':
     # wilcoxon_test(all)
     # t_test(all)
     mann_whitney(all.copy())
-    clusters(all.copy())
+    clusters()
+    all = all.drop(['Description'], axis=1)
     save_back_to_all(sheet_dict, all_path)
     # create_all_candidatess_fasta(all)
     #pd.to_csv("all_candidates_{}.csv".format(species), sep='\t', index=False)

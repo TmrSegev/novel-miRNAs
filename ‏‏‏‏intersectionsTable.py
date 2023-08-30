@@ -275,7 +275,6 @@ featurecounts_mirdeep['mature/star'] = featurecounts_mirdeep['Geneid'].str.split
 featurecounts_mirdeep['mature/star'] = featurecounts_mirdeep['mature/star'].apply(lambda x : x[2])
 
 featurecounts_mirdeep = featurecounts_mirdeep.drop('Geneid', axis=1)
-
 # Casting libraries columns to int64
 cast_dict = {k: 'int64' for k in libraries}
 featurecounts_mirdeep = featurecounts_mirdeep.astype(cast_dict)
@@ -617,7 +616,6 @@ sRNAbench_blast_fc_intersections_table['hairpinSeq'] = remaining_sRNAbench['hair
 
 # Extract loop size
 def loop_size(row):
-    print(row["hairpinSeq"])
     if (row["hairpinSeq"].find(str(row['5pseq'])) == -1) or (row["hairpinSeq"].find(str(row['3pseq'])) == -1):
         return -1
     index_end_5p = len((str(row['5pseq'])))
@@ -701,31 +699,31 @@ if (species == 'Elegans') or (species == 'elegans'):
     mirdeep_blast_fc_intersections_table['Type'] = np.zeros(len(mirdeep_blast_fc_intersections_table))
     mirdeep_blast_fc_intersections_table.loc[((mirdeep_blast_fc_intersections_table['T/F_sRNAbench'] == 1) & (mirdeep_blast_fc_intersections_table['T/F_mirbase'] == 1) & (mirdeep_blast_fc_intersections_table['T/F_mirgenedb'] == 1)), 'Type'] = 1
     mirdeep_blast_fc_intersections_table.loc[((mirdeep_blast_fc_intersections_table['T/F_sRNAbench'] == 0) & (mirdeep_blast_fc_intersections_table['T/F_mirbase'] == 1) & (mirdeep_blast_fc_intersections_table['T/F_mirgenedb'] == 1)), 'Type'] = 2
-    mirdeep_blast_fc_intersections_table.loc[((mirdeep_blast_fc_intersections_table['T/F_sRNAbench'] == 1) & (mirdeep_blast_fc_intersections_table['T/F_mirbase'] == 1) & (mirdeep_blast_fc_intersections_table['T/F_mirgenedb'] == 0)), 'Type'] = 4
-    mirdeep_blast_fc_intersections_table.loc[((mirdeep_blast_fc_intersections_table['T/F_sRNAbench'] == 0) & (mirdeep_blast_fc_intersections_table['T/F_mirbase'] == 1) & (mirdeep_blast_fc_intersections_table['T/F_mirgenedb'] == 0)), 'Type'] = 5
-    mirdeep_blast_fc_intersections_table.loc[((mirdeep_blast_fc_intersections_table['T/F_sRNAbench'] == 1) & (mirdeep_blast_fc_intersections_table['T/F_mirbase'] == 0) & (mirdeep_blast_fc_intersections_table['T/F_mirgenedb'] == 0)), 'Type'] = 7
-    mirdeep_blast_fc_intersections_table.loc[((mirdeep_blast_fc_intersections_table['T/F_sRNAbench'] == 0) & (mirdeep_blast_fc_intersections_table['T/F_mirbase'] == 0) & (mirdeep_blast_fc_intersections_table['T/F_mirgenedb'] == 0)), 'Type'] = 8
+    mirdeep_blast_fc_intersections_table.loc[((mirdeep_blast_fc_intersections_table['T/F_sRNAbench'] == 1) & (mirdeep_blast_fc_intersections_table['T/F_mirbase'] == 1) & (mirdeep_blast_fc_intersections_table['T/F_mirgenedb'] == 0)), 'Type'] = 5
+    mirdeep_blast_fc_intersections_table.loc[((mirdeep_blast_fc_intersections_table['T/F_sRNAbench'] == 0) & (mirdeep_blast_fc_intersections_table['T/F_mirbase'] == 1) & (mirdeep_blast_fc_intersections_table['T/F_mirgenedb'] == 0)), 'Type'] = 6
+    mirdeep_blast_fc_intersections_table.loc[((mirdeep_blast_fc_intersections_table['T/F_sRNAbench'] == 1) & (mirdeep_blast_fc_intersections_table['T/F_mirbase'] == 0) & (mirdeep_blast_fc_intersections_table['T/F_mirgenedb'] == 0)), 'Type'] = 9
+    mirdeep_blast_fc_intersections_table.loc[((mirdeep_blast_fc_intersections_table['T/F_sRNAbench'] == 0) & (mirdeep_blast_fc_intersections_table['T/F_mirbase'] == 0) & (mirdeep_blast_fc_intersections_table['T/F_mirgenedb'] == 0)), 'Type'] = 10
 
 
     # ------sRNAbench:
     sRNAbench_blast_fc_intersections_table['Type'] = np.zeros(len(sRNAbench_blast_fc_intersections_table))
     sRNAbench_blast_fc_intersections_table.loc[((sRNAbench_blast_fc_intersections_table['T/F_mirdeep'] == 1) & (sRNAbench_blast_fc_intersections_table['T/F_mirbase'] == 1) & (sRNAbench_blast_fc_intersections_table['T/F_mirgenedb'] == 1)), 'Type'] = 1
-    sRNAbench_blast_fc_intersections_table.loc[((sRNAbench_blast_fc_intersections_table['T/F_mirdeep'] == 0) & (sRNAbench_blast_fc_intersections_table['T/F_mirbase'] == 1) & (sRNAbench_blast_fc_intersections_table['T/F_mirgenedb'] == 1)), 'Type'] = 2
-    sRNAbench_blast_fc_intersections_table.loc[((sRNAbench_blast_fc_intersections_table['T/F_mirdeep'] == 1) & (sRNAbench_blast_fc_intersections_table['T/F_mirbase'] == 1) & (sRNAbench_blast_fc_intersections_table['T/F_mirgenedb'] == 0)), 'Type'] = 4
-    sRNAbench_blast_fc_intersections_table.loc[((sRNAbench_blast_fc_intersections_table['T/F_mirdeep'] == 0) & (sRNAbench_blast_fc_intersections_table['T/F_mirbase'] == 1) & (sRNAbench_blast_fc_intersections_table['T/F_mirgenedb'] == 0)), 'Type'] = 5
-    sRNAbench_blast_fc_intersections_table.loc[((sRNAbench_blast_fc_intersections_table['T/F_mirdeep'] == 1) & (sRNAbench_blast_fc_intersections_table['T/F_mirbase'] == 0) & (sRNAbench_blast_fc_intersections_table['T/F_mirgenedb'] == 0)), 'Type'] = 7
-    sRNAbench_blast_fc_intersections_table.loc[((sRNAbench_blast_fc_intersections_table['T/F_mirdeep'] == 0) & (sRNAbench_blast_fc_intersections_table['T/F_mirbase'] == 0) & (sRNAbench_blast_fc_intersections_table['T/F_mirgenedb'] == 0)), 'Type'] = 8
+    sRNAbench_blast_fc_intersections_table.loc[((sRNAbench_blast_fc_intersections_table['T/F_mirdeep'] == 0) & (sRNAbench_blast_fc_intersections_table['T/F_mirbase'] == 1) & (sRNAbench_blast_fc_intersections_table['T/F_mirgenedb'] == 1)), 'Type'] = 3
+    sRNAbench_blast_fc_intersections_table.loc[((sRNAbench_blast_fc_intersections_table['T/F_mirdeep'] == 1) & (sRNAbench_blast_fc_intersections_table['T/F_mirbase'] == 1) & (sRNAbench_blast_fc_intersections_table['T/F_mirgenedb'] == 0)), 'Type'] = 5
+    sRNAbench_blast_fc_intersections_table.loc[((sRNAbench_blast_fc_intersections_table['T/F_mirdeep'] == 0) & (sRNAbench_blast_fc_intersections_table['T/F_mirbase'] == 1) & (sRNAbench_blast_fc_intersections_table['T/F_mirgenedb'] == 0)), 'Type'] = 7
+    sRNAbench_blast_fc_intersections_table.loc[((sRNAbench_blast_fc_intersections_table['T/F_mirdeep'] == 1) & (sRNAbench_blast_fc_intersections_table['T/F_mirbase'] == 0) & (sRNAbench_blast_fc_intersections_table['T/F_mirgenedb'] == 0)), 'Type'] = 9
+    sRNAbench_blast_fc_intersections_table.loc[((sRNAbench_blast_fc_intersections_table['T/F_mirdeep'] == 0) & (sRNAbench_blast_fc_intersections_table['T/F_mirbase'] == 0) & (sRNAbench_blast_fc_intersections_table['T/F_mirgenedb'] == 0)), 'Type'] = 11
 
     # ------mirbase:
     mirbase_fc_intersections_table['Type'] = np.zeros(len(mirbase_fc_intersections_table))
     mirbase_fc_intersections_table.loc[((mirbase_fc_intersections_table['T/F_mirgenedb'] == 1) & (mirbase_fc_intersections_table['T/F_mirdeep'] == 1) & (mirbase_fc_intersections_table['T/F_sRNAbench'] == 1)), 'Type'] = 1
-    mirbase_fc_intersections_table.loc[((mirbase_fc_intersections_table['T/F_mirgenedb'] == 0) & (mirbase_fc_intersections_table['T/F_mirdeep'] == 1) & (mirbase_fc_intersections_table['T/F_sRNAbench'] == 1)), 'Type'] = 4
+    mirbase_fc_intersections_table.loc[((mirbase_fc_intersections_table['T/F_mirgenedb'] == 0) & (mirbase_fc_intersections_table['T/F_mirdeep'] == 1) & (mirbase_fc_intersections_table['T/F_sRNAbench'] == 1)), 'Type'] = 5
     mirbase_fc_intersections_table.loc[((mirbase_fc_intersections_table['T/F_mirgenedb'] == 1) & (mirbase_fc_intersections_table['T/F_mirdeep'] == 1) & (mirbase_fc_intersections_table['T/F_sRNAbench'] == 0)), 'Type'] = 2
-    mirbase_fc_intersections_table.loc[((mirbase_fc_intersections_table['T/F_mirgenedb'] == 1) & (mirbase_fc_intersections_table['T/F_mirdeep'] == 0) & (mirbase_fc_intersections_table['T/F_sRNAbench'] == 1)), 'Type'] = 2
-    mirbase_fc_intersections_table.loc[((mirbase_fc_intersections_table['T/F_mirgenedb'] == 0) & (mirbase_fc_intersections_table['T/F_mirdeep'] == 1) & (mirbase_fc_intersections_table['T/F_sRNAbench'] == 0)), 'Type'] = 5
-    mirbase_fc_intersections_table.loc[((mirbase_fc_intersections_table['T/F_mirgenedb'] == 0) & (mirbase_fc_intersections_table['T/F_mirdeep'] == 0) & (mirbase_fc_intersections_table['T/F_sRNAbench'] == 1)), 'Type'] = 5
-    mirbase_fc_intersections_table.loc[((mirbase_fc_intersections_table['T/F_mirgenedb'] == 1) & (mirbase_fc_intersections_table['T/F_mirdeep'] == 0) & (mirbase_fc_intersections_table['T/F_sRNAbench'] == 0)), 'Type'] = 3
-    mirbase_fc_intersections_table.loc[((mirbase_fc_intersections_table['T/F_mirgenedb'] == 0) & (mirbase_fc_intersections_table['T/F_mirdeep'] == 0) & (mirbase_fc_intersections_table['T/F_sRNAbench'] == 0)), 'Type'] = 6
+    mirbase_fc_intersections_table.loc[((mirbase_fc_intersections_table['T/F_mirgenedb'] == 1) & (mirbase_fc_intersections_table['T/F_mirdeep'] == 0) & (mirbase_fc_intersections_table['T/F_sRNAbench'] == 1)), 'Type'] = 3
+    mirbase_fc_intersections_table.loc[((mirbase_fc_intersections_table['T/F_mirgenedb'] == 0) & (mirbase_fc_intersections_table['T/F_mirdeep'] == 1) & (mirbase_fc_intersections_table['T/F_sRNAbench'] == 0)), 'Type'] = 6
+    mirbase_fc_intersections_table.loc[((mirbase_fc_intersections_table['T/F_mirgenedb'] == 0) & (mirbase_fc_intersections_table['T/F_mirdeep'] == 0) & (mirbase_fc_intersections_table['T/F_sRNAbench'] == 1)), 'Type'] = 7
+    mirbase_fc_intersections_table.loc[((mirbase_fc_intersections_table['T/F_mirgenedb'] == 1) & (mirbase_fc_intersections_table['T/F_mirdeep'] == 0) & (mirbase_fc_intersections_table['T/F_sRNAbench'] == 0)), 'Type'] = 4
+    mirbase_fc_intersections_table.loc[((mirbase_fc_intersections_table['T/F_mirgenedb'] == 0) & (mirbase_fc_intersections_table['T/F_mirdeep'] == 0) & (mirbase_fc_intersections_table['T/F_sRNAbench'] == 0)), 'Type'] = 8
 
 else:
     # ---miRdeep:
@@ -737,15 +735,14 @@ else:
 
 # ------CREATE ALL CANDIDATES SHEET:------
 unified = mirdeep_blast_fc_intersections_table.copy()
-
 # Defining 5p/3p sequences in mirdeep
 unified['5pseq'] = np.where(unified['mature'] == '5p', unified['consensus mature sequence'], unified['consensus star sequence'])
 unified['3pseq'] = np.where(unified['mature'] == '3p', unified['consensus mature sequence'], unified['consensus star sequence'])
 
 unified = unified.drop(['Chr_sRNAbench', 'Start_sRNAbench', 'End_sRNAbench', 'Strand_sRNAbench', 'consensus mature sequence', 'consensus star sequence'], axis=1)
 if (species == 'Elegans') or (species == 'elegans'):
-    only_sRNAbench = sRNAbench_blast_fc_intersections_table[sRNAbench_blast_fc_intersections_table['Type'].isin([2, 5, 8])]
-    only_mirbase = mirbase_fc_intersections_table[mirbase_fc_intersections_table['Type'].isin([3, 6])]
+    only_sRNAbench = sRNAbench_blast_fc_intersections_table[sRNAbench_blast_fc_intersections_table['Type'].isin([3, 7, 11])]
+    only_mirbase = mirbase_fc_intersections_table[mirbase_fc_intersections_table['Type'].isin([4, 8])]
    # unified = unified.drop(['T/F_sRNAbench', 'T/F_mirbase', 'T/F_mirgenedb'], axis=1)
     #only_sRNAbench = only_sRNAbench.drop(['T/F_mirdeep'], axis=1)
 else:
