@@ -87,11 +87,11 @@ def plot_series(series, ticks):
     print("name:", series.name, "min:", series.min(), "max:", series.max())
     plt.xticks(np.arange(series.min(), series.max() + ticks, ticks), rotation=45)
     mean = series.mean()
-    std = series.standart_deviation()
+    std = series.std()
     plt.axvline(mean, color="red")
     plt.axvline(mean + std, color="yellow")
     plt.axvline(mean - std, color="yellow")
-    plt.savefig("./figures/{}.png".format(series.name), dpi=300)
+    plt.savefig("./figures/{}_{}.png".format(species, series.name), dpi=300)
     plt.clf()
 
 if __name__ == '__main__':
@@ -162,36 +162,37 @@ if __name__ == '__main__':
     mirdb_df.reset_index(inplace=True, drop=True)
     output = pd.concat([all_remaining, mirdb_df], axis=1)
     # output.to_csv("all_remaining_after_ziv_{}.csv".format(species), index=False)
-
-    output = output.astype({'Mature_BP_ratio': 'float', 'Mature_max_bulge': 'float', 'Star_BP_ratio': 'float', 'Star_max_bulge': 'float'})
-    writer = pd.ExcelWriter('all_remaining_after_ziv_{}.xlsx'.format(species))
-    output.to_excel(writer, sheet_name='(A) Unfiltered)', index=False)
-    sum_fc_thres_ok = output[output['sum_FC_m > thres'] == 1].copy()
-    sum_fc_thres_ok.to_excel(writer, sheet_name='(B) sum_FC>100', index=False)
-    no_novel451 = sum_fc_thres_ok[sum_fc_thres_ok['novel451'] == 0].copy()
-    no_novel451.to_excel(writer, sheet_name='(C) Novel451', index=False)
-    structural = no_novel451[no_novel451['Valid mir'] == True].copy()
-    structural = structural[(structural["Mature_connections"] >= 14) & (structural["Mature_connections"] <= 22)]
-    structural = structural[(structural["Mature_BP_ratio"] >= 0.6) & (structural["Mature_BP_ratio"] <= 0.96)]
-    structural = structural[(structural["Mature_max_bulge"] <= 4)]
-    structural = structural[(structural["Loop_length"] >= 10) & (structural["Loop_length"] <= 25)]
-    structural = structural[(structural["Mature_Length"] >= 19) & (structural["Mature_Length"] <= 26)]
-    structural = structural[(structural["Star_length"] >= 19) & (structural["Star_length"] <= 25)]
-    structural = structural[(structural["Star_connections"] >= 14) & (structural["Star_connections"] <= 23)]
-    structural = structural[(structural["Star_BP_ratio"] >= 0.6) & (structural["Star_BP_ratio"] <= 0.96)]
-    structural = structural[structural["Star_max_bulge"] <= 4]
-    structural = structural[structural["Hairpin_seq_trimmed_length"] >= 53]
-    structural = structural[structural["Max_bulge_symmetry"] <= 3]
-    structural = structural[structural["min_one_mer_hairpin"] >= 0.1]
-    structural = structural[structural["max_one_mer_hairpin"] <= 0.45]
-    structural.to_excel(writer, sheet_name='(D) Structural Features', index=False)
-    writer.save()
+    if species != "miRGeneDB":
+        output = output.astype({'Mature_BP_ratio': 'float', 'Mature_max_bulge': 'float', 'Star_BP_ratio': 'float', 'Star_max_bulge': 'float'})
+        writer = pd.ExcelWriter('all_remaining_after_ziv_{}.xlsx'.format(species))
+        output.to_excel(writer, sheet_name='(A) Unfiltered)', index=False)
+        sum_fc_thres_ok = output[output['sum_FC_m > thres'] == 1].copy()
+        sum_fc_thres_ok.to_excel(writer, sheet_name='(B) sum_FC>100', index=False)
+        no_novel451 = sum_fc_thres_ok[sum_fc_thres_ok['novel451'] == 0].copy()
+        no_novel451.to_excel(writer, sheet_name='(C) Novel451', index=False)
+        structural = no_novel451[no_novel451['Valid mir'] == True].copy()
+        structural = structural[(structural["Mature_connections"] >= 14) & (structural["Mature_connections"] <= 22)]
+        structural = structural[(structural["Mature_BP_ratio"] >= 0.6) & (structural["Mature_BP_ratio"] <= 0.96)]
+        structural = structural[(structural["Mature_max_bulge"] <= 4)]
+        structural = structural[(structural["Loop_length"] >= 10) & (structural["Loop_length"] <= 25)]
+        structural = structural[(structural["Mature_Length"] >= 19) & (structural["Mature_Length"] <= 26)]
+        structural = structural[(structural["Star_length"] >= 19) & (structural["Star_length"] <= 25)]
+        structural = structural[(structural["Star_connections"] >= 14) & (structural["Star_connections"] <= 23)]
+        structural = structural[(structural["Star_BP_ratio"] >= 0.6) & (structural["Star_BP_ratio"] <= 0.96)]
+        structural = structural[structural["Star_max_bulge"] <= 4]
+        structural = structural[structural["Hairpin_seq_trimmed_length"] >= 53]
+        structural = structural[structural["Max_bulge_symmetry"] <= 3]
+        structural = structural[structural["min_one_mer_hairpin"] >= 0.1]
+        structural = structural[structural["max_one_mer_hairpin"] <= 0.45]
+        structural.to_excel(writer, sheet_name='(D) Structural Features', index=False)
+        writer.save()
 
     if species != "Hofstenia":
         if species == "Elegans":
             mirgenedb = output[(output['Description_mirgenedb'] != '.') & (output['Valid mir'] == True)]
         else:
             mirgenedb = output[output['Valid mir'] == True]
+        mirgenedb.to_csv("temp.csv", sep='\t', index=False)
         plot_series(mirgenedb['Hairpin_seq_trimmed_length'], 5.0)
         plot_series(mirgenedb['Mature_connections'], 1.0)
         plot_series(mirgenedb['Mature_BP_ratio'].astype('float'), 0.05)

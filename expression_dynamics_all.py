@@ -4,6 +4,9 @@ import sys
 from Bio import AlignIO
 import os
 from Bio.Align.Applications import ClustalwCommandline
+from Bio.Phylo.TreeConstruction import DistanceCalculator
+from Bio.Phylo.TreeConstruction import DistanceTreeConstructor
+from Bio import Phylo
 
 
 
@@ -118,16 +121,55 @@ if j == "":
 else:
     plt.savefig('{}_{}_{}.png'.format(row['Seed'], row['Family'], j), dpi=300)
 
-
+file_name = "{}_{}".format(seed, family)
 clustalw_exe = r"/sise/home/stome/clustaw/clustalw-2.1/src/clustalw2"
-clustalw_cline = ClustalwCommandline(clustalw_exe, infile="{}_{}.fasta".format(seed, family))
+clustalw_cline = ClustalwCommandline(clustalw_exe, infile=file_name + ".fasta")
 assert os.path.isfile(clustalw_exe), "Clustal W executable missing"
 stdout, stderr = clustalw_cline()
-align = AlignIO.read("opuntia.aln", "clustal")
-print(align)
+alignment = AlignIO.read(file_name+".aln", "clustal")
+print(alignment)
 
-# # Read the fasta
-# alignments = AlignIO.parse("{}_{}.fasta".format(seed, family), "clustal")
-# for alignment in alignments:
-#     print(alignment)
-#     print()
+calculator = DistanceCalculator('identity')
+distance_matrix = calculator.get_distance(alignment)
+print(distance_matrix)
+
+# ------ Using UPGMA algorithm
+constructor = DistanceTreeConstructor()
+# Construct the phlyogenetic tree using UPGMA algorithm
+UPGMATree = constructor.upgma(distance_matrix)
+
+# Make a better looking tree using the features of matplotlib
+fig = plt.figure(figsize=(20, 12), dpi=300) # create figure & set the size
+plt.rc('font', size=6)              # fontsize of the leaf and node labels
+plt.rc('xtick', labelsize=8)       # fontsize of the tick labels
+plt.rc('ytick', labelsize=8)       # fontsize of the tick labels
+axes = fig.add_subplot(1, 1, 1)
+
+# drawing the tree
+Phylo.draw(UPGMATree, axes=axes)
+fig.savefig(file_name + "_UPGMATree.png")
+
+# Further info and find common ancestor of two terminals:
+# UPGMATree.common_ancestor('Dog','Masked_Palm_Civet')
+# UPGMATree.get_terminals()
+# UPGMATree.get_nonterminals()
+# UPGMATree.count_terminals()
+
+# ------ Using Neighbour Joining algorithm
+# Construct the phlyogenetic tree using NJ algorithm
+NJTree = constructor.nj(distance_matrix)
+# Draw the phlyogenetic tree using terminal
+Phylo.draw_ascii(NJTree)
+# Make a better looking tree using the features of matplotlib
+
+fig = plt.figure(figsize=(28, 11), dpi=300) # create figure & set the size
+plt.rc('font', size=6)              # fontsize of the leaf and node labels
+# matplotlib.rc('font', size=18)              # fontsize of the leaf and node labels
+# matplotlib.rc('xtick', labelsize=16)       # fontsize of the tick labels
+# matplotlib.rc('ytick', labelsize=16)       # fontsize of the tick labels
+
+axes = fig.add_subplot(1, 1, 1)
+Phylo.draw(NJTree, axes=axes)
+
+fig.savefig(file_name + "_NJTree.png")
+
