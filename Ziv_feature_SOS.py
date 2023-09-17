@@ -12,12 +12,13 @@ import numpy as np
 def get_seq_data(path, start_end_mark=False):
     seq = {}
     for seq_record in SeqIO.parse(path, "fasta"):
-        if species != "Hofstenia":
-            # seq_id = seq_record.description.split(';')
-            seq_id = seq_record.description
-            # seq_id = seq_id[0]
-        else:
-            seq_id = seq_record.id.split('|')[:-1][0]
+        # if species != "Hofstenia":
+        #     # seq_id = seq_record.description.split(';')
+        #     seq_id = seq_record.description
+        #     # seq_id = seq_id[0]
+        # else:
+        #     seq_id = seq_record.id.split('|')[:-1][0]
+        seq_id = seq_record.description
         if start_end_mark:
             seq[seq_id] = ('S' + "".join(str(seq_record.seq)) + 'E')
         else:
@@ -129,10 +130,11 @@ if __name__ == '__main__':
     star = get_seq_data(star, start_end_mark=False)
     if species == "miRGeneDB":
         all_remaining = pd.DataFrame()
-    elif species != "Hofstenia":
-        all_remaining = pd.read_excel(all_remaining_path, sheet_name="all_candidates")
-    else:
-        all_remaining = pd.read_csv(all_remaining_path, sep='\t')
+    # elif species != "Hofstenia":
+    #     all_remaining = pd.read_excel(all_remaining_path, sheet_name="all_candidates")
+    # else:
+    #     all_remaining = pd.read_csv(all_remaining_path, sep='\t')
+    all_remaining = pd.read_excel(all_remaining_path, sheet_name="all_candidates")
     #ziv_features = pd.DataFrame()
     # gen_seq = open("star_mature_generated_output.txt",).readlines()
     gen_dict = build_dict()
@@ -162,7 +164,12 @@ if __name__ == '__main__':
     mirdb_df.reset_index(inplace=True, drop=True)
     output = pd.concat([all_remaining, mirdb_df], axis=1)
     # output.to_csv("all_remaining_after_ziv_{}.csv".format(species), index=False)
-    if species != "miRGeneDB":
+    if species == "miRGeneDB" or species == "Hofstenia":
+        output = output.astype({'Mature_BP_ratio': 'float', 'Mature_max_bulge': 'float', 'Star_BP_ratio': 'float', 'Star_max_bulge': 'float'})
+        writer = pd.ExcelWriter('all_remaining_after_ziv_{}.xlsx'.format(species))
+        output.to_excel(writer, sheet_name='(A) Unfiltered)', index=False)
+        writer.save()
+    if species != "miRGeneDB" and species != "Hofstenia":
         output = output.astype({'Mature_BP_ratio': 'float', 'Mature_max_bulge': 'float', 'Star_BP_ratio': 'float', 'Star_max_bulge': 'float'})
         writer = pd.ExcelWriter('all_remaining_after_ziv_{}.xlsx'.format(species))
         output.to_excel(writer, sheet_name='(A) Unfiltered)', index=False)
@@ -187,7 +194,7 @@ if __name__ == '__main__':
         structural.to_excel(writer, sheet_name='(D) Structural Features', index=False)
         writer.save()
 
-    if species != "Hofstenia":
+    if species != "miRGeneDB" and species != "Hofstenia":
         if species == "Elegans":
             mirgenedb = output[(output['Description_mirgenedb'] != '.') & (output['Valid mir'] == True)]
         else:

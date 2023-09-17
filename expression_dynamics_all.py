@@ -23,7 +23,7 @@ from Bio import Phylo
 #     plt.savefig('{}_{}.png'.format(row['Seed'], row['Unnamed: 0']), dpi=300)
 #
 def create_seed_fasta(df):
-    fasta_path = "{}_{}.fasta".format(seed, family)
+    fasta_path = "./{}/{}_{}.fasta".format(folder_name, seed, family)
     fasta_file = ''
     open(fasta_path, 'w').close()
 
@@ -45,6 +45,14 @@ def create_seed_fasta(df):
     with open(fasta_path, 'a+') as f:
         f.write(fasta_file)
 
+def create_folder(seed, family):
+    folder_name = "{}_{}".format(seed, family)
+    if not os.path.exists(folder_name):
+        os.mkdir(folder_name)
+        print(f"Folder '{folder_name}' created successfully.")
+    else:
+        print(f"Folder '{folder_name}' already exists.")
+    return folder_name
 
 all_path = None
 seed = None
@@ -74,10 +82,10 @@ all_candidates = pd.read_excel(all_path)
 # time_all = time_elegans + time_macrosperma + time_sulstoni
 # rename_dict = dict(zip(libraries_rpm_all, time_all))
 # all_candidates = all_candidates.rename(columns=rename_dict)
-
 seed_candidates = all_candidates[all_candidates['Seed'] == seed]
 seed_candidates = seed_candidates.reset_index(drop=True)
 family = seed_candidates['Family'].iloc[0]
+folder_name = create_folder(seed, family)
 create_seed_fasta(seed_candidates)
 
 # plots = []
@@ -86,6 +94,8 @@ plt.figure(figsize=(22, 14))
 plt.suptitle('Seed: {}, Family: {}'.format(seed_candidates['Seed'].iloc[0], seed_candidates['Family'].iloc[0]), fontsize=16)
 i = 1
 j = ""
+seed_candidates.to_excel("./{}/{}_{}_candidates.xlsx".format(folder_name, seed, family), index=False)
+
 for index, row in seed_candidates.iterrows():
     plt.subplot(3, 4, i)
     species = row['Species']
@@ -112,16 +122,16 @@ for index, row in seed_candidates.iterrows():
         i = 1
         if j == "":
             j = 1
-        plt.savefig('{}_{}_{}.png'.format(row['Seed'], row['Family'], j), dpi=300)
+        plt.savefig('./{}/{}_{}_{}.png'.format(folder_name, row['Seed'], row['Family'], j), dpi=300)
         plt.clf()
         j += 1
 
 if j == "":
-    plt.savefig('{}_{}.png'.format(row['Seed'], row['Family']), dpi=300)
+    plt.savefig('./{}/{}_{}.png'.format(folder_name, row['Seed'], row['Family']), dpi=300)
 else:
-    plt.savefig('{}_{}_{}.png'.format(row['Seed'], row['Family'], j), dpi=300)
+    plt.savefig('./{}/{}_{}_{}.png'.format(folder_name, row['Seed'], row['Family'], j), dpi=300)
 
-file_name = "{}_{}".format(seed, family)
+file_name = "./{}/{}_{}".format(folder_name, seed, family)
 clustalw_exe = r"/sise/home/stome/clustaw/clustalw-2.1/src/clustalw2"
 clustalw_cline = ClustalwCommandline(clustalw_exe, infile=file_name + ".fasta")
 assert os.path.isfile(clustalw_exe), "Clustal W executable missing"
