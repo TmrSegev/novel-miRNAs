@@ -590,13 +590,13 @@ def filter_candidates(true_mature=None, true_star=None):
         # if len(cutted_hairpin) < dict_filter_params['min_trimmed_hairpin_length']: #modified
         #     continue
 
-        if mature_3p:
-            # find the indexes of the loop
-            start_loop, end_loop = find_loop_size_3p(ct_df, start_mature)
-        if mature_5p:
-            start_loop, end_loop = find_loop_size_5p(ct_df, end_mature)
-
-        loop_size = end_loop - start_loop
+        # if mature_3p:
+        #     # find the indexes of the loop
+        #     start_loop, end_loop = find_loop_size_3p(ct_df, start_mature)
+        # if mature_5p:
+        #     start_loop, end_loop = find_loop_size_5p(ct_df, end_mature)
+        #
+        # loop_size = end_loop - start_loop
 
         # if loop_size < dict_filter_params['min_loop_length'] or loop_size > dict_filter_params['max_loop_length']:
         #     # del res[key]
@@ -659,6 +659,20 @@ def filter_candidates(true_mature=None, true_star=None):
         #########################################
 
         mature = mature_df[1].str.cat()
+
+        if mature_3p:
+            # find the indexes of the loop
+            start_loop = len(star)
+            end_loop = hairpin.find(mature)
+        if mature_5p:
+            start_loop = len(mature)
+            end_loop = hairpin.find(star)
+
+        loop_size = end_loop - start_loop
+        if hairpin == "guggccgcguggcucaauuggauagagcaccugacuacggaucaggagguugcagguucgaguccugcgguggucgau":
+            print(start_loop)
+            print(end_loop)
+            print(loop_size)
 
         min_one_mer_mature = count_kmers(mature, 1, "min") / len(mature)
         min_one_mer_hairpin = count_kmers(hairpin, 1, "min") / len(hairpin)

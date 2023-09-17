@@ -72,6 +72,33 @@ def boxplot_by_type(df, name):
         plt.scatter(x, y)
     plt.savefig("{}_boxplots_by_type_{}.png".format(species, name), dpi=300, bbox_inches='tight')
 
+    # Create boxplot figure for elegans seperating miRdeep, sRNAbench or both:
+    if species == "Elegans" or species == "elegans":
+        plt.clf()
+        types = [[1, 5, 9], [2, 6, 10], [3, 7, 11]]
+        titles = ["Both", "miRdeep only", "sRNAbench only"]
+        columns = []
+        for i in range(0, len(types)):
+            # col = '{} (n={})'.format(titles[i], len(df.loc[df['Type'] in types[i]]))
+            # df[col] = np.log10(df.loc[df['Type'] in types[i], 'mean_m_rpm'])
+            # # df[col] = df.loc[df['Type'] == type, 'mean_m_rpm']
+            # columns.append(col)
+            mask = df['Type'].isin(types[i])
+            col = '{} (n={})'.format(titles[i], mask.sum())
+            df[col] = np.log10(df.loc[mask, 'mean_m_rpm'])
+            columns.append(col)
+        df.boxplot(column=columns)
+        plt.ylabel("log10_mean_m_rpm")
+        plt.yticks(ticks=np.arange(0, 6), labels=10 ** np.arange(0, 6))
+        plt.title("{} boxplots by miRdeep / sRNAbench".format(species))
+        plt.xticks(rotation=90)
+        # plt.tight_layout()
+        for i, d in enumerate(df[columns]):
+            y = df[columns][d]
+            x = np.random.normal(i + 1, 0.04, len(y))
+            plt.scatter(x, y)
+        plt.savefig("{}_boxplots_by_algorithm_{}.png".format(species, name), dpi=300, bbox_inches='tight')
+
 
 def boxplot_known_unknown(df):
     plt.clf()
@@ -206,7 +233,6 @@ def clusters():
         df['Cluster_size'] = np.zeros(len(df))
         clusters_df = pd.DataFrame(columns=df.columns)
 
-        print(key)
         if "blast" not in key:
             new_df = pd.DataFrame(columns=df.columns)
             cluster_index = 1
@@ -215,7 +241,6 @@ def clusters():
             # Calculate differences within each group
             df['differences'] = df.groupby(['Chr', 'Strand'])['Start'].diff()
             df['differences'] = df['differences'].fillna(0)
-            print(df['differences'])
             # df.to_excel('{}_diff.xlsx'.format(species), index=True)
 
             # Calculate clusters
@@ -250,7 +275,6 @@ def clusters():
             # clusters_df = clusters_df.drop(['Description', 'differences'], axis=1)
             # new_df = new_df.drop(['Description', 'differences'], axis=1)
             new_df.sort_index(inplace=True)
-            print(new_df.info())
             new_df = new_df.sort_values(['Chr', 'Strand', 'Start', 'End'])
             sheet_dict[key] = new_df
             clusters_df.to_csv('{}_clusters.csv'.format(species), sep='\t', index=False)
