@@ -17,7 +17,7 @@ def families_by_type(df):
     plt.ylabel("Counts")
     # plt.legend(["1: Both", "2: miRDeep only", "3: sRNAbench only"])
     # plt.show()
-    plt.savefig("{}_family_counts_per_type.png".format(species), dpi=300)
+    plt.savefig("./figures/{}_family_counts_per_type.png".format(species), dpi=300)
 
 
 # ---Creating unknown seeds by type pivot table
@@ -38,7 +38,7 @@ def unknown_families_by_type(df):
     plt.ylabel("Counts")
     # plt.legend(["1: Both", "2: miRDeep only", "3: sRNAbench only"])
     # plt.show()
-    plt.savefig("{}_unknown_family_counts_per_type.png".format(species), dpi=300)
+    plt.savefig("./figures/{}_unknown_family_counts_per_type.png".format(species), dpi=300)
     plt.clf()
 
     pivot_solos = pivot_solos.drop('sum', axis=1)
@@ -47,7 +47,7 @@ def unknown_families_by_type(df):
     plt.ylabel("Counts")
     # plt.legend(["1: Both", "2: miRDeep only", "3: sRNAbench only"])
     # plt.show()
-    plt.savefig("{}_unique_seed_candidates_by_type.png".format(species), dpi=300)
+    plt.savefig("./figures/{}_unique_seed_candidates_by_type.png".format(species), dpi=300)
 
 
 def boxplot_by_type(df, name):
@@ -70,7 +70,7 @@ def boxplot_by_type(df, name):
         y = df[columns][d]
         x = np.random.normal(i + 1, 0.04, len(y))
         plt.scatter(x, y)
-    plt.savefig("{}_boxplots_by_type_{}.png".format(species, name), dpi=300, bbox_inches='tight')
+    plt.savefig("./figures/{}_boxplots_by_type_{}.png".format(species, name), dpi=300, bbox_inches='tight')
 
     # Create boxplot figure for elegans seperating miRdeep, sRNAbench or both:
     if species == "Elegans" or species == "elegans":
@@ -97,7 +97,7 @@ def boxplot_by_type(df, name):
             y = df[columns][d]
             x = np.random.normal(i + 1, 0.04, len(y))
             plt.scatter(x, y)
-        plt.savefig("{}_boxplots_by_algorithm_{}.png".format(species, name), dpi=300, bbox_inches='tight')
+        plt.savefig("./figures/{}_boxplots_by_algorithm_{}.png".format(species, name), dpi=300, bbox_inches='tight')
 
 
 def boxplot_known_unknown(df):
@@ -124,7 +124,7 @@ def boxplot_known_unknown(df):
         y = df[columns][d]
         x = np.random.normal(i + 1, 0.04, len(y))
         plt.scatter(x, y)
-    plt.savefig("{}_boxplots_known_unknown.png".format(species), dpi=300)
+    plt.savefig("./figures/{}_boxplots_known_unknown.png".format(species), dpi=300)
 
 
 #def wilcoxon_test(df):
@@ -135,7 +135,7 @@ def boxplot_known_unknown(df):
 def mann_whitney(df):
     types = list(df['Type'].unique())
     types.sort()
-    with open('{}_mann_whitney.txt'.format(species), 'w') as file:
+    with open('./figures/{}_mann_whitney.txt'.format(species), 'w') as file:
         for i in range(1, len(types) + 1):
             for j in range(i + 1, len(types) + 1):
                 disti = np.log10(df.loc[df['Type'] == i, 'mean_m_rpm'])
@@ -165,7 +165,7 @@ def normal_dist(df):
         # ax.set_ylabel(str(i))
         ax.hist(df.loc[df['Type'] == type, 'mean_m_rpm'])
         ax.set_title("Type {}".format(type))
-    plt.savefig("{}_normal_dist.png".format(species), dpi=300)
+    plt.savefig("./figures/{}_normal_dist.png".format(species), dpi=300)
 
 def create_all_candidatess_fasta(df):
     fasta_path = "all_candidates_mature.fasta"
@@ -234,13 +234,13 @@ def clusters():
         clusters_df = pd.DataFrame(columns=df.columns)
 
         if "blast" not in key:
-            new_df = pd.DataFrame(columns=df.columns)
             cluster_index = 1
             cluster_file = ""
 
             # Calculate differences within each group
             df['differences'] = df.groupby(['Chr', 'Strand'])['Start'].diff()
             df['differences'] = df['differences'].fillna(0)
+            new_df = pd.DataFrame(columns=df.columns)
             # df.to_excel('{}_diff.xlsx'.format(species), index=True)
 
             # Calculate clusters
@@ -297,7 +297,10 @@ if __name__ == '__main__':
     xls = pd.ExcelFile(all_path)
     sheet_dict = {sheet_name: xls.parse(sheet_name) for sheet_name in xls.sheet_names}
     # all = pd.read_excel(all_path, sheet_name="(D) Structural Features")
-    all = sheet_dict["(D) Structural Features"]
+    if species == "Hofstenia":
+        all = sheet_dict["(A) Unfiltered)"]
+    else:
+        all = sheet_dict["(D) Structural Features"]
     if species == "elegans" or species == "Elegans":
         all['Description'] = all[['Description_mirdeep', 'Description_sRNAbench', 'Description_mirbase']].astype(str).agg('. '.join, axis=1)
     else:

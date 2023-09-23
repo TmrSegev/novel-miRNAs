@@ -771,7 +771,7 @@ unified = unified[columns]
 # --- Extract seed
 unified['Seed'] = np.where(unified["mature"] == '5p', unified["5pseq"].str[1:8], unified["3pseq"].str[1:8])
 
-seed_families = pd.read_csv('/sise/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/mirbase_data/Seeds.txt', sep='\t')
+seed_families = pd.read_csv('/sise/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/mirbase_data/ALL_seed_family_from_mirgendb.csv', encoding='latin-1')
 seed_families = seed_families[['Family', 'Seed']]
 seed_families = seed_families.drop_duplicates(subset='Seed')
 unified = pd.merge(unified, seed_families, left_on='Seed', right_on='Seed', how='left')
