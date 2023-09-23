@@ -85,11 +85,12 @@ def run(output, fasta_path=None, seed_path=None):
             else:
                 table = table.drop(overlaps.index)
     print(table['overlaps'].value_counts().sort_index(ascending=False))
+    table = table.drop(["distance"], axis=1)
     no_overlaps.to_csv('removed_sRNAbench_no_overlaps.csv', sep='\t')
     table.to_csv('sRNAbench_all_remaining_filtered.csv', sep='\t', index=False)
 
     if seed_path:
-        seed_file = pd.read_csv(seed_path, sep='\t')
+        seed_file = pd.read_csv(seed_path, encoding='latin-1')
 
     if fasta_path is not None:
         fasta_file = ''

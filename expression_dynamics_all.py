@@ -55,7 +55,7 @@ def create_folder(seed, family):
     return folder_name
 
 all_path = None
-seed = None
+# seed = None
 libraries_elegans_rpm = ['CE81_m_rpm', 'CE80_m_rpm', 'CE69_m_rpm', 'CE63_m_rpm', 'CE62_m_rpm', 'CE61_m_rpm', 'CE60_m_rpm', 'CE59_m_rpm', 'CE58_m_rpm', 'CE57_m_rpm', 'CE79_m_rpm', 'CE78_m_rpm']
 time_elegans = ['4', '8', '12', '16', '20', '24', '28', '32', '36', '40', '44', '48']
 libraries_macrosperma_rpm = ['MR8_m_rpm', 'MR7_m_rpm', 'MR6_m_rpm', 'MR5_m_rpm', 'MR4_m_rpm']
@@ -66,8 +66,8 @@ for i in range(1, len(sys.argv), 2):
     arg = sys.argv[i]
     if arg == '--all':
         all_path = sys.argv[i + 1]
-    elif arg == '--seed':
-        seed = sys.argv[i + 1]
+    # elif arg == '--seed':
+    #     seed = sys.argv[i + 1]
     elif arg == '--help' or arg == '-h':
         print(f'Manual:\n'
               f' --all <path>: path to an intersection table excel which contains "all_candidates" sheet.\n'
@@ -82,104 +82,119 @@ all_candidates = pd.read_excel(all_path)
 # time_all = time_elegans + time_macrosperma + time_sulstoni
 # rename_dict = dict(zip(libraries_rpm_all, time_all))
 # all_candidates = all_candidates.rename(columns=rename_dict)
-seed_candidates = all_candidates[all_candidates['Seed'] == seed]
-seed_candidates = seed_candidates.reset_index(drop=True)
-family = seed_candidates['Family'].iloc[0]
-folder_name = create_folder(seed, family)
-create_seed_fasta(seed_candidates)
+all_seeds = all_candidates['Seed'].unique()
+for seed in all_seeds:
+    seed_candidates = all_candidates[all_candidates['Seed'] == seed]
+    seed_candidates = seed_candidates.reset_index(drop=True)
+    family = seed_candidates['Family'].iloc[0]
+    folder_name = create_folder(seed, family)
+    create_seed_fasta(seed_candidates)
+    print(seed, family, ", Number of candidates:", len(seed_candidates))
 
-# plots = []
-# seed_candidates.apply(lambda row: create_graph(row), axis=1)
-plt.figure(figsize=(22, 14))
-plt.suptitle('Seed: {}, Family: {}'.format(seed_candidates['Seed'].iloc[0], seed_candidates['Family'].iloc[0]), fontsize=16)
-i = 1
-j = ""
-seed_candidates.to_excel("./{}/{}_{}_candidates.xlsx".format(folder_name, seed, family), index=False)
+    # plots = []
+    # seed_candidates.apply(lambda row: create_graph(row), axis=1)
+    plt.figure(figsize=(22, 14))
+    plt.suptitle('Seed: {}, Family: {}'.format(seed_candidates['Seed'].iloc[0], seed_candidates['Family'].iloc[0]), fontsize=16)
+    i = 1
+    j = ""
+    seed_candidates.to_excel("./{}/{}_{}_candidates.xlsx".format(folder_name, seed, family), index=False)
 
-for index, row in seed_candidates.iterrows():
-    plt.subplot(3, 4, i)
-    species = row['Species']
-    if species == "Elegans":
-        rpm = libraries_elegans_rpm
-        time = time_elegans
-    elif species == "Macrosperma":
-        rpm = libraries_macrosperma_rpm
-        time = time_macrosperma
-    elif species == "Sulstoni":
-        rpm = libraries_sulstoni_rpm
-        time = time_sulstoni
-    row_rpm = row[rpm]
-    rename_dict = dict(zip(rpm, time))
-    row_rpm = row_rpm.rename(rename_dict)
-    row_rpm.plot.line(style='.-')
-    plot = plt.ylabel("Mature Counts (RPM)")
-    # plots.append(plot)
-    plt.xlabel("Time (Hours)")
-    plt.title("index: " + str(index) + "|Species: " + str(species))
-    plt.xticks(ticks=range(0, len(time)), labels=time)
-    i += 1
-    if i == 13:
-        i = 1
-        if j == "":
-            j = 1
+    for index, row in seed_candidates.iterrows():
+        plt.subplot(3, 4, i)
+        species = row['Species']
+        if species == "Elegans":
+            rpm = libraries_elegans_rpm
+            time = time_elegans
+        elif species == "Macrosperma":
+            rpm = libraries_macrosperma_rpm
+            time = time_macrosperma
+        elif species == "Sulstoni":
+            rpm = libraries_sulstoni_rpm
+            time = time_sulstoni
+        row_rpm = row[rpm]
+        rename_dict = dict(zip(rpm, time))
+        row_rpm = row_rpm.rename(rename_dict)
+        row_rpm.plot.line(style='.-')
+        plot = plt.ylabel("Mature Counts (RPM)")
+        # plots.append(plot)
+        plt.xlabel("Time (Hours)")
+        plt.title("index: " + str(index) + "|Species: " + str(species))
+        plt.xticks(ticks=range(0, len(time)), labels=time)
+        i += 1
+        if i == 13:
+            i = 1
+            if j == "":
+                j = 1
+            plt.savefig('./{}/{}_{}_{}.png'.format(folder_name, row['Seed'], row['Family'], j), dpi=300)
+            plt.close()
+            plt.clf()
+            j += 1
+
+    if j == "":
+        plt.savefig('./{}/{}_{}.png'.format(folder_name, row['Seed'], row['Family']), dpi=300)
+        plt.close()
+    else:
         plt.savefig('./{}/{}_{}_{}.png'.format(folder_name, row['Seed'], row['Family'], j), dpi=300)
-        plt.clf()
-        j += 1
+        plt.close()
 
-if j == "":
-    plt.savefig('./{}/{}_{}.png'.format(folder_name, row['Seed'], row['Family']), dpi=300)
-else:
-    plt.savefig('./{}/{}_{}_{}.png'.format(folder_name, row['Seed'], row['Family'], j), dpi=300)
+    file_name = "./{}/{}_{}".format(folder_name, seed, family)
+    clustalw_exe = r"/sise/home/stome/clustaw/clustalw-2.1/src/clustalw2"
+    clustalw_cline = ClustalwCommandline(clustalw_exe, infile=file_name + ".fasta")
+    assert os.path.isfile(clustalw_exe), "Clustal W executable missing"
+    stdout, stderr = clustalw_cline()
+    try:
+        alignment = AlignIO.read(file_name+".aln", "clustal")
+    except ValueError as e:
+        print(f"Error: {e}")
+        continue
 
-file_name = "./{}/{}_{}".format(folder_name, seed, family)
-clustalw_exe = r"/sise/home/stome/clustaw/clustalw-2.1/src/clustalw2"
-clustalw_cline = ClustalwCommandline(clustalw_exe, infile=file_name + ".fasta")
-assert os.path.isfile(clustalw_exe), "Clustal W executable missing"
-stdout, stderr = clustalw_cline()
-alignment = AlignIO.read(file_name+".aln", "clustal")
-print(alignment)
+    calculator = DistanceCalculator('identity')
+    distance_matrix = calculator.get_distance(alignment)
+    with open(file_name + "_distance_matrix.csv", 'w') as f:
+        f.write(str(distance_matrix))
 
-calculator = DistanceCalculator('identity')
-distance_matrix = calculator.get_distance(alignment)
-print(distance_matrix)
+    # ------ Using UPGMA algorithm
+    constructor = DistanceTreeConstructor()
+    # Construct the phlyogenetic tree using UPGMA algorithm
+    UPGMATree = constructor.upgma(distance_matrix)
 
-# ------ Using UPGMA algorithm
-constructor = DistanceTreeConstructor()
-# Construct the phlyogenetic tree using UPGMA algorithm
-UPGMATree = constructor.upgma(distance_matrix)
+    # Make a better looking tree using the features of matplotlib
+    fig = plt.figure(figsize=(20, 12), dpi=300) # create figure & set the size
+    plt.rc('font', size=6)              # fontsize of the leaf and node labels
+    plt.rc('xtick', labelsize=8)       # fontsize of the tick labels
+    plt.rc('ytick', labelsize=8)       # fontsize of the tick labels
+    axes = fig.add_subplot(1, 1, 1)
 
-# Make a better looking tree using the features of matplotlib
-fig = plt.figure(figsize=(20, 12), dpi=300) # create figure & set the size
-plt.rc('font', size=6)              # fontsize of the leaf and node labels
-plt.rc('xtick', labelsize=8)       # fontsize of the tick labels
-plt.rc('ytick', labelsize=8)       # fontsize of the tick labels
-axes = fig.add_subplot(1, 1, 1)
+    # drawing the tree
+    Phylo.draw(UPGMATree, axes=axes, do_show=False)
+    fig.savefig(file_name + "_UPGMATree.png")
 
-# drawing the tree
-Phylo.draw(UPGMATree, axes=axes)
-fig.savefig(file_name + "_UPGMATree.png")
+    # Draw the phlyogenetic tree in ASCII
+    with open(file_name + "_UPGMATree_ASCII.txt", 'w') as f:
+        Phylo.draw_ascii(UPGMATree, file=f)
 
-# Further info and find common ancestor of two terminals:
-# UPGMATree.common_ancestor('Dog','Masked_Palm_Civet')
-# UPGMATree.get_terminals()
-# UPGMATree.get_nonterminals()
-# UPGMATree.count_terminals()
+    # Further info and find common ancestor of two terminals:
+    # UPGMATree.common_ancestor('Dog','Masked_Palm_Civet')
+    # UPGMATree.get_terminals()
+    # UPGMATree.get_nonterminals()
+    # UPGMATree.count_terminals()
 
-# ------ Using Neighbour Joining algorithm
-# Construct the phlyogenetic tree using NJ algorithm
-NJTree = constructor.nj(distance_matrix)
-# Draw the phlyogenetic tree using terminal
-Phylo.draw_ascii(NJTree)
-# Make a better looking tree using the features of matplotlib
+    # ------ Using Neighbour Joining algorithm
+    # Construct the phlyogenetic tree using NJ algorithm
+    NJTree = constructor.nj(distance_matrix)
+    # Draw the phlyogenetic tree in ASCII
+    with open(file_name + "_NJTree_ASCII.txt", 'w') as f:
+        Phylo.draw_ascii(NJTree, file=f)
 
-fig = plt.figure(figsize=(28, 11), dpi=300) # create figure & set the size
-plt.rc('font', size=6)              # fontsize of the leaf and node labels
-# matplotlib.rc('font', size=18)              # fontsize of the leaf and node labels
-# matplotlib.rc('xtick', labelsize=16)       # fontsize of the tick labels
-# matplotlib.rc('ytick', labelsize=16)       # fontsize of the tick labels
+    # Make a better looking tree using the features of matplotlib
+    fig = plt.figure(figsize=(28, 11), dpi=300) # create figure & set the size
+    plt.rc('font', size=6)              # fontsize of the leaf and node labels
+    # matplotlib.rc('font', size=18)              # fontsize of the leaf and node labels
+    # matplotlib.rc('xtick', labelsize=16)       # fontsize of the tick labels
+    # matplotlib.rc('ytick', labelsize=16)       # fontsize of the tick labels
 
-axes = fig.add_subplot(1, 1, 1)
-Phylo.draw(NJTree, axes=axes)
+    axes = fig.add_subplot(1, 1, 1)
+    Phylo.draw(NJTree, axes=axes, do_show=False)
 
-fig.savefig(file_name + "_NJTree.png")
+    fig.savefig(file_name + "_NJTree.png")
 

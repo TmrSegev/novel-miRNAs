@@ -87,7 +87,7 @@ def run(output, fasta_path, seed_path):
     all_remaining.to_csv('mirdeep_all_remaining_filtered.csv', sep='\t', index=False)
 
     if seed_path is not None:
-        seed_file = pd.read_csv(seed_path, sep="\t")
+        seed_file = pd.read_csv(seed_path, encoding='latin-1')
 
     if fasta_path is not None:
         fasta_file = ''
