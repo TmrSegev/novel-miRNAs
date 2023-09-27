@@ -27,15 +27,17 @@ def unknown_families_by_type(df):
     filtered_df = df[df['Family'] == "UNKNOWN"]
     pivot = pd.pivot_table(filtered_df, values='Description', index='Seed', columns='Type', aggfunc='count')
     pivot.fillna(0, inplace=True)
+    pivot = pivot.astype(int)
     pivot['sum'] = pivot.sum(axis=1)
     pivot_groups = pivot[pivot['sum'] > 1]
     pivot_solos = pivot[pivot['sum'] == 1]
-
+    sum = pivot['sum']
     pivot_groups = pivot_groups.drop('sum', axis=1)
     pivot_groups.sort_values('Seed', inplace=True)
     pivot_groups.plot(kind='bar', figsize=(14, 10), stacked=True,
                           title="{} counts of unknown families in each type".format(species))
     plt.ylabel("Counts")
+    plt.yticks(range(0, int(sum.max()) + 1))
     # plt.legend(["1: Both", "2: miRDeep only", "3: sRNAbench only"])
     # plt.show()
     plt.savefig("./figures/{}_unknown_family_counts_per_type.png".format(species), dpi=300)
@@ -144,6 +146,27 @@ def mann_whitney(df):
                 res_great = stats.mannwhitneyu(disti, distj, alternative="greater")
                 min_p = min(res_less.pvalue, res_great.pvalue)
                 file.write("Type " + str(i) + " vs Type " + str(j) + ":    " + str(min_p) + '\t' + ("significant" if min_p <= 0.05 else "non-significant") + '\n')
+
+
+def mann_whitney_algorithm(df):
+    types = [[1, 5, 9], [2, 6, 10], [3, 7, 11]]
+    titles = ["Both", "miRdeep only", "sRNAbench only"]
+    with open('./figures/{}_mann_whitney_by_algorithm.txt'.format(species), 'w') as file:
+        for i in range(0, len(types)):
+            for j in range(i + 1, len(types)):
+                maski = df['Type'].isin(types[i])
+                coli = '{} (n={})'.format(titles[i], maski.sum())
+                disti = np.log10(df.loc[maski, 'mean_m_rpm'])
+
+                maskj = df['Type'].isin(types[j])
+                colj = '{} (n={})'.format(titles[j], maskj.sum())
+                distj = np.log10(df.loc[df['Type'] == j, 'mean_m_rpm'])
+
+                res_less = stats.mannwhitneyu(disti, distj, alternative="less")
+                res_great = stats.mannwhitneyu(disti, distj, alternative="greater")
+                min_p = min(res_less.pvalue, res_great.pvalue)
+                file.write(coli + " vs " + colj + ":    " + str(min_p) + '\t' + ("significant" if min_p <= 0.05 else "non-significant") + '\n')
+
 
 def t_test(df):
     types = list(df['Type'].unique())
@@ -315,6 +338,8 @@ if __name__ == '__main__':
     # wilcoxon_test(all)
     # t_test(all)
     mann_whitney(all.copy())
+    if species == "Elegans" or species == "elegans":
+        mann_whitney_algorithm(all.copy())
     clusters()
     all = all.drop(['Description'], axis=1)
     save_back_to_all(sheet_dict, all_path)
