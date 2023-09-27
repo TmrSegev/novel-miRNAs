@@ -1,6 +1,7 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
+import scipy.stats as stats
 
 def count_non_nan_columns(row):
     return row.count()
@@ -22,6 +23,69 @@ def save_back_to_all(sheet_dict, filepath):
         for sheet_name, df in sheet_dict.items():
             df.to_excel(writer, sheet_name, index=False)
 
+
+def unknown_families_by_species(df):
+    filtered_df = df[df['Family'] == "UNKNOWN"]
+    pivot = pd.pivot_table(filtered_df, values='Description', index='Seed', columns='Species', aggfunc='count')
+    pivot.fillna(0, inplace=True)
+    pivot = pivot.astype(int)
+    pivot['sum'] = pivot.sum(axis=1)
+    pivot_groups = pivot[pivot['sum'] > 1]
+    sum = pivot['sum']
+    pivot_groups = pivot_groups.drop('sum', axis=1)
+    pivot_groups.sort_values('Seed', inplace=True)
+    pivot_groups.plot(kind='bar', figsize=(14, 10), stacked=True,
+                          title="Counts of unknown families in each species")
+    plt.ylabel("Counts")
+    plt.yticks(range(0, int(sum.max()) + 1))
+    plt.savefig("unknown_family_counts_per_species.png", dpi=300)
+    plt.clf()
+
+
+def known_families_by_species(df):
+    families_by_species = pd.pivot_table(df, values='Description', index='Family', columns='Species', aggfunc='count')
+    families_by_species.fillna(0, inplace=True)
+    families_by_species = families_by_species.drop("UNKNOWN", axis=0)
+    families_by_species.sort_values('Family', inplace=True)
+    families_by_species.plot(kind='bar', figsize=(14, 10), stacked=True, title="Counts of known families in each species")
+    plt.ylabel("Counts")
+    plt.savefig("known_family_counts_per_species.png", dpi=300)
+    plt.clf()
+
+
+def boxplot_known_unknown_all_species(df):
+    plt.clf()
+    columns = []
+    col_known = 'Known (n={})'.format(len(df.loc[df['Family'] != 'UNKNOWN']))
+    col_unknown = 'Unknown (n={})'.format(len(df.loc[df['Family'] == 'UNKNOWN']))
+    df[col_known] = df.loc[df['Family'] != 'UNKNOWN', 'mean_m_rpm'].astype(int).replace(0, np.nan)
+    df[col_unknown] = df.loc[df['Family'] == 'UNKNOWN', 'mean_m_rpm'].astype(int).replace(0, np.nan)
+    df[col_known] = np.log10(df[col_known])
+    df[col_unknown] = np.log10(df[col_unknown])
+    columns.append(col_known)
+    columns.append(col_unknown)
+    df.boxplot(column=columns)
+    plt.ylabel("log10_mean_m_rpm")
+    plt.yticks(ticks=np.arange(0, 6), labels=10 ** np.arange(0, 6))
+    plt.title("Counts of known/unknown in all species")
+    plt.xticks(rotation=45)
+    # plt.tight_layout()
+    for i, d in enumerate(df[columns]):
+        y = df[columns][d]
+        x = np.random.normal(i + 1, 0.04, len(y))
+        plt.scatter(x, y, s=10)
+    plt.savefig("boxplots_known_unknown_in_all_species.png", dpi=300)
+
+
+def mann_whitney_species(df):
+    with open('mann_whitney_species_known_unknown.txt', 'w') as file:
+        disti = np.log10(df.loc[df['Family'] == "UNKNOWN", 'mean_m_rpm'].astype(int))
+        distj = np.log10(df.loc[df['Family'] != "UNKNOWN", 'mean_m_rpm'].astype(int))
+        res_less = stats.mannwhitneyu(disti, distj, alternative="less")
+        res_great = stats.mannwhitneyu(disti, distj, alternative="greater")
+        min_p = min(res_less.pvalue, res_great.pvalue)
+        file.write("Known VS Unknown: " + str(min_p) + '\t' + ("significant" if min_p <= 0.05 else "non-significant") + '\n')
+
 xls = pd.ExcelFile("/sise/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/Ziv_Features/all_remaining_after_ziv_Elegans.xlsx")
 elegans_sheet_dict = {sheet_name: xls.parse(sheet_name) for sheet_name in xls.sheet_names}
 
@@ -41,6 +105,7 @@ macrosperma_sheet_dict["(D) Structural Features"]['Species'] = "Macrosperma"
 sulstoni_sheet_dict["(D) Structural Features"]['Species'] = "Sulstoni"
 
 all = pd.concat([elegans_sheet_dict["(D) Structural Features"], macrosperma_sheet_dict["(D) Structural Features"], sulstoni_sheet_dict["(D) Structural Features"]])
+all.reset_index(inplace=True)
 all.to_excel("all_species_candidates.xlsx", index=False)
 all['Description'] = all[['Description_mirdeep', 'Description_sRNAbench']].astype(str).agg(', '.join, axis=1)
 seeds_by_species = pd.pivot_table(all, values='Description', index=['Seed', 'Family'], columns='Species', aggfunc='count')
@@ -120,6 +185,11 @@ unknown_unique_two_plus = unknown_unique[unknown_unique['Sum'] > 1]
 unknown_unique_two_plus_seeds = unknown_unique_two_plus['Seed'].to_list()
 all_unknown_unique_two_plus = all[all['Seed'].isin(unknown_unique_two_plus_seeds)]
 all_unknown_unique_two_plus.to_excel("all_unknown_unique_two_plus.xlsx", index=False)
+
+unknown_families_by_species(all.copy())
+known_families_by_species(all.copy())
+boxplot_known_unknown_all_species(all.copy())
+mann_whitney_species(all.copy())
 
 save_back_to_all(elegans_sheet_dict, "/sise/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/Ziv_Features/all_remaining_after_ziv_Elegans.xlsx")
 save_back_to_all(macrosperma_sheet_dict, "/sise/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/Ziv_Features/all_remaining_after_ziv_Macrosperma.xlsx")
