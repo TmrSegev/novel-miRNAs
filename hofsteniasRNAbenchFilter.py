@@ -13,28 +13,33 @@ def filterNovel451(novel451, novel):
     :param novel451: dataframe of the novel451.txt additional input.
     :param novel: dataframe of the novel.txt input.
     """
-    deleted_input = pd.DataFrame(columns=novel451.columns)
-    for index_451, row_451 in novel451.iterrows():
-        seq3p = row_451['3pseq']
-        seq5p = row_451['5pseq']
-        if max(row_451['3pRC'], row_451['5pRC']) < threshold:
-            row_451["Removal Reason"] = 'Weak mature signal'
-            deleted_input = deleted_input.append(row_451)
-            novel451.drop(index_451, inplace=True)
-            continue
-        if row_451['matureBindings'] < 14:
-            row_451["Removal Reason"] = 'Hairpin does not have enough pairings'
-            deleted_input = deleted_input.append(row_451)
-            novel451.drop(index_451, inplace=True)
-            continue
-        # This segment removes mature seq from novel 451 if it is also present in novel.
-        for index_novel, row_novel in novel.iterrows():
-            if((row_novel["3pseq"] == seq5p) | (row_novel["5pseq"] == seq3p) | (row_novel["3pseq"] == seq3p) | (row_novel["5pseq"] == seq5p)):
-                row_451["Removal Reason"] = 'Duplicate in novel, originally novel451'
-                deleted_input = deleted_input.append(row_451)
-                novel451.drop(index_451, inplace=True)
-                break
-    return novel451, deleted_input
+    # deleted_input = pd.DataFrame(columns=novel451.columns)
+    # for index_451, row_451 in novel451.iterrows():
+    #     seq3p = row_451['3pseq']
+    #     seq5p = row_451['5pseq']
+    #     if max(row_451['3pRC'], row_451['5pRC']) < threshold:
+    #         row_451["Removal Reason"] = 'Weak mature signal'
+    #         deleted_input = deleted_input.append(row_451)
+    #         novel451.drop(index_451, inplace=True)
+    #         continue
+    #     if row_451['matureBindings'] < 14:
+    #         row_451["Removal Reason"] = 'Hairpin does not have enough pairings'
+    #         deleted_input = deleted_input.append(row_451)
+    #         novel451.drop(index_451, inplace=True)
+    #         continue
+    #     # This segment removes mature seq from novel 451 if it is also present in novel.
+    #     for index_novel, row_novel in novel.iterrows():
+    #         if((row_novel["3pseq"] == seq5p) | (row_novel["5pseq"] == seq3p) | (row_novel["3pseq"] == seq3p) | (row_novel["5pseq"] == seq5p)):
+    #             row_451["Removal Reason"] = 'Duplicate in novel, originally novel451'
+    #             deleted_input = deleted_input.append(row_451)
+    #             novel451.drop(index_451, inplace=True)
+    #             break
+    # return novel451, deleted_input
+    novel451["Removal Reason"] = 'novel451'
+    deleted_input = novel451.copy()
+
+    return pd.DataFrame(columns=novel451.columns), deleted_input
+
 
 def filterNovel(novel):
     """
