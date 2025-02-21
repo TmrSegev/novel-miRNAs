@@ -155,9 +155,14 @@ def run(input, additional=None):
     table = table[(table['start_5p'] != -1) & (table['end_3p'] != -1)]
 
     table['hairpinSeq'] = table.apply(lambda row : cut_hairpin(row), axis=1)
-    # table['hairpinSeq'] = table['hairpinSeq'].str[table['start_5p']:table['end_3p']]
-    table['end'] = table['start'] + table['end_3p'] - 1
-    table['start'] = table['start'] + table['start_5p']
+
+    # Adjust coordinates based on strand
+    table.loc[table['strand'] == '+', 'end'] = table['start'] + table['end_3p'] - 1
+    table.loc[table['strand'] == '+', 'start'] = table['start'] + table['start_5p']
+
+    table.loc[table['strand'] == '-', 'start'] = table['end'] - table['end_3p'] + 1
+    table.loc[table['strand'] == '-', 'end'] = table['end'] - table['start_5p']
+
     table = table.drop(['start_5p', 'end_3p'], axis=1)
 
     table.to_csv('sRNAbench_remaining.csv', sep='\t', index=False)

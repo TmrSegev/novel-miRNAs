@@ -47,8 +47,13 @@ def run(output, fasta_path, seed_path):
         # Uniting all remaining files
         table = None
         folders = ["EC1", "EC2", "EC3", "GA1", "GA2", "GA3", "DI1", "DI2", "DI3", "PDi1", "PDi2", "PDi3", "PDii1", "PDii2", "PDii3", "PL1", "PL2", "PL3", "PH1", "PH2", "PH3", "HL1", "HL2", "HL3", "IST1", "IST2", "IST3", "AMP1", "AMP2", "AMP3", "SMA1", "SMA2", "SMA3"]
+
         for folder in folders:
             to_add = pd.read_csv("/sise/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/Hofstenia/mirdeep_out/" + folder + "/remaining_file_" + str(i) + ".csv", sep='\t')
+            print(to_add.shape)
+
+            to_add["Library"] = folder
+
             if table is None:
                 table = to_add
             else:
@@ -56,6 +61,8 @@ def run(output, fasta_path, seed_path):
 
         # Filtering by coordinates
         table = table.sort_values(['precursor coordinate'])
+        table.to_csv('debugging_Hofstenia_miRDeep.csv', sep='\t', index=False)
+        print("SAVED CSV")
 
         table['chr'] = table['precursor coordinate'].str.split(':', expand=True)[0]
         table['positions'] = table['precursor coordinate'].str.split(':', expand=True)[1]

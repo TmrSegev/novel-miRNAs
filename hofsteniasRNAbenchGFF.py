@@ -53,6 +53,9 @@ def run(output, fasta_path=None, seed_path=None):
     for folder in folders:
         to_add = pd.read_csv("/sise/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/sRNAtoolboxDB/out/" + folder + "/sRNAbench_remaining.csv", sep='\t')
         to_add_no_find = pd.read_csv("/sise/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/sRNAtoolboxDB/out/" + folder + "/sRNAbench_removed_no_find.csv", sep='\t')
+
+        to_add["Library"] = folder
+
         if table is None:
             table = to_add
         else:
@@ -68,6 +71,8 @@ def run(output, fasta_path=None, seed_path=None):
 
     # Filtering by coordinates
     table = table.sort_values(['seqName', 'start', 'end'])
+    table.to_csv('debugging_Hofstenia_sRNAbench.csv', sep='\t', index=False)
+    print("SAVED CSV")
     table['overlaps'] = np.zeros(len(table))
     no_overlaps = pd.DataFrame(columns=table.columns)
 
