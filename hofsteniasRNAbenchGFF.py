@@ -49,6 +49,7 @@ def run(output, fasta_path=None, seed_path=None):
     # Uniting all remaining files, and all removed no find files
     table = None
     removed_no_find = None
+
     folders = ["Hofstenia_EC1", "Hofstenia_EC2", "Hofstenia_EC3", "Hofstenia_GA1", "Hofstenia_GA2", "Hofstenia_GA3", "Hofstenia_DI1", "Hofstenia_DI2", "Hofstenia_DI3", "Hofstenia_PDi1", "Hofstenia_PDi2", "Hofstenia_PDi3", "Hofstenia_PDii1", "Hofstenia_PDii2", "Hofstenia_PDii3", "Hofstenia_PL1", "Hofstenia_PL2", "Hofstenia_PL3", "Hofstenia_PH1", "Hofstenia_PH2", "Hofstenia_PH3", "Hofstenia_HL1", "Hofstenia_HL2", "Hofstenia_HL3", "Hofstenia_IST1", "Hofstenia_IST2", "Hofstenia_IST3", "Hofstenia_AMP1", "Hofstenia_AMP2", "Hofstenia_AMP3", "Hofstenia_SMA1", "Hofstenia_SMA2", "Hofstenia_SMA3"]
     for folder in folders:
         to_add = pd.read_csv("/sise/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/sRNAtoolboxDB/out/" + folder + "/sRNAbench_remaining.csv", sep='\t')
@@ -73,6 +74,7 @@ def run(output, fasta_path=None, seed_path=None):
     table = table.sort_values(['seqName', 'start', 'end'])
     table.to_csv('debugging_Hofstenia_sRNAbench.csv', sep='\t', index=False)
     print("SAVED CSV")
+
     table['overlaps'] = np.zeros(len(table))
     no_overlaps = pd.DataFrame(columns=table.columns)
 
@@ -92,7 +94,11 @@ def run(output, fasta_path=None, seed_path=None):
     print(table['overlaps'].value_counts().sort_index(ascending=False))
     table = table.drop(["distance"], axis=1)
     no_overlaps.to_csv('removed_sRNAbench_no_overlaps.csv', sep='\t')
-    table.to_csv('sRNAbench_all_remaining_filtered.csv', sep='\t', index=False)
+    # table.to_csv('sRNAbench_all_remaining_filtered.csv', sep='\t', index=False)
+
+    if good_candidates:
+        table = pd.read_csv("/sise/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/Hofstenia/good_candidates/sRNAbench_goodCandidates.csv")
+        table.to_csv('sRNAbench_all_remaining_filtered.csv', sep='\t', index=False)
 
     if seed_path:
         seed_file = pd.read_csv(seed_path, encoding='latin-1')
@@ -252,6 +258,7 @@ if __name__ == '__main__':
     fasta_path = None
     seed_path = None
     species = None
+    good_candidates = False
     args = []
     for i in range(1, len(sys.argv), 2):
         arg = sys.argv[i]
@@ -263,6 +270,12 @@ if __name__ == '__main__':
             fasta_path = sys.argv[i + 1]
         elif arg == '-s':
             species = sys.argv[i + 1]
+        elif arg == '--goodcandidates':
+            good_candidates = sys.argv[i + 1]
+            if good_candidates == "True":
+                good_candidates = True
+            else:
+                good_candidates = False
         elif arg == '--help' or arg == '-h':
             print(f'Manual:\n'
                   f' -i <path>: sRNAbench prediction output, like novel.txt/novel451.txt.\n'

@@ -59,7 +59,10 @@ def filterInputs(inputs_arr, score_threshold, true_positive_threshold, mc_thresh
                     input.drop(index=index, inplace=True)
                     f.close()
         total_reads_left = len(input.index)
-        filtered_percent = "%.2f" % (((total_reads - total_reads_left) / total_reads) * 100)
+        if total_reads_left == 0:
+            filtered_percent = "0.00"
+        else:
+            filtered_percent = "%.2f" % (((total_reads - total_reads_left) / total_reads) * 100)
         sys.stdout.write(
             f'\tTotal Reads Filtered by rfam alert and non-coding RNA database: {total_reads - total_reads_left} ({filtered_percent}%)\n')
 
@@ -77,7 +80,10 @@ def filterInputs(inputs_arr, score_threshold, true_positive_threshold, mc_thresh
                     deleted_input = deleted_input.append(row)
                     input.drop(index=index, inplace=True)
         total_reads_left_after_duplicate_filtering = len(input.index)
-        filtered_percent = "%.2f" % (
+        if total_reads_left == 0:
+            filtered_percent = "0.00"
+        else:
+            filtered_percent = "%.2f" % (
                 ((total_reads_left - total_reads_left_after_duplicate_filtering) / total_reads_left) * 100)
         sys.stdout.write(
             f'\tTotal Reads Filtered because they have a duplicate with score >=10:'
@@ -92,7 +98,10 @@ def filterInputs(inputs_arr, score_threshold, true_positive_threshold, mc_thresh
             deleted_input = deleted_input.append(to_delete)
             input = input[((input['total read count'] >= exclude_counts) & (input['star read count'] > 0)) | (input['miRDeep2 score'] >= score_threshold)]
             total_reads_left_after_score_filtering = len(input.index)
-            filtered_percent = "%.2f" % (
+            if total_reads_left == 0:
+                filtered_percent = "0.00"
+            else:
+                filtered_percent = "%.2f" % (
                     ((total_reads_left - total_reads_left_after_score_filtering) / total_reads_left) * 100)
             sys.stdout.write(
                 f'\tTotal Reads Filtered by Score:'
@@ -122,7 +131,10 @@ def filterInputs(inputs_arr, score_threshold, true_positive_threshold, mc_thresh
                 deleted_input = input[~(input['true positive probability'] >= true_positive_threshold)]
             input = input[input['true positive probability'] >= true_positive_threshold]
             total_reads_left_after_true_positive_filtering = len(input.index)
-            filtered_percent = "%.2f" % (
+            if total_reads_left == 0:
+                filtered_percent = "0.00"
+            else:
+                filtered_percent = "%.2f" % (
                         ((total_reads_left - total_reads_left_after_true_positive_filtering) / total_reads_left) * 100)
             sys.stdout.write(
                 f'\tTotal Reads Filtered by True-Positive Probability:'
@@ -137,14 +149,20 @@ def filterInputs(inputs_arr, score_threshold, true_positive_threshold, mc_thresh
         input = input[(input['mature read count'] >= mc_threshold) | (input['star read count'] >= mc_threshold)]
 
         total_reads_left_after_mature_star_filtering = len(input.index)
-        filtered_percent = "%.2f" % (
+        if total_reads_left == 0:
+            filtered_percent = "0.00"
+        else:
+            filtered_percent = "%.2f" % (
                 ((total_reads_left - total_reads_left_after_mature_star_filtering) / total_reads_left) * 100)
         sys.stdout.write(
             f'\tTotal Reads Filtered because of low mature or star read count:'
             f' {total_reads_left - total_reads_left_after_mature_star_filtering} ({filtered_percent}%)\n')
         total_reads_left = total_reads_left_after_mature_star_filtering
 
-        filtered_percent = "%.2f" % ((total_reads_left / total_reads) * 100)
+        if total_reads_left == 0:
+            filtered_percent = "0.00"
+        else:
+            filtered_percent = "%.2f" % ((total_reads_left / total_reads) * 100)
         sys.stdout.write(f'\tTotal Reads Left After all filters: {total_reads_left} ({filtered_percent}%)\n')
         file_count += 1
         input.to_csv(f'remaining_file_{file_count - 1}.csv', sep='\t', index=False)

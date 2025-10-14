@@ -107,6 +107,13 @@ def run(input, additional=None):
     :return:
     """
     table = pd.read_csv(input, sep='\t')
+
+    if table.empty:
+        print(f"Input file {input} is empty - skipping.")
+        pd.DataFrame(columns=['Removal Reason']).to_csv('sRNAbench_removed.csv', sep='\t', index=False)
+        table.to_csv('sRNAbench_remaining.csv', sep='\t', index=False)
+        return
+
     table["origin"] = "novel"
     table, deleted_input = filterNovel(table)
 

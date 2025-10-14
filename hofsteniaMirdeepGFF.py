@@ -61,7 +61,9 @@ def run(output, fasta_path, seed_path):
 
         # Filtering by coordinates
         table = table.sort_values(['precursor coordinate'])
-        table.to_csv('debugging_Hofstenia_miRDeep.csv', sep='\t', index=False)
+        print(table.columns)
+        print(table.shape)
+        table.to_csv(f'debugging_Hofstenia_miRDeep_{i}.csv', sep='\t', index=False)
         print("SAVED CSV")
 
         table['chr'] = table['precursor coordinate'].str.split(':', expand=True)[0]
@@ -90,8 +92,14 @@ def run(output, fasta_path, seed_path):
         filtered_input.append(table)
         no_overlaps.to_csv('removed_mirdeep_{}_no_overlaps.csv'.format(i), sep='\t')
         table = table.rename({"tag id":"provisional id", "estimated probability that the miRNA is a true positive":"estimated probability that the miRNA candidate is a true positive"}, axis=1)
-    all_remaining = pd.concat([filtered_input[0], table], ignore_index=True)
-    all_remaining.to_csv('mirdeep_all_remaining_filtered.csv', sep='\t', index=False)
+    # all_remaining = pd.concat([filtered_input[0], table], ignore_index=True)
+    # all_remaining.to_csv('mirdeep_all_remaining_filtered.csv', sep='\t', index=False)
+
+    if good_candidates:
+        filtered_input = pd.read_csv("/sise/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/Hofstenia/good_candidates/miRDeep_goodCandidates.csv")
+        filtered_input.to_csv('mirdeep_all_remaining_filtered.csv', sep='\t', index=False)
+        filtered_input = [filtered_input]
+
 
     if seed_path is not None:
         seed_file = pd.read_csv(seed_path, encoding='latin-1')
@@ -106,6 +114,8 @@ def run(output, fasta_path, seed_path):
 
     intersection_index = -1  # Used later to intersect the table with miRdeep, blast and featurecounts results.
     for input in filtered_input:
+        print(input.columns)
+        print(input.shape)
         for index, row in input.iterrows():
             intersection_index += 1
             details = row['precursor coordinate']
@@ -252,6 +262,7 @@ if __name__ == '__main__':
     fasta_path = None
     seed_path = None
     species = None
+    good_candidates = False
     args = []
 
     i = 1
@@ -267,6 +278,12 @@ if __name__ == '__main__':
             fasta_path = sys.argv[i + 1]
         elif arg == '--exclude-c':
             exclude_c = sys.argv[i + 1]
+        elif arg == '--goodcandidates':
+            good_candidates = sys.argv[i + 1]
+            if good_candidates == "True":
+                good_candidates = True
+            else:
+                good_candidates = False
         elif arg == '--help' or arg == '-h':
             print(f'Manual:\n'
                   f' -i <path> : miRDeep2 prediction output path, like result_08_10_2021_t_09_57_05\n'

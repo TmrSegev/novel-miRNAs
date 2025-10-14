@@ -7,17 +7,12 @@ import Ziv_Git
 from Bio import SeqIO
 import sys
 import numpy as np
+import pprint
 
 
 def get_seq_data(path, start_end_mark=False):
     seq = {}
     for seq_record in SeqIO.parse(path, "fasta"):
-        # if species != "Hofstenia":
-        #     # seq_id = seq_record.description.split(';')
-        #     seq_id = seq_record.description
-        #     # seq_id = seq_id[0]
-        # else:
-        #     seq_id = seq_record.id.split('|')[:-1][0]
         seq_id = seq_record.description
         if start_end_mark:
             seq[seq_id] = ('S' + "".join(str(seq_record.seq)) + 'E')
@@ -25,15 +20,15 @@ def get_seq_data(path, start_end_mark=False):
             seq[seq_id] = ("".join(str(seq_record.seq)))
     return seq
 
-def crete_fasta(name,seq):
+
+def crete_fasta(name, seq):
     with open('fasta_example.fa', 'w') as f:
         f.write(f'> {name}\n'
                 f'{seq}\n')
 
 
 def create_setting_ini(seed):
-    #seed was CACCGGG
-    mode_1=f"""[mode_1]
+    mode_1 = f"""[mode_1]
     seed = {seed}
     short_window_size = 14
     long_window_size = 65
@@ -47,22 +42,49 @@ def create_setting_ini(seed):
     with open("settings.ini", "w") as f:
         f.write(mode_1)
 
+
 def build_dict():
-    return {'Chr': [], 'Start_hairpin': [], 'End_hairpin': [], 'Strand': [], 'Hairpin_seq': [],
-                  'Mature_connections': [], 'Mature_BP_ratio': [], 'Mature_max_bulge': [], 'Loop_length': [],
-                  'Fold': [], 'Mature': [],'Mature_Length': [], '3p/5p': [], 'Hairpin_seq_trimmed': [], 'Star': [], 'Start_star': [],
-                  'End_star': [], 'Star_length': [], 'Star_connections': [], 'Star_BP_ratio': [], 'Star_max_bulge': [],
-                  'Hairpin_seq_trimmed_length': [], 'Max_bulge_symmetry': [], 'min_one_mer_mature': [], 'min_one_mer_hairpin': [], 'max_one_mer_mature': [], 'max_two_mer_mature': [], 'max_one_mer_hairpin': [], 'max_two_mer_hairpin': [], 'Valid mir': []}
+    keys = ['Chr', 'Start_hairpin', 'End_hairpin', 'Strand', 'Hairpin_seq',
+            'Mature', 'Start_mature', 'End_mature', 'Mature_Length', 'Mature_connections', 'Mature_BP_ratio',
+            'Mature_max_bulge', 'Loop_length', 'Fold', '3p/5p', 'Hairpin_seq_trimmed', 'Star', 'Start_star',
+            'End_star', 'Star_length', 'Star_connections', 'Star_BP_ratio', 'Star_max_bulge',
+            'Hairpin_seq_trimmed_length', 'Mature_max_bulge_asymmetry', 'Star_max_bulge_asymmetry',
+            'min_one_mer_mature', 'min_one_mer_hairpin', 'max_one_mer_mature', 'max_two_mer_mature',
+            'max_one_mer_hairpin', 'max_two_mer_hairpin', '5p_overhang', '3p_overhang', 'Valid mir'
+    ]
+    return {f'{key}_ziv': [] for key in keys}
+
 
 def build_exception_dict():
-    return {'Chr': -1, 'Start_hairpin': -1, 'End_hairpin': -1, 'Strand': -1, 'Hairpin_seq': -1,
-                  'Mature_connections': -1, 'Mature_BP_ratio': -1, 'Mature_max_bulge': -1, 'Loop_length': -1,
-                  'Fold': -1, 'Mature': -1,'Mature_Length': -1, '3p/5p': -1, 'Hairpin_seq_trimmed': -1, 'Star': -1, 'Start_star': -1,
-                  'End_star': -1, 'Star_length': -1, 'Star_connections': -1, 'Star_BP_ratio': -1, 'Star_max_bulge': -1,
-                  'Hairpin_seq_trimmed_length': -1, 'Max_bulge_symmetry': -1, 'min_one_mer_mature': -1, 'min_one_mer_hairpin': -1, 'max_one_mer_mature': -1, 'max_two_mer_mature': -1, 'max_one_mer_hairpin': -1, 'max_two_mer_hairpin': -1, 'Valid mir': False}
-def find_seed(name,seq):
-    start_mature_inx = seq.index(mature[name])
-    return seq[start_mature_inx + 1:start_mature_inx + 8]
+    exception_values = {
+        'Chr': -1, 'Start_hairpin': -1, 'End_hairpin': -1, 'Strand': -1, 'Hairpin_seq': -1,
+        'Mature': -1, 'Start_mature': -1, 'End_mature': -1, 'Mature_Length': -1,
+        'Mature_connections': -1, 'Mature_BP_ratio': -1, 'Mature_max_bulge': -1,
+        'Loop_length': -1, 'Fold': -1, '3p/5p': -1, 'Hairpin_seq_trimmed': -1,
+        'Star': -1, 'Start_star': -1, 'End_star': -1, 'Star_length': -1,
+        'Star_connections': -1, 'Star_BP_ratio': -1, 'Star_max_bulge': -1,
+        'Hairpin_seq_trimmed_length': -1, 'Mature_max_bulge_asymmetry': -1,
+        'Star_max_bulge_asymmetry': -1, 'min_one_mer_mature': -1,
+        'min_one_mer_hairpin': -1, 'max_one_mer_mature': -1, 'max_two_mer_mature': -1,
+        'max_one_mer_hairpin': -1, 'max_two_mer_hairpin': -1,
+        '5p_overhang': -1, '3p_overhang': -1, 'Valid mir': False
+    }
+    return {f'{k}_ziv': v for k, v in exception_values.items()}
+
+
+
+def find_seed(name, seq):
+    """
+    Pull the 7-nt seed (positions 2–8) directly from the mature miRNA
+    rather than searching inside the precursor.
+    """
+    mat = mature.get(name)
+    if mat is None:
+        raise KeyError(f"No mature sequence for '{name}'")
+    if len(mat) < 8:
+        raise ValueError(f"Mature sequence for '{name}' is only {len(mat)} nt long")
+    return mat[1:8]
+
 
 def find_gen_seed(seq):
     start_mature_seq = 'ZZZZZ'
@@ -70,17 +92,19 @@ def find_gen_seed(seq):
 
 
 def find_neg_seed(seq):
-    r = random.randint(0,1)
+    r = random.randint(0, 1)
     if r:
-        start_mature_seq = len(seq)-22
+        start_mature_seq = len(seq) - 22
     else:
         start_mature_seq = 0
     return seq[start_mature_seq + 1:start_mature_seq + 8]
 
+
 def clean(seq):
-    for char in ['DDDDD','FFFFF','ZZZZZ','BBBBB']:
-        seq = seq.replace(char,"")
+    for char in ['DDDDD', 'FFFFF', 'ZZZZZ', 'BBBBB']:
+        seq = seq.replace(char, "")
     return seq.split("\n")[0]
+
 
 def plot_series(series, ticks):
     series.plot.hist()
@@ -94,6 +118,78 @@ def plot_series(series, ticks):
     plt.axvline(mean - std, color="yellow")
     plt.savefig("./figures/{}_{}.png".format(species, series.name), dpi=300)
     plt.clf()
+
+
+def manual_change(df):
+    """
+    Manually corrects specific mismatched hairpin sequences in a pandas DataFrame.
+
+    This function applies a correction logic to each row, identifying problematic
+    entries by matching their full hairpin sequence and replacing it with the
+    corrected version.
+
+    All sequence comparisons and replacements are done using RNA sequences (with 'U' instead of 'T').
+
+    Args:
+        df (pd.DataFrame): A DataFrame where each row represents a miRNA and must
+                           contain at least the 'hairpinSeq' column.
+
+    Returns:
+        pd.DataFrame: The modified DataFrame with corrected hairpin sequences.
+    """
+
+    # --- Define the corrections here ---
+    # The key is the ENTIRE incorrect hairpin sequence.
+    # The value is the ENTIRE corrected hairpin sequence.
+    # NOTE: We define these with 'T' for readability and convert to 'U' in the code.
+    corrections_t = {
+        # For new-mir-novel17_2
+        "TAATGGATGATTACTATTATAAATAGGACAAAGAAGGTTAAATGGTACATAAACATATAATGTAAAGTTGTTTTATAAAGTTTAATGGATGATTACTATTATT":
+            "TAATGGATGATTACTATTATAAATAGGACAAAGAAGGTTAAATGGTACATAAACATATAATGTAAAGTTGTTTTATAAAGTTTAATGGATGATTAATATTAGG",
+
+        # For miR-335A
+        "TAGTATGTATCATTGAAGAACTTTATAAGGATTTTCATTGATGTATGCTTGG":
+            "TAGTATGTATCATTGAAGAACCTTTATAAGGATTTTCATTGATGTATGCTTGG",
+
+        # For new-mir-novel20_2
+        "TAGTGTGTGTCTTTGATGAACCTTGTTAAGGTTCTTAATTGATGTATGATTAGG":
+            "TAGTGTGTGTCTTTGATGAACCTTGTTAAGGTTCTTAATTGATATATGATTAGG",
+
+        # For miR-2839
+        "TCAAACAGAAGTTTTATGCACCAGGTTTGAAGTCATGCTTAAGGCATCTTGTGCAGAATT":
+            "TCAAACAGAAGTTTTATGCACCAGGTTTGAAGTCATGCTTAAGGGATCTTGTGCAGAATT"
+    }
+
+    # Convert all correction sequences from DNA (T) to RNA (U)
+    # The keys are the incorrect hairpins, values are the corrected ones.
+    corrections_u = {
+        key.replace('T', 'U'): val.replace('T', 'U')
+        for key, val in corrections_t.items()
+    }
+
+    # --- FIX ---
+    # Define a function to apply to each row of the DataFrame.
+    def correct_hairpin(row):
+        # Get the hairpin sequence from the row, remove spaces for matching.
+        original_hairpin_u = row['hairpinSeq'].replace(" ", "")
+
+        # Check if this hairpin is in our correction dictionary
+        if original_hairpin_u in corrections_u:
+            # If it is, return the corrected version
+            print(f"--- Correcting hairpin for miRNA containing '{row.get('miRNA_ID', 'N/A')}' ---")
+            return corrections_u[original_hairpin_u]
+        else:
+            # Otherwise, return the original sequence unchanged
+            return row['hairpinSeq']
+
+    print(f"Applying corrections to 'hairpinSeq' column...")
+
+    # Use .apply() to execute the 'correct_hairpin' function on each row.
+    # The result is a new Series which we assign back to the 'hairpinSeq' column.
+    df['hairpinSeq'] = df.apply(correct_hairpin, axis=1)
+
+    print("Corrections complete.")
+    return df
 
 if __name__ == '__main__':
     precursors = None
@@ -130,89 +226,94 @@ if __name__ == '__main__':
     star = get_seq_data(star, start_end_mark=False)
     if species == "miRGeneDB":
         all_remaining = pd.DataFrame()
-    # elif species != "Hofstenia":
-    #     all_remaining = pd.read_excel(all_remaining_path, sheet_name="all_candidates")
-    # else:
-    #     all_remaining = pd.read_csv(all_remaining_path, sep='\t')
-    all_remaining = pd.read_excel(all_remaining_path, sheet_name="all_candidates")
-    #ziv_features = pd.DataFrame()
-    # gen_seq = open("star_mature_generated_output.txt",).readlines()
+    else:
+        all_remaining = pd.read_excel(all_remaining_path, sheet_name="all_candidates")
+
     gen_dict = build_dict()
     neg_dict = build_dict()
     mirdb_dict = build_dict()
-    for i,(name,seq) in enumerate(precursors.items()):
-        seed = find_seed(name,seq)
+    for name, seq in precursors.items():
+        try:
+            seed = find_seed(name, seq)
+        except Exception as e:
+            print("Skipping", name, "–", e)
+            continue
+        print("seed is:", seed)
         create_setting_ini(seed)
         try:
-            out_dict=Ziv_Git.start_filtering(seq, true_mature=mature[name], true_star=star[name])
-            # if i == 678:
-            #     print(out_dict)
-            for k,v in out_dict['new'].items():
+            out_dict = Ziv_Git.start_filtering(seq, true_mature=mature[name], true_star=star[name])
+            for k, v in out_dict['new'].items():
                 mirdb_dict[k].append(v)
-            #ziv_features = ziv_features.append(mirdb_df)
         except Exception as e:
-            #print(e,name,seq,out_dict)
-            print(e, name, seq)
+            print("FAILED in start_filtering or append:", e)
             exception_dict = build_exception_dict()
-            for k,v in exception_dict.items():
+            for k, v in exception_dict.items():
                 mirdb_dict[k].append(v)
-            # row = pd.DataFrame(columns=list(mirdb_dict.keys()))
-            # row.loc[0] = ''
             continue
+
     mirdb_df = pd.DataFrame(mirdb_dict)
     all_remaining.reset_index(inplace=True, drop=True)
     mirdb_df.reset_index(inplace=True, drop=True)
     output = pd.concat([all_remaining, mirdb_df], axis=1)
-    # output.to_csv("all_remaining_after_ziv_{}.csv".format(species), index=False)
+
     if species == "miRGeneDB" or species == "Hofstenia":
-        output = output.astype({'Mature_BP_ratio': 'float', 'Mature_max_bulge': 'float', 'Star_BP_ratio': 'float', 'Star_max_bulge': 'float'})
+        output = output.astype(
+            {'Mature_BP_ratio_ziv': 'float', 'Mature_max_bulge_ziv': 'float', 'Star_BP_ratio_ziv': 'float',
+             'Star_max_bulge_ziv': 'float'})
+        if species == "Hofstenia":
+            output['Description'] = output[['Description_mirdeep', 'Description_sRNAbench']].astype(str).agg('__'.join, axis=1).str.replace(';', '|', regex=False).str.replace('ID=', '', regex=False).str.replace('.', '', regex=False)
+        output = manual_change(output)
         writer = pd.ExcelWriter('all_remaining_after_ziv_{}.xlsx'.format(species))
-        output.to_excel(writer, sheet_name='(A) Unfiltered)', index=False)
+        output.to_excel(writer, sheet_name='(A) Unfiltered', index=False)
         writer.save()
     if species != "miRGeneDB" and species != "Hofstenia":
-        output = output.astype({'Mature_BP_ratio': 'float', 'Mature_max_bulge': 'float', 'Star_BP_ratio': 'float', 'Star_max_bulge': 'float'})
+        output = output.astype(
+            {'Mature_BP_ratio_ziv': 'float', 'Mature_max_bulge_ziv': 'float', 'Star_BP_ratio_ziv': 'float',
+             'Star_max_bulge_ziv': 'float'})
         writer = pd.ExcelWriter('all_remaining_after_ziv_{}.xlsx'.format(species))
-        output.to_excel(writer, sheet_name='(A) Unfiltered)', index=False)
+        output.to_excel(writer, sheet_name='(A) Unfiltered', index=False)
         sum_fc_thres_ok = output[output['sum_FC_m > thres'] == 1].copy()
         sum_fc_thres_ok.to_excel(writer, sheet_name='(B) sum_FC>100', index=False)
         no_novel451 = sum_fc_thres_ok[sum_fc_thres_ok['novel451'] == 0].copy()
         no_novel451.to_excel(writer, sheet_name='(C) Novel451', index=False)
-        structural = no_novel451[no_novel451['Valid mir'] == True].copy()
-        structural = structural[(structural["Mature_connections"] >= 14) & (structural["Mature_connections"] <= 22)]
-        structural = structural[(structural["Mature_BP_ratio"] >= 0.6) & (structural["Mature_BP_ratio"] <= 0.96)]
-        structural = structural[(structural["Mature_max_bulge"] <= 4)]
-        structural = structural[(structural["Loop_length"] >= 10) & (structural["Loop_length"] <= 25)]
-        structural = structural[(structural["Mature_Length"] >= 19) & (structural["Mature_Length"] <= 26)]
-        structural = structural[(structural["Star_length"] >= 19) & (structural["Star_length"] <= 25)]
-        structural = structural[(structural["Star_connections"] >= 14) & (structural["Star_connections"] <= 23)]
-        structural = structural[(structural["Star_BP_ratio"] >= 0.6) & (structural["Star_BP_ratio"] <= 0.96)]
-        structural = structural[structural["Star_max_bulge"] <= 4]
-        structural = structural[structural["Hairpin_seq_trimmed_length"] >= 53]
-        structural = structural[structural["Max_bulge_symmetry"] <= 3]
-        structural = structural[structural["min_one_mer_hairpin"] >= 0.1]
-        structural = structural[structural["max_one_mer_hairpin"] <= 0.45]
+        structural = no_novel451[no_novel451['Valid mir_ziv'] == True].copy()
+        structural = structural[
+            (structural["Mature_connections_ziv"] >= 14) & (structural["Mature_connections_ziv"] <= 22)]
+        structural = structural[
+            (structural["Mature_BP_ratio_ziv"] >= 0.6) & (structural["Mature_BP_ratio_ziv"] <= 0.96)]
+        structural = structural[(structural["Mature_max_bulge_ziv"] <= 4)]
+        structural = structural[(structural["Loop_length_ziv"] >= 10) & (structural["Loop_length_ziv"] <= 25)]
+        structural = structural[(structural["Mature_Length_ziv"] >= 19) & (structural["Mature_Length_ziv"] <= 26)]
+        structural = structural[(structural["Star_length_ziv"] >= 19) & (structural["Star_length_ziv"] <= 25)]
+        structural = structural[(structural["Star_connections_ziv"] >= 14) & (structural["Star_connections_ziv"] <= 23)]
+        structural = structural[(structural["Star_BP_ratio_ziv"] >= 0.6) & (structural["Star_BP_ratio_ziv"] <= 0.96)]
+        structural = structural[structural["Star_max_bulge_ziv"] <= 4]
+        structural = structural[structural["Hairpin_seq_trimmed_length_ziv"] >= 53]
+        structural = structural[structural["Max_bulge_symmetry_ziv"] <= 3]
+        structural = structural[structural["min_one_mer_hairpin_ziv"] >= 0.1]
+        structural = structural[structural["max_one_mer_hairpin_ziv"] <= 0.45]
         structural.to_excel(writer, sheet_name='(D) Structural Features', index=False)
         writer.save()
 
     if species != "miRGeneDB" and species != "Hofstenia":
         if species == "Elegans":
-            mirgenedb = output[(output['Description_mirgenedb'] != '.') & (output['Valid mir'] == True)]
+            mirgenedb = output[(output['Description_mirgenedb'] != '.') & (output['Valid mir_ziv'] == True)]
         else:
-            mirgenedb = output[output['Valid mir'] == True]
+            mirgenedb = output[output['Valid mir_ziv'] == True]
         mirgenedb.to_csv("temp.csv", sep='\t', index=False)
-        plot_series(mirgenedb['Hairpin_seq_trimmed_length'], 5.0)
-        plot_series(mirgenedb['Mature_connections'], 1.0)
-        plot_series(mirgenedb['Mature_BP_ratio'].astype('float'), 0.05)
-        plot_series(mirgenedb['Mature_max_bulge'].astype('float'), 1.0)
-        plot_series(mirgenedb['Loop_length'], 2.0)
-        plot_series(mirgenedb['Mature_Length'], 1.0)
-        plot_series(mirgenedb['Star_length'], 1.0)
-        plot_series(mirgenedb['Star_connections'], 1.0)
-        plot_series(mirgenedb['Star_BP_ratio'].astype('float'), 0.05)
-        plot_series(mirgenedb['Star_max_bulge'].astype('float'), 1.0)
-        plot_series(mirgenedb['Max_bulge_symmetry'], 1.0)
-        plot_series(mirgenedb['min_one_mer_hairpin'], 0.05)
-        plot_series(mirgenedb['max_one_mer_hairpin'], 0.05)
+        plot_series(mirgenedb['Hairpin_seq_trimmed_length_ziv'], 5.0)
+        plot_series(mirgenedb['Mature_connections_ziv'], 1.0)
+        plot_series(mirgenedb['Mature_BP_ratio_ziv'].astype('float'), 0.05)
+        plot_series(mirgenedb['Mature_max_bulge_ziv'].astype('float'), 1.0)
+        plot_series(mirgenedb['Loop_length_ziv'], 2.0)
+        plot_series(mirgenedb['Mature_Length_ziv'], 1.0)
+        plot_series(mirgenedb['Star_length_ziv'], 1.0)
+        plot_series(mirgenedb['Star_connections_ziv'], 1.0)
+        plot_series(mirgenedb['Star_BP_ratio_ziv'].astype('float'), 0.05)
+        plot_series(mirgenedb['Star_max_bulge_ziv'].astype('float'), 1.0)
+        plot_series(mirgenedb['Max_bulge_symmetry_ziv'], 1.0)
+        plot_series(mirgenedb['min_one_mer_hairpin_ziv'], 0.05)
+        plot_series(mirgenedb['max_one_mer_hairpin_ziv'], 0.05)
         # mirgenedb['End_hairpin'].plot.hist()
         # plt.xticks(np.arange(mirgenedb['End_hairpin'].min(), mirgenedb['End_hairpin'].max() + 1, 5.0))
         # plt.savefig("./figures/hairpin_length.png", dpi=300)
