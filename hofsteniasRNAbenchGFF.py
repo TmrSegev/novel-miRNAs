@@ -25,14 +25,14 @@ def handleGivenName(name, df, column):
 
 
 
-def run(output, fasta_path=None, seed_path=None):
+def run(output, fasta_path=None, seed_path=None, good_candidates=False, new_genome=False):
     """
     This Function will create GFF3 file from the sRNAbench output.
+    :param output: base filename for the GFF3 output file.
+    :param fasta_path: base filename for fasta files (if provided, creates fasta files).
     :param seed_path: a path to the seed file.
-    :param fasta_path: a path to create fasta file from the gff3 table.
-    :param additional: additonal sRNAbench output prediction file.
-    :param input: sRNAbench output prediction files 'novel.txt', 'novel454.txt'
-    :param output: output path of the GFF formatted file.
+    :param good_candidates: if True, use pre-filtered good candidates.
+    :param new_genome: if True, use new genome folder structure (Hofstenia_newGenome_*).
     :return:
     """
     version = "##gff-version 3\n"
@@ -41,19 +41,46 @@ def run(output, fasta_path=None, seed_path=None):
     gff3_pre_only = pd.DataFrame(columns=gff3_columns)
     # gff3_pre_only = gff3_pre_only.astype({"start": int})
     # gff3_pre_only = gff3_pre_only.astype({"end": int})
-    output_pre_only = "{}_sRNAbench_pre_only.gff3".format(species)
-    fasta_prefix = fasta_path.split('.fasta')[0]
-    fasta_pre_only_path = fasta_prefix + "_pre_only.fasta"
-    fasta_star_path = fasta_prefix + "_star.fasta"
+    
+    # Determine base path based on genome version
+    if new_genome:
+        base_path = "/sise/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/sRNAtoolboxDB/out/Hofstenia_newGenome/"
+        output_dir = "/sise/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/Hofstenia_newGenome/scripts/"
+    else:
+        base_path = "/sise/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/sRNAtoolboxDB/out/"
+        output_dir = "/sise/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/Hofstenia/scripts/"
+    
+    # Prepend output directory to all output file paths
+    output = output_dir + output
+    
+    # Extract species name from output filename for output_pre_only
+    # e.g., "Hofstenia_sRNAbench.gff3" -> "Hofstenia"
+    species = output.split('/')[-1].split('_sRNAbench')[0]
+    output_pre_only = output_dir + "{}_sRNAbench_pre_only.gff3".format(species)
+    
+    if fasta_path is not None:
+        fasta_path = output_dir + fasta_path
+        fasta_prefix = fasta_path.split('.fasta')[0]
+        fasta_pre_only_path = fasta_prefix + "_pre_only.fasta"
+        fasta_star_path = fasta_prefix + "_star.fasta"
+    else:
+        fasta_pre_only_path = None
+        fasta_star_path = None
 
     # Uniting all remaining files, and all removed no find files
     table = None
     removed_no_find = None
-
-    folders = ["Hofstenia_EC1", "Hofstenia_EC2", "Hofstenia_EC3", "Hofstenia_GA1", "Hofstenia_GA2", "Hofstenia_GA3", "Hofstenia_DI1", "Hofstenia_DI2", "Hofstenia_DI3", "Hofstenia_PDi1", "Hofstenia_PDi2", "Hofstenia_PDi3", "Hofstenia_PDii1", "Hofstenia_PDii2", "Hofstenia_PDii3", "Hofstenia_PL1", "Hofstenia_PL2", "Hofstenia_PL3", "Hofstenia_PH1", "Hofstenia_PH2", "Hofstenia_PH3", "Hofstenia_HL1", "Hofstenia_HL2", "Hofstenia_HL3", "Hofstenia_IST1", "Hofstenia_IST2", "Hofstenia_IST3", "Hofstenia_AMP1", "Hofstenia_AMP2", "Hofstenia_AMP3", "Hofstenia_SMA1", "Hofstenia_SMA2", "Hofstenia_SMA3"]
+    
+    # Sample suffixes for all folders (folder names remain the same)
+    sample_suffixes = ["EC1", "EC2", "EC3", "GA1", "GA2", "GA3", "DI1", "DI2", "DI3", 
+                       "PDi1", "PDi2", "PDi3", "PDii1", "PDii2", "PDii3", "PL1", "PL2", "PL3", 
+                       "PH1", "PH2", "PH3", "HL1", "HL2", "HL3", "IST1", "IST2", "IST3", 
+                       "AMP1", "AMP2", "AMP3", "SMA1", "SMA2", "SMA3"]
+    
+    folders = ["Hofstenia_" + suffix for suffix in sample_suffixes]
     for folder in folders:
-        to_add = pd.read_csv("/sise/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/sRNAtoolboxDB/out/" + folder + "/sRNAbench_remaining.csv", sep='\t')
-        to_add_no_find = pd.read_csv("/sise/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/sRNAtoolboxDB/out/" + folder + "/sRNAbench_removed_no_find.csv", sep='\t')
+        to_add = pd.read_csv(base_path + folder + "/sRNAbench_remaining.csv", sep='\t')
+        to_add_no_find = pd.read_csv(base_path + folder + "/sRNAbench_removed_no_find.csv", sep='\t')
 
         to_add["Library"] = folder
 
@@ -67,12 +94,12 @@ def run(output, fasta_path=None, seed_path=None):
         else:
             removed_no_find = pd.concat([removed_no_find, to_add_no_find], ignore_index=True)
 
-    removed_no_find.to_csv("all_sRNAbench_removed_no_find.csv", sep='\t', index=False)
+    removed_no_find.to_csv(output_dir + "all_sRNAbench_removed_no_find.csv", sep='\t', index=False)
 
 
     # Filtering by coordinates
     table = table.sort_values(['seqName', 'start', 'end'])
-    table.to_csv('debugging_Hofstenia_sRNAbench.csv', sep='\t', index=False)
+    table.to_csv(output_dir + 'debugging_Hofstenia_sRNAbench.csv', sep='\t', index=False)
     print("SAVED CSV")
 
     table['overlaps'] = np.zeros(len(table))
@@ -92,13 +119,42 @@ def run(output, fasta_path=None, seed_path=None):
             else:
                 table = table.drop(overlaps.index)
     print(table['overlaps'].value_counts().sort_index(ascending=False))
-    table = table.drop(["distance"], axis=1)
-    no_overlaps.to_csv('removed_sRNAbench_no_overlaps.csv', sep='\t')
-    # table.to_csv('sRNAbench_all_remaining_filtered.csv', sep='\t', index=False)
+    if 'distance' in table.columns:
+        table = table.drop(["distance"], axis=1)
+    no_overlaps.to_csv(output_dir + 'removed_sRNAbench_no_overlaps.csv', sep='\t')
+    # table.to_csv(output_dir + 'sRNAbench_all_remaining_filtered.csv', sep='\t', index=False)
 
     if good_candidates:
-        table = pd.read_csv("/sise/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/Hofstenia/good_candidates/sRNAbench_goodCandidates.csv")
-        table.to_csv('sRNAbench_all_remaining_filtered.csv', sep='\t', index=False)
+        if new_genome:
+            good_candidates_path = "/sise/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/Hofstenia_newGenome/good_candidates/sRNAbench_goodCandidates.csv"
+        else:
+            good_candidates_path = "/sise/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/Hofstenia/good_candidates/sRNAbench_goodCandidates.csv"
+        try:
+            table = pd.read_csv(good_candidates_path)
+            if table.empty:
+                print(f"Warning: Good candidates file is empty: {good_candidates_path}")
+            table.to_csv(output_dir + 'sRNAbench_all_remaining_filtered.csv', sep='\t', index=False)
+        except (FileNotFoundError, pd.errors.EmptyDataError) as e:
+            print(f"Warning: Could not read good candidates file: {good_candidates_path}")
+            print(f"Error: {e}")
+            print("Continuing with filtered table from coordinate overlap filtering...")
+
+    # Check if table is empty after all filtering
+    if table.empty:
+        print("Warning: No miRNA candidates remaining after filtering. Creating empty output files.")
+        # Create empty output files
+        with open(output, 'w') as file:
+            file.write(version)
+        with open(output_pre_only, 'w') as file:
+            file.write(version)
+        gff3.to_csv(output, index=False, header=False, mode="a", sep='\t')
+        gff3_pre_only.to_csv(output_pre_only, index=False, header=False, mode="a", sep='\t')
+        if fasta_path is not None:
+            open(fasta_path, 'w').close()
+            open(fasta_pre_only_path, 'w').close()
+            open(fasta_star_path, 'w').close()
+        print("Empty output files created successfully.")
+        return
 
     if seed_path:
         seed_file = pd.read_csv(seed_path, encoding='latin-1')
@@ -259,6 +315,7 @@ if __name__ == '__main__':
     seed_path = None
     species = None
     good_candidates = False
+    new_genome = False
     args = []
     for i in range(1, len(sys.argv), 2):
         arg = sys.argv[i]
@@ -276,18 +333,27 @@ if __name__ == '__main__':
                 good_candidates = True
             else:
                 good_candidates = False
+        elif arg == '--new-genome':
+            new_genome = sys.argv[i + 1]
+            if new_genome == "True":
+                new_genome = True
+            else:
+                new_genome = False
         elif arg == '--help' or arg == '-h':
             print(f'Manual:\n'
-                  f' -i <path>: sRNAbench prediction output, like novel.txt/novel451.txt.\n'
-                  f' -a <path>: additional input file.\n'
-                  f' -o <path>: output path.\n'
+                  f' -o <filename>: output GFF3 filename (required).\n'
+                  f' -s <species>: species name (required, used for output_pre_only filename).\n'
                   f' -seed <path> : classify the reads by seed file, should be separated by tab with columns.\n'
-                  f' --create-fasta <path>: create fasta file from the gff3 table.\n'
+                  f' --create-fasta <filename>: create fasta file from the gff3 table.\n'
+                  f' --goodcandidates <True/False>: use pre-filtered good candidates.\n'
+                  f' --new-genome <True/False>: use new genome folder structure (Hofstenia_newGenome_*).\n'
                   )
 
             sys.exit()
 
     if not output:
-        raise ('Output path is required (-o <path>)')
-    run(output, fasta_path, seed_path)
+        raise ('Output filename is required (-o <filename>)')
+    if not species:
+        raise ('Species name is required (-s <species>)')
+    run(output, fasta_path, seed_path, good_candidates, new_genome)
 # See PyCharm help at https://www.jetbrains.com/help/pycharm/

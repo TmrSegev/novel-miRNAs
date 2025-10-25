@@ -19,17 +19,15 @@ def getSeqId(row):
     return seq_id
 
 
-def run(output, fasta_path, seed_path):
+def run(output, fasta_path, seed_path, good_candidates=False, new_genome=False):
     f"""
     This function creates gff3 file from the inputs, This function will add to the miRNA ID -m / -s if its mature/star,
     -number which the number its the frequency of this seq among its type (mature/star)
+    :param output: String - base filename for the GFF formatted file.
+    :param fasta_path: String - base filename for fasta files.
     :param seed_path: String - seed file path.
-    :param fasta_path: String - fasta file will created in this path.
-    :param exclude_c: Int - exclude rows from the filtering when total counts higher than exclude_c.
-    :param threshold_s: Float - threshold for score.
-    :param threshold_tp: Float - threshold for the true positive estimate.
-    :param inputs: Array - with DataFrames of miRDeep results.csv predict tables.
-    :param output: String - output path of the GFF formatted file.
+    :param good_candidates: Boolean - if True, use pre-filtered good candidates.
+    :param new_genome: Boolean - if True, use new genome folder structure.
     :return: None, at the end of the function gff3 file will created.
     """
     seed_file = None
@@ -37,10 +35,31 @@ def run(output, fasta_path, seed_path):
     gff3_columns = ['seqid', 'source', 'type', 'start', 'end', 'score', 'strand', 'phase', 'attributes']
     gff3 = pd.DataFrame(columns=gff3_columns)
     gff3_pre_only = pd.DataFrame(columns=gff3_columns)
-    output_pre_only = "{}_mirdeep_pre_only.gff3".format(species)
-    fasta_prefix = fasta_path.split('.fasta')[0]
-    fasta_pre_only_path = fasta_prefix + "_pre_only.fasta"
-    fasta_star_path = fasta_prefix + "_star.fasta"
+    
+    # Determine base path based on genome version
+    if new_genome:
+        base_path = "/sise/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/Hofstenia_newGenome/mirdeep_out/"
+        output_dir = "/sise/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/Hofstenia_newGenome/scripts/"
+    else:
+        base_path = "/sise/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/Hofstenia/mirdeep_out/"
+        output_dir = "/sise/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/Hofstenia/scripts/"
+    
+    # Prepend output directory to all output file paths
+    output = output_dir + output
+    
+    # Extract species name from output filename for output_pre_only
+    # e.g., "Hofstenia_mirdeep.gff3" -> "Hofstenia"
+    species = output.split('/')[-1].split('_mirdeep')[0]
+    output_pre_only = output_dir + "{}_mirdeep_pre_only.gff3".format(species)
+    
+    if fasta_path is not None:
+        fasta_path = output_dir + fasta_path
+        fasta_prefix = fasta_path.split('.fasta')[0]
+        fasta_pre_only_path = fasta_prefix + "_pre_only.fasta"
+        fasta_star_path = fasta_prefix + "_star.fasta"
+    else:
+        fasta_pre_only_path = None
+        fasta_star_path = None
 
     filtered_input = []
     for i in range(1, 3):
@@ -49,7 +68,7 @@ def run(output, fasta_path, seed_path):
         folders = ["EC1", "EC2", "EC3", "GA1", "GA2", "GA3", "DI1", "DI2", "DI3", "PDi1", "PDi2", "PDi3", "PDii1", "PDii2", "PDii3", "PL1", "PL2", "PL3", "PH1", "PH2", "PH3", "HL1", "HL2", "HL3", "IST1", "IST2", "IST3", "AMP1", "AMP2", "AMP3", "SMA1", "SMA2", "SMA3"]
 
         for folder in folders:
-            to_add = pd.read_csv("/sise/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/Hofstenia/mirdeep_out/" + folder + "/remaining_file_" + str(i) + ".csv", sep='\t')
+            to_add = pd.read_csv(base_path + folder + "/remaining_file_" + str(i) + ".csv", sep='\t')
             print(to_add.shape)
 
             to_add["Library"] = folder
@@ -63,8 +82,15 @@ def run(output, fasta_path, seed_path):
         table = table.sort_values(['precursor coordinate'])
         print(table.columns)
         print(table.shape)
-        table.to_csv(f'debugging_Hofstenia_miRDeep_{i}.csv', sep='\t', index=False)
+        table.to_csv(output_dir + f'debugging_Hofstenia_miRDeep_{i}.csv', sep='\t', index=False)
         print("SAVED CSV")
+
+        # Skip processing if table is empty
+        if table.empty:
+            print(f"Table for iteration {i} is empty - skipping filtering.")
+            no_overlaps = pd.DataFrame(columns=table.columns)
+            no_overlaps.to_csv(output_dir + 'removed_mirdeep_{}_no_overlaps.csv'.format(i), sep='\t')
+            continue
 
         table['chr'] = table['precursor coordinate'].str.split(':', expand=True)[0]
         table['positions'] = table['precursor coordinate'].str.split(':', expand=True)[1]
@@ -90,16 +116,45 @@ def run(output, fasta_path, seed_path):
         print(table['overlaps'].value_counts().sort_index(ascending=False))
         table = table.drop(["distance"], axis=1)
         filtered_input.append(table)
-        no_overlaps.to_csv('removed_mirdeep_{}_no_overlaps.csv'.format(i), sep='\t')
+        no_overlaps.to_csv(output_dir + 'removed_mirdeep_{}_no_overlaps.csv'.format(i), sep='\t')
         table = table.rename({"tag id":"provisional id", "estimated probability that the miRNA is a true positive":"estimated probability that the miRNA candidate is a true positive"}, axis=1)
     # all_remaining = pd.concat([filtered_input[0], table], ignore_index=True)
-    # all_remaining.to_csv('mirdeep_all_remaining_filtered.csv', sep='\t', index=False)
+    # all_remaining.to_csv(output_dir + 'mirdeep_all_remaining_filtered.csv', sep='\t', index=False)
 
     if good_candidates:
-        filtered_input = pd.read_csv("/sise/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/Hofstenia/good_candidates/miRDeep_goodCandidates.csv")
-        filtered_input.to_csv('mirdeep_all_remaining_filtered.csv', sep='\t', index=False)
-        filtered_input = [filtered_input]
+        if new_genome:
+            good_candidates_path = "/sise/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/Hofstenia_newGenome/good_candidates/miRDeep_goodCandidates.csv"
+        else:
+            good_candidates_path = "/sise/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/Hofstenia/good_candidates/miRDeep_goodCandidates.csv"
+        try:
+            filtered_input = pd.read_csv(good_candidates_path)
+            if filtered_input.empty:
+                print(f"Warning: Good candidates file is empty: {good_candidates_path}")
+            filtered_input.to_csv(output_dir + 'mirdeep_all_remaining_filtered.csv', sep='\t', index=False)
+            filtered_input = [filtered_input]
+        except (FileNotFoundError, pd.errors.EmptyDataError) as e:
+            print(f"Warning: Could not read good candidates file: {good_candidates_path}")
+            print(f"Error: {e}")
+            print("Continuing with filtered inputs from coordinate overlap filtering...")
+            # Keep the existing filtered_input list from the loop above
 
+
+    # Check if all filtered inputs are empty
+    if all(df.empty for df in filtered_input):
+        print("Warning: No miRNA candidates remaining after filtering. Creating empty output files.")
+        # Create empty output files
+        with open(output, 'w') as file:
+            file.write(version)
+        with open(output_pre_only, 'w') as file:
+            file.write(version)
+        gff3.to_csv(output, index=False, header=False, mode="a", sep='\t')
+        gff3_pre_only.to_csv(output_pre_only, index=False, header=False, mode="a", sep='\t')
+        if fasta_path is not None:
+            open(fasta_path, 'w').close()
+            open(fasta_pre_only_path, 'w').close()
+            open(fasta_star_path, 'w').close()
+        print("Empty output files created successfully.")
+        return
 
     if seed_path is not None:
         seed_file = pd.read_csv(seed_path, encoding='latin-1')
@@ -263,6 +318,7 @@ if __name__ == '__main__':
     seed_path = None
     species = None
     good_candidates = False
+    new_genome = False
     args = []
 
     i = 1
@@ -284,24 +340,27 @@ if __name__ == '__main__':
                 good_candidates = True
             else:
                 good_candidates = False
+        elif arg == '--new-genome':
+            new_genome = sys.argv[i + 1]
+            if new_genome == "True":
+                new_genome = True
+            else:
+                new_genome = False
         elif arg == '--help' or arg == '-h':
             print(f'Manual:\n'
-                  f' -i <path> : miRDeep2 prediction output path, like result_08_10_2021_t_09_57_05\n'
-                  f' -o <path> : output path.\n'
+                  f' -o <filename> : output GFF3 filename (required).\n'
+                  f' -s <species> : species name (required, used for output_pre_only filename).\n'
                   f' -seed <path> : classify the reads by seed file, should be separated by tab with columns'
                   f' [miRBase_name, seed], default: None.\n'
-                  f' --filter-tp <float> : threshold for the true positive estimate, any value between 0 - 100, '
-                  f'default: None.\n '
-                  f' --filter-s <float> : threshold for score, default: None.\n'
-                  f' --exclude-c <int> : term to ignore the score filter threshold if total counts are higher, default: '
-                  f'None.\n '
-                  f' --csv-save : will save the inner tables of miRDeep2 output results as csv.\n'
-                  f' --create-fasta <path>: create fasta file from the gff3 table.\n')
+                  f' --create-fasta <filename>: create fasta file from the gff3 table.\n'
+                  f' --goodcandidates <True/False>: use pre-filtered good candidates.\n'
+                  f' --new-genome <True/False>: use new genome folder structure (Hofstenia_newGenome_*).\n')
             sys.exit()
         i += 2
 
     if not output:
-        raise ('Output path is required (-o <path>)')
+        raise ('Output filename is required (-o <filename>)')
+    if not species:
+        raise ('Species name is required (-s <species>)')
 
-
-    run(output, fasta_path, seed_path)
+    run(output, fasta_path, seed_path, good_candidates, new_genome)

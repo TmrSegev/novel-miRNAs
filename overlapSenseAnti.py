@@ -22,6 +22,13 @@ intersections = pd.read_csv(intersections_table_path, sep='\t', names=['Chr_a', 
 annotation = gffpd.read_gff3(gff_path)
 gff = annotation.df
 
+# Check if intersections table is empty
+if intersections.empty:
+    print("Warning: Intersections table is empty. No overlaps to process.")
+    print("GFF file will remain unchanged.")
+    # Exit without modifying the GFF
+    sys.exit(0)
+
 # Create rc_m columns and rc_s columns
 intersections['rc_m_a'] = intersections['Description_a'].str.split(';', expand=True)[1]
 intersections['rc_m_b'] = intersections['Description_b'].str.split(';', expand=True)[1]

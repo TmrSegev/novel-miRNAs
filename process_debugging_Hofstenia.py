@@ -10,14 +10,20 @@ print("IMPORTED")
 parser = argparse.ArgumentParser()
 parser.add_argument("--tool", choices=["sRNAbench", "miRDeep"], required=True,
                     help="Specify the tool: sRNAbench or miRDeep")
+parser.add_argument("--new-genome", action="store_true",
+                    help="Use new genome folder structure (Hofstenia_newGenome)")
 args = parser.parse_args()
 
 tool_name = args.tool
 alt_tool_name = "miRDeep" if tool_name == "sRNAbench" else "sRNAbench"
 
-# Load the data
-base_path = "/sise/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/Hofstenia/scripts/"
-output_path = "/sise/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/Hofstenia/good_candidates/"
+# Determine base path based on genome version
+if args.new_genome:
+    base_path = "/sise/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/Hofstenia_newGenome/scripts/"
+    output_path = "/sise/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/Hofstenia_newGenome/good_candidates/"
+else:
+    base_path = "/sise/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/Hofstenia/scripts/"
+    output_path = "/sise/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/Hofstenia/good_candidates/"
 if tool_name == "miRDeep":
     file1 = f"{base_path}debugging_Hofstenia_miRDeep_1.csv"
     file2 = f"{base_path}debugging_Hofstenia_miRDeep_2.csv"

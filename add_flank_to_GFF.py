@@ -1,4 +1,18 @@
 import sys
+import argparse
+import os
+
+# Argument parser for new genome support
+parser = argparse.ArgumentParser(description='Add flanking regions to GFF3 pre_miRNA features')
+parser.add_argument('--new-genome', action='store_true',
+                    help='Use new genome folder structure (Hofstenia_newGenome)')
+args = parser.parse_args()
+
+# Determine base path based on genome version
+if args.new_genome:
+    base_dir = "/sise/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/Hofstenia_newGenome/scripts/"
+else:
+    base_dir = "/sise/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/Hofstenia/scripts/"
 
 # A list of the algorithms whose output will be processed.
 algorithms = ["mirdeep", "sRNAbench"]
@@ -6,12 +20,27 @@ algorithms = ["mirdeep", "sRNAbench"]
 FLANK = 10
 
 for algo in algorithms:
-    # These are placeholder paths.
-    # You should replace them with the actual paths to your files.
-    INPUT = f"/sise/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/Hofstenia/scripts/Hofstenia_{algo}.gff3"
-    OUTPUT = f"/sise/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/Hofstenia/scripts/Hofstenia_{algo}_flanked_pre.gff3"
+    INPUT = f"{base_dir}Hofstenia_{algo}.gff3"
+    OUTPUT = f"{base_dir}Hofstenia_{algo}_flanked_pre.gff3"
 
     print(f"Processing {INPUT} -> {OUTPUT}", file=sys.stderr)
+
+    # Check if input file exists
+    if not os.path.exists(INPUT):
+        print(f"Warning: Input file not found: {INPUT}", file=sys.stderr)
+        print(f"Skipping {algo}...", file=sys.stderr)
+        continue
+
+    # Check if input file is empty (only has headers)
+    with open(INPUT) as check_file:
+        lines = check_file.readlines()
+        # If file only has headers (lines starting with #), create empty output
+        if all(line.startswith('#') for line in lines):
+            print(f"Warning: Input file is empty (only headers): {INPUT}", file=sys.stderr)
+            print(f"Creating empty output file: {OUTPUT}", file=sys.stderr)
+            with open(OUTPUT, "w") as fout:
+                fout.writelines(lines)
+            continue
 
     with open(INPUT) as fin, open(OUTPUT, "w") as fout:
         for line in fin:
