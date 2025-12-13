@@ -44,11 +44,11 @@ def run(output, fasta_path=None, seed_path=None, good_candidates=False, new_geno
     
     # Determine base path based on genome version
     if new_genome:
-        base_path = "/sise/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/sRNAtoolboxDB/out/Hofstenia_newGenome/"
-        output_dir = "/sise/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/Hofstenia_newGenome/scripts/"
+        base_path = "/groups/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/sRNAtoolboxDB/out/Hofstenia_newGenome/"
+        output_dir = "/groups/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/Hofstenia_newGenome/scripts/"
     else:
-        base_path = "/sise/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/sRNAtoolboxDB/out/"
-        output_dir = "/sise/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/Hofstenia/scripts/"
+        base_path = "/groups/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/sRNAtoolboxDB/out/"
+        output_dir = "/groups/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/Hofstenia/scripts/"
     
     # Prepend output directory to all output file paths
     output = output_dir + output
@@ -114,7 +114,7 @@ def run(output, fasta_path=None, seed_path=None, good_candidates=False, new_geno
             overlaps = overlaps[overlaps['seqName'] == row['seqName']]
             table.loc[index, 'overlaps'] = len(overlaps)
             if len(overlaps) == 0:
-                no_overlaps = no_overlaps.append(row)
+                no_overlaps = pd.concat([no_overlaps, pd.DataFrame([row])], ignore_index=True)
                 table = table.drop(index)
             else:
                 table = table.drop(overlaps.index)
@@ -126,9 +126,9 @@ def run(output, fasta_path=None, seed_path=None, good_candidates=False, new_geno
 
     if good_candidates:
         if new_genome:
-            good_candidates_path = "/sise/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/Hofstenia_newGenome/good_candidates/sRNAbench_goodCandidates.csv"
+            good_candidates_path = "/groups/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/Hofstenia_newGenome/good_candidates/sRNAbench_goodCandidates.csv"
         else:
-            good_candidates_path = "/sise/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/Hofstenia/good_candidates/sRNAbench_goodCandidates.csv"
+            good_candidates_path = "/groups/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/Hofstenia/good_candidates/sRNAbench_goodCandidates.csv"
         try:
             table = pd.read_csv(good_candidates_path)
             if table.empty:
@@ -251,7 +251,7 @@ def run(output, fasta_path=None, seed_path=None, good_candidates=False, new_geno
         if mature_seq == 3:
             seed = name3p.split('|')[4]
             gff_row = [[f'{seqId}', '.', 'pre_miRNA', str(start), str(end), '.', strand, '.', f'ID={name};RC_m={rc_mature};RC_s={rc_star};index={intersection_index};{seed};{origin};{overlaps}']]
-        gff3_pre_only = gff3_pre_only.append(gff_row)
+        gff3_pre_only = pd.concat([gff3_pre_only, pd.DataFrame(gff_row, columns=gff3_columns)], ignore_index=True)
 
         if strand == '+':
             try:
@@ -289,7 +289,7 @@ def run(output, fasta_path=None, seed_path=None, good_candidates=False, new_geno
 
         miRNAs = pd.DataFrame(gff_row, columns=gff3_columns)
 
-        gff3 = gff3.append(miRNAs)
+        gff3 = pd.concat([gff3, miRNAs], ignore_index=True)
 
     with open(output, 'w') as file:
         file.write(version)

@@ -9,7 +9,7 @@ import pandas as pd
 from subprocess import Popen
 from Bio import pairwise2
 import numpy as np
-os.chdir(r"/sise/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/Ziv_Features/")
+os.chdir(r"/groups/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/Ziv_Features/")
 _ct_dump_count = 0
 
 dirpath = os.getcwd()

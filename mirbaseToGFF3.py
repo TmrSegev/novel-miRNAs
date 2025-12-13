@@ -19,14 +19,14 @@ def is_5p_3p(precursor, sub_seq):
         return '5p'
 
 
-annotation = gffpd.read_gff3("/sise/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/mirbase_data/cel_mirbase.gff3")
+annotation = gffpd.read_gff3("/groups/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/mirbase_data/cel_mirbase.gff3")
 gff = annotation.df
 
-hairpin = SeqIO.parse(open("/sise/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/mirbase_data/animalsHairpin.fa"),
+hairpin = SeqIO.parse(open("/groups/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/mirbase_data/animalsHairpin.fa"),
                         'fasta')
 hairpin_dict = SeqIO.to_dict(hairpin)
 
-mature = SeqIO.parse(open("/sise/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/mirbase_data/animalsMature.fa"),
+mature = SeqIO.parse(open("/groups/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/mirbase_data/animalsMature.fa"),
                         'fasta')
 mature_dict = SeqIO.to_dict(mature)
 

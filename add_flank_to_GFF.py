@@ -10,9 +10,9 @@ args = parser.parse_args()
 
 # Determine base path based on genome version
 if args.new_genome:
-    base_dir = "/sise/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/Hofstenia_newGenome/scripts/"
+    base_dir = "/groups/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/Hofstenia_newGenome/scripts/"
 else:
-    base_dir = "/sise/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/Hofstenia/scripts/"
+    base_dir = "/groups/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/Hofstenia/scripts/"
 
 # A list of the algorithms whose output will be processed.
 algorithms = ["mirdeep", "sRNAbench"]

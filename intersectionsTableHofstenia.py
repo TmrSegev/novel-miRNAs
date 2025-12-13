@@ -40,8 +40,15 @@ remaining_sRNAbench_path = None
 mirbase_gff_path = None
 libraries = None
 sum_fc_thres = 100
-for i in range(1, len(sys.argv), 2):
+new_genome = False
+
+i = 1
+while i < len(sys.argv):
     arg = sys.argv[i]
+    if arg == '--new-genome':
+        new_genome = True
+        i += 1
+        continue
     if arg == '-s':
         species = sys.argv[i + 1]
     elif arg == '--mirdeep-inter-table':
@@ -89,6 +96,7 @@ for i in range(1, len(sys.argv), 2):
     elif arg == '--help' or arg == '-h':
         print(f'Manual:\n'
               f' -s <name>: name of species.\n'
+              f' --new-genome: use new genome folder structure (Hofstenia_newGenome).\n'
               f' --mirdeep-inter-table <path>: path to bedtools -a mirdeep and -b sRNAbench intersection .bed file.\n'
               f' --sRNAbench-inter-table <path>: path to bedtools -a sRNAbench and -b mirdeep intersection .bed file.\n'
               f' --blast-mirdeep <path>: path to mirdeep blast results file.\n'
@@ -113,6 +121,13 @@ for i in range(1, len(sys.argv), 2):
               f' --fc-mirbase <path>: path to mirbase featurecounts results file (full counts, not the summary file).\n'
               )
         sys.exit()
+    i += 2
+
+# Determine output directory based on new_genome flag
+if new_genome:
+    output_dir = "/groups/vaksler-group/IsanaRNA/Isana_Tzah/RNAcentral/miRNAs/Hofstenia_newGenome/"
+else:
+    output_dir = "/groups/vaksler-group/IsanaRNA/Isana_Tzah/RNAcentral/miRNAs/Hofstenia/"
 
 # -----CREATE INTERSECTIONS TABLES-----
 # -----mirdeep intersections table:-----
@@ -776,7 +791,7 @@ unified = unified[columns]
 # --- Extract seed
 unified['Seed'] = np.where(unified["mature"] == '5p', unified["5pseq"].str[1:8], unified["3pseq"].str[1:8])
 
-seed_families = pd.read_csv('/sise/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/mirbase_data/ALL_seed_family_from_mirgendb.csv', encoding='latin-1')
+seed_families = pd.read_csv('/groups/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/mirbase_data/ALL_seed_family_from_mirgendb.csv', encoding='latin-1')
 seed_families = seed_families[['Family', 'Seed']]
 seed_families = seed_families.drop_duplicates(subset='Seed')
 unified = pd.merge(unified, seed_families, left_on='Seed', right_on='Seed', how='left')
@@ -791,7 +806,7 @@ unified["novel451"] = np.where(unified['Description_sRNAbench'].str.contains("no
 
 # -----SAVE TO EXCEL-----
 
-writer = pd.ExcelWriter('intersections_table_{}.xlsx'.format(species))
+writer = pd.ExcelWriter(output_dir + 'intersections_table_{}.xlsx'.format(species))
 mirdeep_blast_fc_intersections_table.to_excel(writer, sheet_name='miRdeep')
 sRNAbench_blast_fc_intersections_table.to_excel(writer, sheet_name='sRNAbench')
 if (species == 'Elegans') or (species == 'elegans'):

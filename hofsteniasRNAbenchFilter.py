@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 import sys
+import os
 import pandas as pd
 import numpy as np
 from Bio import pairwise2
@@ -120,35 +121,39 @@ def run(input, additional=None):
     table, deleted_input = filterNovel(table)
 
     if additional:
-        table_to_add = pd.read_csv(additional, sep='\t')
-        table_to_add["origin"] = "novel451"
-        table_to_add, table_to_delete = filterNovel451(table_to_add, table)
-        deleted_input = deleted_input.append(table_to_delete)
-        table = table.append(table_to_add)
+        # Check if additional file exists before processing
+        if os.path.exists(additional):
+            table_to_add = pd.read_csv(additional, sep='\t')
+            table_to_add["origin"] = "novel451"
+            table_to_add, table_to_delete = filterNovel451(table_to_add, table)
+            deleted_input = deleted_input.append(table_to_delete)
+            table = table.append(table_to_add)
+        else:
+            print(f"Warning: Additional file not found: {additional}. Skipping novel451 analysis.")
 
     # Filter non coding RNA
     table['5pseq'] = table['5pseq'].astype(str)
     table['3pseq'] = table['3pseq'].astype(str)
     for index, row in table.iterrows():
-        with open('/sise/vaksler-group/IsanaRNA/Isana_Tzah/RNAcentral/ncRNAs_Caenorhabditis/Caenorhabditis_rRNA.fasta') as f:
+        with open('/groups/vaksler-group/IsanaRNA/Isana_Tzah/RNAcentral/ncRNAs_Caenorhabditis/Caenorhabditis_rRNA.fasta') as f:
             if (row['5pseq'] in f.read()) or (row['3pseq'] in f.read()):
                 row['Removal Reason'] = 'rRNA'
                 deleted_input = deleted_input.append(row)
                 table.drop(index=index, inplace=True)
                 f.close()
-        with open('/sise/vaksler-group/IsanaRNA/Isana_Tzah/RNAcentral/ncRNAs_Caenorhabditis/Caenorhabditis_snoRNA.fasta') as f:
+        with open('/groups/vaksler-group/IsanaRNA/Isana_Tzah/RNAcentral/ncRNAs_Caenorhabditis/Caenorhabditis_snoRNA.fasta') as f:
             if (row['5pseq'] in f.read()) or (row['3pseq'] in f.read()):
                 row['Removal Reason'] = 'snoRNA'
                 deleted_input = deleted_input.append(row)
                 table.drop(index=index, inplace=True)
                 f.close()
-        with open('/sise/vaksler-group/IsanaRNA/Isana_Tzah/RNAcentral/ncRNAs_Caenorhabditis/Caenorhabditis_snRNA.fasta') as f:
+        with open('/groups/vaksler-group/IsanaRNA/Isana_Tzah/RNAcentral/ncRNAs_Caenorhabditis/Caenorhabditis_snRNA.fasta') as f:
             if (row['5pseq'] in f.read()) or (row['3pseq'] in f.read()):
                 row['Removal Reason'] = 'snRNA'
                 deleted_input = deleted_input.append(row)
                 table.drop(index=index, inplace=True)
                 f.close()
-        with open('/sise/vaksler-group/IsanaRNA/Isana_Tzah/RNAcentral/ncRNAs_Caenorhabditis/Caenorhabditis_tRNA.fasta') as f:
+        with open('/groups/vaksler-group/IsanaRNA/Isana_Tzah/RNAcentral/ncRNAs_Caenorhabditis/Caenorhabditis_tRNA.fasta') as f:
             if (row['5pseq'] in f.read()) or (row['3pseq'] in f.read()):
                 row['Removal Reason'] = 'tRNA'
                 deleted_input = deleted_input.append(row)

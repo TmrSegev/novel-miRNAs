@@ -3,7 +3,7 @@ import os
 import argparse
 
 # Paths
-# base_dir = "/sise/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/Elegans/miRge"
+# base_dir = "/groups/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/Elegans/miRge"
 # mature_in = os.path.join(base_dir, "all_candidates_mature.fasta")
 # star_in   = os.path.join(base_dir, "all_candidates_star.fasta")
 # combined_out = os.path.join(base_dir, "combined_mature_star.fasta")

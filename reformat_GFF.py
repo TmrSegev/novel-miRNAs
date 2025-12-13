@@ -22,8 +22,8 @@ if not oscar:
 
 
 # Define input and output file paths
-# input_file = "/sise/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/Hofstenia/miRge/miRNA.250203.gff"  # Update with your actual file path
-# output_file = "/sise/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/Hofstenia/miRge/miRNA_250203_reformatted.gff3"
+# input_file = "/groups/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/Hofstenia/miRge/miRNA.250203.gff"  # Update with your actual file path
+# output_file = "/groups/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/Hofstenia/miRge/miRNA_250203_reformatted.gff3"
 
 # Define GFF column headers
 gff_columns = [

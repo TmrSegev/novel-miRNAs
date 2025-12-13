@@ -133,12 +133,19 @@ if __name__ == '__main__':
     species = None
     all_path = None
     sheet_name = "all_candidates"
+    new_genome = False
     # Set a default output path
     output = "./"
+    output_explicitly_provided = False
 
     # Parse command-line arguments
-    for i in range(1, len(sys.argv), 2):
+    i = 1
+    while i < len(sys.argv):
         arg = sys.argv[i]
+        if arg == '--new-genome':
+            new_genome = True
+            i += 1
+            continue
         if arg == '-s':
             species = sys.argv[i + 1]
         elif arg == '--all':
@@ -147,6 +154,7 @@ if __name__ == '__main__':
             sheet_name = sys.argv[i + 1]
         elif arg == "--output":
             output = sys.argv[i + 1]
+            output_explicitly_provided = True
             if not output.endswith('/'):
                 output += '/'
         elif arg == '--help' or arg == '-h':
@@ -155,8 +163,14 @@ if __name__ == '__main__':
                   f' --all <path>: path to an intersection table excel which contains "all_candidates" sheet.\n'
                   f' --sheetname <name>: name of the sheet in the excel file (default: all_candidates).\n'
                   f' --output <path>: path to the output directory (default: ./).\n'
+                  f' --new-genome: use new genome folder structure for output (overrides default ./ if --output not specified).\n'
                   )
             sys.exit()
+        i += 2
+
+    # Override output path if --new-genome flag is set and --output was not explicitly provided
+    if new_genome and not output_explicitly_provided:
+        output = "/groups/vaksler-group/IsanaRNA/Isana_Tzah/RNAcentral/miRNAs/Hofstenia_newGenome/"
 
     if not all_path:
         print("Error: Missing required argument --all <path>")

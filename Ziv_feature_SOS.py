@@ -106,7 +106,11 @@ def clean(seq):
     return seq.split("\n")[0]
 
 
-def plot_series(series, ticks):
+def plot_series(series, ticks, output_dir="./"):
+    # Ensure figures directory exists
+    figures_dir = output_dir + "figures/"
+    os.makedirs(figures_dir, exist_ok=True)
+    
     series.plot.hist()
     plt.title(series.name)
     print("name:", series.name, "min:", series.min(), "max:", series.max())
@@ -116,11 +120,11 @@ def plot_series(series, ticks):
     plt.axvline(mean, color="red")
     plt.axvline(mean + std, color="yellow")
     plt.axvline(mean - std, color="yellow")
-    plt.savefig("./figures/{}_{}.png".format(species, series.name), dpi=300)
+    plt.savefig(figures_dir + "{}_{}.png".format(species, series.name), dpi=300)
     plt.clf()
 
 
-def manual_change(df):
+def manual_change(df, new_genome=False):
     """
     Manually corrects specific mismatched hairpin sequences in a pandas DataFrame.
 
@@ -133,6 +137,7 @@ def manual_change(df):
     Args:
         df (pd.DataFrame): A DataFrame where each row represents a miRNA and must
                            contain at least the 'hairpinSeq' column.
+        new_genome (bool): If True, also applies corrections specific to the new genome.
 
     Returns:
         pd.DataFrame: The modified DataFrame with corrected hairpin sequences.
@@ -160,12 +165,55 @@ def manual_change(df):
             "TCAAACAGAAGTTTTATGCACCAGGTTTGAAGTCATGCTTAAGGGATCTTGTGCAGAATT"
     }
 
+    # Corrections for new genome
+    corrections_t_new_genome = {
+        # For new-mir-novel80_1
+        # Mismatch: ...ATAATC[T]GTAG... -> ...ATAATC[A]GTAG...
+        "AGTTATTTAATAATCTGTAGAATAACACATTCTGCTATTGTTATGTAACTGC":
+            "AGTTATTTAATAATCAGTAGAATAACACATTCTGCTATTGTTATGTAACTGC",
+
+        # For new-mir-novel107_1
+        # Mismatch: ...CATTGAT[G]TAT... -> ...CATTGAT[A]TAT...
+        "TAGTGTTTATCTTTGAAGAATCGTAAAACGATTTTTCATTGATGTATGCTCGG":
+            "TAGTGTTTATCTTTGAAGAATCGTAAAACGATTTTTCATTGATATATGCTCGG",
+
+        # For new-mir-novel89
+        # Mismatch: TAG[C]ATGTAT... -> TAG[G]ATGTAT...
+        "TAGCATGTATCTTTGAAGAATCTTATATGGTTTTTCATTGATGTATGCTTGG":
+            "TAGGATGTATCTTTGAAGAATCTTATATGGTTTTTCATTGATGTATGCTTGG",
+
+        # For new-mir-novel112_2
+        # Mismatch: ...CTACCCAC[A] -> ...CTACCCAC[T]
+        "TGGGTAGTTCTCATGGCTGCCATCAGAAATCAAAGTAAACAAATTTTAAAATAGTCATGAGAACTACCCACA":
+            "TGGGTAGTTCTCATGGCTGCCATCAGAAATCAAAGTAAACAAATTTTAAAATAGTCATGAGAACTACCCACT",
+
+        # For new-mir-novel54_7
+        # Mismatch: ...ACTAA[CT]TT... -> ...ACTAA[CC]TT...
+        "TAGTGTGTAACTTTGACTAACTTTATATGATTTTTCATTGTTGTATACTTGG":
+            "TAGTGTGTAACTTTGACTAACCTTATATGATTTTTCATTGTTGTATACTTGG",
+
+        # For new-mir-novel60_3_3
+        # Mismatch: ...ACGTCA[T]TTGC... -> ...ACGTCA[A]TTGC...
+        "TAGCATTTCAGTTTTAGAGAGAGATTGTGTTCTCACTCTTAACGTCATTTGCTTGC":
+            "TAGCATTTCAGTTTTAGAGAGAGATTGTGTTCTCACTCTTAACGTCAATTGCTTGC"
+    }
+
     # Convert all correction sequences from DNA (T) to RNA (U)
     # The keys are the incorrect hairpins, values are the corrected ones.
     corrections_u = {
         key.replace('T', 'U'): val.replace('T', 'U')
         for key, val in corrections_t.items()
     }
+    
+    # If new_genome is True, merge in the new genome corrections
+    if new_genome:
+        corrections_u_new_genome = {
+            key.replace('T', 'U'): val.replace('T', 'U')
+            for key, val in corrections_t_new_genome.items()
+        }
+        corrections_u.update(corrections_u_new_genome)
+
+    print(corrections_u)
 
     # --- FIX ---
     # Define a function to apply to each row of the DataFrame.
@@ -197,11 +245,16 @@ if __name__ == '__main__':
     star = None
     species = None
     all_remaining_path = None
+    new_genome = False
     args = []
 
     i = 1
     while i < len(sys.argv):
         arg = sys.argv[i]
+        if arg == '--new-genome':
+            new_genome = True
+            i += 1
+            continue
         if arg == '--precursors':
             precursors = sys.argv[i + 1]
         elif arg == '--mature':
@@ -217,9 +270,16 @@ if __name__ == '__main__':
                   f' --precursors <path> : fasta file path of precursors sequences.\n'
                   f' --mature <path> : fasta file path of mature sequences, with the same names as the precursors.\n'
                   f' --species <name>: name of the species.\n'
-                  f' --all-remaining <path>: path to the all remaining filtered csv file.\n')
+                  f' --all-remaining <path>: path to the all remaining filtered csv file.\n'
+                  f' --new-genome: use new genome folder structure for output files.\n')
             sys.exit()
         i += 2
+
+    # Determine output directory based on new_genome flag
+    if new_genome:
+        output_dir = "/groups/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/Ziv_Features/"
+    else:
+        output_dir = "./"
 
     precursors = get_seq_data(precursors, start_end_mark=False)
     mature = get_seq_data(mature, start_end_mark=False)
@@ -256,21 +316,21 @@ if __name__ == '__main__':
     mirdb_df.reset_index(inplace=True, drop=True)
     output = pd.concat([all_remaining, mirdb_df], axis=1)
 
-    if species == "miRGeneDB" or species == "Hofstenia":
+    if species == "miRGeneDB" or species == "Hofstenia" or species == "Hofstenia_newGenome":
         output = output.astype(
             {'Mature_BP_ratio_ziv': 'float', 'Mature_max_bulge_ziv': 'float', 'Star_BP_ratio_ziv': 'float',
              'Star_max_bulge_ziv': 'float'})
-        if species == "Hofstenia":
+        if species == "Hofstenia" or species == "Hofstenia_newGenome":
             output['Description'] = output[['Description_mirdeep', 'Description_sRNAbench']].astype(str).agg('__'.join, axis=1).str.replace(';', '|', regex=False).str.replace('ID=', '', regex=False).str.replace('.', '', regex=False)
-        output = manual_change(output)
-        writer = pd.ExcelWriter('all_remaining_after_ziv_{}.xlsx'.format(species))
+        output = manual_change(output, new_genome=new_genome)
+        writer = pd.ExcelWriter(output_dir + 'all_remaining_after_ziv_{}.xlsx'.format(species))
         output.to_excel(writer, sheet_name='(A) Unfiltered', index=False)
         writer.save()
-    if species != "miRGeneDB" and species != "Hofstenia":
+    if species != "miRGeneDB" and species != "Hofstenia" and species != "Hofstenia_newGenome":
         output = output.astype(
             {'Mature_BP_ratio_ziv': 'float', 'Mature_max_bulge_ziv': 'float', 'Star_BP_ratio_ziv': 'float',
              'Star_max_bulge_ziv': 'float'})
-        writer = pd.ExcelWriter('all_remaining_after_ziv_{}.xlsx'.format(species))
+        writer = pd.ExcelWriter(output_dir + 'all_remaining_after_ziv_{}.xlsx'.format(species))
         output.to_excel(writer, sheet_name='(A) Unfiltered', index=False)
         sum_fc_thres_ok = output[output['sum_FC_m > thres'] == 1].copy()
         sum_fc_thres_ok.to_excel(writer, sheet_name='(B) sum_FC>100', index=False)
@@ -295,25 +355,25 @@ if __name__ == '__main__':
         structural.to_excel(writer, sheet_name='(D) Structural Features', index=False)
         writer.save()
 
-    if species != "miRGeneDB" and species != "Hofstenia":
+    if species != "miRGeneDB" and species != "Hofstenia" and species != "Hofstenia_newGenome":
         if species == "Elegans":
             mirgenedb = output[(output['Description_mirgenedb'] != '.') & (output['Valid mir_ziv'] == True)]
         else:
             mirgenedb = output[output['Valid mir_ziv'] == True]
         mirgenedb.to_csv("temp.csv", sep='\t', index=False)
-        plot_series(mirgenedb['Hairpin_seq_trimmed_length_ziv'], 5.0)
-        plot_series(mirgenedb['Mature_connections_ziv'], 1.0)
-        plot_series(mirgenedb['Mature_BP_ratio_ziv'].astype('float'), 0.05)
-        plot_series(mirgenedb['Mature_max_bulge_ziv'].astype('float'), 1.0)
-        plot_series(mirgenedb['Loop_length_ziv'], 2.0)
-        plot_series(mirgenedb['Mature_Length_ziv'], 1.0)
-        plot_series(mirgenedb['Star_length_ziv'], 1.0)
-        plot_series(mirgenedb['Star_connections_ziv'], 1.0)
-        plot_series(mirgenedb['Star_BP_ratio_ziv'].astype('float'), 0.05)
-        plot_series(mirgenedb['Star_max_bulge_ziv'].astype('float'), 1.0)
-        plot_series(mirgenedb['Max_bulge_symmetry_ziv'], 1.0)
-        plot_series(mirgenedb['min_one_mer_hairpin_ziv'], 0.05)
-        plot_series(mirgenedb['max_one_mer_hairpin_ziv'], 0.05)
+        plot_series(mirgenedb['Hairpin_seq_trimmed_length_ziv'], 5.0, output_dir)
+        plot_series(mirgenedb['Mature_connections_ziv'], 1.0, output_dir)
+        plot_series(mirgenedb['Mature_BP_ratio_ziv'].astype('float'), 0.05, output_dir)
+        plot_series(mirgenedb['Mature_max_bulge_ziv'].astype('float'), 1.0, output_dir)
+        plot_series(mirgenedb['Loop_length_ziv'], 2.0, output_dir)
+        plot_series(mirgenedb['Mature_Length_ziv'], 1.0, output_dir)
+        plot_series(mirgenedb['Star_length_ziv'], 1.0, output_dir)
+        plot_series(mirgenedb['Star_connections_ziv'], 1.0, output_dir)
+        plot_series(mirgenedb['Star_BP_ratio_ziv'].astype('float'), 0.05, output_dir)
+        plot_series(mirgenedb['Star_max_bulge_ziv'].astype('float'), 1.0, output_dir)
+        plot_series(mirgenedb['Max_bulge_symmetry_ziv'], 1.0, output_dir)
+        plot_series(mirgenedb['min_one_mer_hairpin_ziv'], 0.05, output_dir)
+        plot_series(mirgenedb['max_one_mer_hairpin_ziv'], 0.05, output_dir)
         # mirgenedb['End_hairpin'].plot.hist()
         # plt.xticks(np.arange(mirgenedb['End_hairpin'].min(), mirgenedb['End_hairpin'].max() + 1, 5.0))
         # plt.savefig("./figures/hairpin_length.png", dpi=300)

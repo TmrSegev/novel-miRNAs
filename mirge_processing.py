@@ -24,9 +24,9 @@ SPECIES = args.species
 
 # Configure the input Excel file path and sheet name
 input_excel = Path(
-    f"/sise/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/Ziv_Features/all_remaining_after_ziv_{SPECIES}.xlsx")
+    f"/groups/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/Ziv_Features/all_remaining_after_ziv_{SPECIES}.xlsx")
 # Note: Corrected a potential typo in the sheet name from "(A) Unfiltered)"
-sheet_name = "(A) Unfiltered" if SPECIES == "Hofstenia" else "(D) Structural Features"
+sheet_name = "(A) Unfiltered" if SPECIES in ["Hofstenia", "Hofstenia_newGenome"] else "(D) Structural Features"
 
 print(f"Loading maturity info from: {input_excel} | Sheet: {sheet_name}")
 # Load the maturity data from the specified sheet in the Excel file
@@ -51,7 +51,7 @@ if 'Strand' in maturity_df.columns:
 
 
 # Define the base directory containing all libraries
-# base_dir = '/sise/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/Hofstenia/miRge_output/results/'
+# base_dir = '/groups/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/Hofstenia/miRge_output/results/'
 base_dir = os.path.join(dir, f'results{m18_suffix}/')
 
 # Variables to track the number of miRNAs missing 3p or 5p across all libraries
@@ -368,6 +368,54 @@ for idx, row in enhanced_df.iterrows():
             enhanced_df.loc[idx, f'Star-%5p-{lib}'] = pivot_star_5p.loc[mirna_3p, lib]
             enhanced_df.loc[idx, f'Star-%3p-{lib}'] = pivot_star_3p.loc[mirna_3p, lib]
 
+# Initialize Max columns
+enhanced_df['Mature-T-Max'] = float('nan')
+enhanced_df['Mature-%5p-Max'] = float('nan')
+enhanced_df['Mature-T-Max-Library'] = ''
+enhanced_df['Star-T-Max'] = float('nan')
+enhanced_df['Star-%5p-Max'] = float('nan')
+enhanced_df['Star-T-Max-Library'] = ''
+
+# Find the library with max Mature-T and Star-T for each row
+for idx, row in enhanced_df.iterrows():
+    # Find max Mature-T across all libraries
+    mature_t_values = {}
+    mature_5p_values = {}
+    for lib in libraries:
+        mature_t_col = f'Mature-T-{lib}'
+        mature_5p_col = f'Mature-%5p-{lib}'
+        if mature_t_col in enhanced_df.columns:
+            mature_t_val = row[mature_t_col]
+            mature_5p_val = row[mature_5p_col] if mature_5p_col in enhanced_df.columns else float('nan')
+            if pd.notna(mature_t_val) and mature_t_val > 0:
+                mature_t_values[lib] = mature_t_val
+                mature_5p_values[lib] = mature_5p_val
+    
+    if mature_t_values:
+        max_mature_lib = max(mature_t_values, key=mature_t_values.get)
+        enhanced_df.loc[idx, 'Mature-T-Max'] = mature_t_values[max_mature_lib]
+        enhanced_df.loc[idx, 'Mature-%5p-Max'] = mature_5p_values[max_mature_lib]
+        enhanced_df.loc[idx, 'Mature-T-Max-Library'] = max_mature_lib
+    
+    # Find max Star-T across all libraries
+    star_t_values = {}
+    star_5p_values = {}
+    for lib in libraries:
+        star_t_col = f'Star-T-{lib}'
+        star_5p_col = f'Star-%5p-{lib}'
+        if star_t_col in enhanced_df.columns:
+            star_t_val = row[star_t_col]
+            star_5p_val = row[star_5p_col] if star_5p_col in enhanced_df.columns else float('nan')
+            if pd.notna(star_t_val) and star_t_val > 0:
+                star_t_values[lib] = star_t_val
+                star_5p_values[lib] = star_5p_val
+    
+    if star_t_values:
+        max_star_lib = max(star_t_values, key=star_t_values.get)
+        enhanced_df.loc[idx, 'Star-T-Max'] = star_t_values[max_star_lib]
+        enhanced_df.loc[idx, 'Star-%5p-Max'] = star_5p_values[max_star_lib]
+        enhanced_df.loc[idx, 'Star-T-Max-Library'] = max_star_lib
+
 
 # --- REORDER: Group by column type instead of by library ---
 new_cols_order = []
@@ -380,17 +428,20 @@ for col_type in column_types:
     for lib in libraries:
         new_cols_order.append(f'{col_type}-{lib}')
 
+# Add Max columns after all library-specific columns
+new_cols_order.extend(['Mature-T-Max', 'Mature-%5p-Max', 'Mature-T-Max-Library', 'Star-T-Max', 'Star-%5p-Max', 'Star-T-Max-Library'])
+
 existing_cols = [c for c in enhanced_df.columns if c not in new_cols_order]
 enhanced_df = enhanced_df[existing_cols + new_cols_order]
 
 
 # Save the enhanced dataframe
-candidates_dir = f"/sise/vaksler-group/IsanaRNA/Isana_Tzah/RNAcentral/miRNAs/{SPECIES}/"
+candidates_dir = f"/groups/vaksler-group/IsanaRNA/Isana_Tzah/RNAcentral/miRNAs/{SPECIES}/"
 output_excel_path = os.path.join(candidates_dir, f'final_candidates_v1{m18_suffix}.xlsx')
 enhanced_df.to_excel(output_excel_path, index=False)
 
 print(f"Enhanced Excel saved to: {output_excel_path}")
-print(f"Added {len(libraries) * 6} Mature/Star columns and removed {len(cols_to_drop)} legacy *_percent columns")
+print(f"Added {len(libraries) * 6} Mature/Star columns, 6 Max columns (4 values + 2 library names), and removed {len(cols_to_drop)} legacy *_percent columns")
 print(f"Enhanced Excel has {len(enhanced_df)} rows and {len(enhanced_df.columns)} columns")
 
 # Print summary of added columns

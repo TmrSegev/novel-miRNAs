@@ -138,7 +138,7 @@ for seed in all_seeds:
         plt.close()
 
     file_name = "./{}/{}_{}".format(folder_name, seed, family)
-    clustalw_exe = r"/sise/home/stome/clustaw/clustalw-2.1/src/clustalw2"
+    clustalw_exe = r"/groups/home/stome/clustaw/clustalw-2.1/src/clustalw2"
     clustalw_cline = ClustalwCommandline(clustalw_exe, infile=file_name + ".fasta")
     assert os.path.isfile(clustalw_exe), "Clustal W executable missing"
     stdout, stderr = clustalw_cline()
