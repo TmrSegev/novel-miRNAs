@@ -92,25 +92,25 @@ def filterInputs(inputs_arr, score_threshold, true_positive_threshold, exclude_c
         deleted_input['Removal Reason'] = 'rfam alert'
         input = input[input['rfam alert'] == '-']
         for index, row in input.iterrows():
-            with open('/groups/vaksler-group/IsanaRNA/Isana_Tzah/RNAcentral/ncRNAs_Caenorhabditis/Caenorhabditis_rRNA.fasta') as f:
+            with open('/mnt/new_groups/vaksler_group/Isana_Tzah/RNAcentral/ncRNAs_Caenorhabditis/Caenorhabditis_rRNA.fasta') as f:
                 if row['consensus mature sequence'].upper() in f.read():
                     row['Removal Reason'] = 'rRNA'
                     deleted_input = deleted_input.append(row)
                     input.drop(index=index, inplace=True)
                     f.close()
-            with open('/groups/vaksler-group/IsanaRNA/Isana_Tzah/RNAcentral/ncRNAs_Caenorhabditis/Caenorhabditis_snoRNA.fasta') as f:
+            with open('/mnt/new_groups/vaksler_group/Isana_Tzah/RNAcentral/ncRNAs_Caenorhabditis/Caenorhabditis_snoRNA.fasta') as f:
                 if row['consensus mature sequence'].upper() in f.read():
                     row['Removal Reason'] = 'snoRNA'
                     deleted_input = deleted_input.append(row)
                     input.drop(index=index, inplace=True)
                     f.close()
-            with open('/groups/vaksler-group/IsanaRNA/Isana_Tzah/RNAcentral/ncRNAs_Caenorhabditis/Caenorhabditis_snRNA.fasta') as f:
+            with open('/mnt/new_groups/vaksler_group/Isana_Tzah/RNAcentral/ncRNAs_Caenorhabditis/Caenorhabditis_snRNA.fasta') as f:
                 if row['consensus mature sequence'].upper() in f.read():
                     row['Removal Reason'] = 'snRNA'
                     deleted_input = deleted_input.append(row)
                     input.drop(index=index, inplace=True)
                     f.close()
-            with open('/groups/vaksler-group/IsanaRNA/Isana_Tzah/RNAcentral/ncRNAs_Caenorhabditis/Caenorhabditis_tRNA.fasta') as f:
+            with open('/mnt/new_groups/vaksler_group/Isana_Tzah/RNAcentral/ncRNAs_Caenorhabditis/Caenorhabditis_tRNA.fasta') as f:
                 if row['consensus mature sequence'].upper() in f.read():
                     row['Removal Reason'] = 'tRNA'
                     deleted_input = deleted_input.append(row)

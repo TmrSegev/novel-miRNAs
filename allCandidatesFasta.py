@@ -170,7 +170,7 @@ if __name__ == '__main__':
 
     # Override output path if --new-genome flag is set and --output was not explicitly provided
     if new_genome and not output_explicitly_provided:
-        output = "/groups/vaksler-group/IsanaRNA/Isana_Tzah/RNAcentral/miRNAs/Hofstenia_newGenome/"
+        output = "/mnt/new_groups/vaksler_group/Isana_Tzah/RNAcentral/miRNAs/Hofstenia_newGenome/"
 
     if not all_path:
         print("Error: Missing required argument --all <path>")

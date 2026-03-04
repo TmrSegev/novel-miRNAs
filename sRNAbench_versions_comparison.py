@@ -269,7 +269,7 @@ def main():
         fasta_file = os.path.join(intersections_dir, f'Hofstenia_sRNAbench_pre_only_{auto_detected_version}.fasta')
         if not os.path.exists(fasta_file):
             # Try alternative path
-            scripts_dir = '/groups/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/Hofstenia_newGenome/scripts/'
+            scripts_dir = '/mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Hofstenia_newGenome/scripts/'
             fasta_file = os.path.join(scripts_dir, f'Hofstenia_sRNAbench_pre_only_{auto_detected_version}.fasta')
         if not os.path.exists(fasta_file) and args.debug:
             print(f"Debug: Could not find FASTA file: {fasta_file}", file=sys.stderr)

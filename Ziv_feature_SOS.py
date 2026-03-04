@@ -21,6 +21,24 @@ def get_seq_data(path, start_end_mark=False):
     return seq
 
 
+def load_double_mature_names(double_mature_path):
+    """
+    Load candidate names from double_mature.fasta file.
+    Returns a set of candidate names.
+    """
+    double_mature_names = set()
+    try:
+        for seq_record in SeqIO.parse(double_mature_path, "fasta"):
+            # The candidate name is in the description/header
+            double_mature_names.add(seq_record.description)
+        print(f"Loaded {len(double_mature_names)} candidate names from double_mature.fasta")
+    except FileNotFoundError:
+        print(f"Warning: double_mature.fasta file not found at {double_mature_path}")
+    except Exception as e:
+        print(f"Error loading double_mature.fasta: {e}")
+    return double_mature_names
+
+
 def crete_fasta(name, seq):
     with open('fasta_example.fa', 'w') as f:
         f.write(f'> {name}\n'
@@ -277,7 +295,7 @@ if __name__ == '__main__':
 
     # Determine output directory based on new_genome flag
     if new_genome:
-        output_dir = "/groups/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/Ziv_Features/"
+        output_dir = "/mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Ziv_Features/"
     else:
         output_dir = "./"
 
@@ -286,12 +304,18 @@ if __name__ == '__main__':
     star = get_seq_data(star, start_end_mark=False)
     if species == "miRGeneDB":
         all_remaining = pd.DataFrame()
+        # Load double_mature names when processing mirgenedb
+        double_mature_path = "/mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/mirgenedb_data_v3/double_mature.fasta"
+        double_mature_names = load_double_mature_names(double_mature_path)
     else:
         all_remaining = pd.read_excel(all_remaining_path, sheet_name="all_candidates")
+        double_mature_names = set()
 
     gen_dict = build_dict()
     neg_dict = build_dict()
     mirdb_dict = build_dict()
+    # Track candidate names for mirgenedb processing
+    candidate_names_list = []
     for name, seq in precursors.items():
         try:
             seed = find_seed(name, seq)
@@ -304,11 +328,17 @@ if __name__ == '__main__':
             out_dict = Ziv_Git.start_filtering(seq, true_mature=mature[name], true_star=star[name])
             for k, v in out_dict['new'].items():
                 mirdb_dict[k].append(v)
+            # Track candidate name for successful processing
+            if species == "miRGeneDB":
+                candidate_names_list.append(name)
         except Exception as e:
             print("FAILED in start_filtering or append:", e)
             exception_dict = build_exception_dict()
             for k, v in exception_dict.items():
                 mirdb_dict[k].append(v)
+            # Track candidate name even for exceptions
+            if species == "miRGeneDB":
+                candidate_names_list.append(name)
             continue
 
     mirdb_df = pd.DataFrame(mirdb_dict)
@@ -316,13 +346,38 @@ if __name__ == '__main__':
     mirdb_df.reset_index(inplace=True, drop=True)
     output = pd.concat([all_remaining, mirdb_df], axis=1)
 
+    # Add two_matures flag column for mirgenedb
+    if species == "miRGeneDB":
+        if len(candidate_names_list) == len(output):
+            # Create flag column: 1 if candidate name is in double_mature, 0 otherwise
+            output['two_matures'] = [1 if name in double_mature_names else 0 for name in candidate_names_list]
+            print(f"Added two_matures flag: {sum(output['two_matures'])} candidates flagged as two matures")
+            
+            # Add fasta name and sequences from input fasta files
+            output['fasta_name'] = candidate_names_list
+            output['hairpin_seq_fasta'] = [precursors.get(name, '') for name in candidate_names_list]
+            output['mature_seq_fasta'] = [mature.get(name, '') for name in candidate_names_list]
+            output['star_seq_fasta'] = [star.get(name, '') for name in candidate_names_list]
+            print(f"Added fasta name and sequence columns from input fasta files")
+        else:
+            print(f"Warning: Number of candidate names ({len(candidate_names_list)}) doesn't match output DataFrame length ({len(output)})")
+            output['two_matures'] = 0
+            # Still add columns even if lengths don't match (with empty/default values)
+            # Pad or truncate candidate_names_list to match output length
+            padded_names = candidate_names_list[:len(output)] if len(candidate_names_list) >= len(output) else candidate_names_list + [''] * (len(output) - len(candidate_names_list))
+            output['fasta_name'] = padded_names
+            output['hairpin_seq_fasta'] = [precursors.get(name, '') if name else '' for name in padded_names]
+            output['mature_seq_fasta'] = [mature.get(name, '') if name else '' for name in padded_names]
+            output['star_seq_fasta'] = [star.get(name, '') if name else '' for name in padded_names]
+            print(f"Added fasta name and sequence columns from input fasta files (with padding/truncation due to length mismatch)")
+
     if species == "miRGeneDB" or species == "Hofstenia" or species == "Hofstenia_newGenome":
         output = output.astype(
             {'Mature_BP_ratio_ziv': 'float', 'Mature_max_bulge_ziv': 'float', 'Star_BP_ratio_ziv': 'float',
              'Star_max_bulge_ziv': 'float'})
         if species == "Hofstenia" or species == "Hofstenia_newGenome":
             output['Description'] = output[['Description_mirdeep', 'Description_sRNAbench']].astype(str).agg('__'.join, axis=1).str.replace(';', '|', regex=False).str.replace('ID=', '', regex=False).str.replace('.', '', regex=False)
-        output = manual_change(output, new_genome=new_genome)
+            output = manual_change(output, new_genome=new_genome)
         writer = pd.ExcelWriter(output_dir + 'all_remaining_after_ziv_{}.xlsx'.format(species))
         output.to_excel(writer, sheet_name='(A) Unfiltered', index=False)
         writer.save()

@@ -9,7 +9,7 @@ import RNA
 import pandas as pd
 from subprocess import Popen
 from Bio import pairwise2
-os.chdir(r"/groups/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/Ziv_Features/")
+os.chdir(r"/mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Ziv_Features/")
 
 dirpath = os.getcwd()
 res = {}

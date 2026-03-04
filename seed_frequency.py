@@ -86,19 +86,19 @@ def mann_whitney_species(df):
         min_p = min(res_less.pvalue, res_great.pvalue)
         file.write("Known VS Unknown: " + str(min_p) + '\t' + ("significant" if min_p <= 0.05 else "non-significant") + '\n')
 
-xls = pd.ExcelFile("/groups/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/Ziv_Features/all_remaining_after_ziv_Elegans.xlsx")
+xls = pd.ExcelFile("/mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Ziv_Features/all_remaining_after_ziv_Elegans.xlsx")
 elegans_sheet_dict = {sheet_name: xls.parse(sheet_name) for sheet_name in xls.sheet_names}
 
-xls = pd.ExcelFile("/groups/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/Ziv_Features/all_remaining_after_ziv_Macrosperma.xlsx")
+xls = pd.ExcelFile("/mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Ziv_Features/all_remaining_after_ziv_Macrosperma.xlsx")
 macrosperma_sheet_dict = {sheet_name: xls.parse(sheet_name) for sheet_name in xls.sheet_names}
 
-xls = pd.ExcelFile("/groups/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/Ziv_Features/all_remaining_after_ziv_Sulstoni.xlsx")
+xls = pd.ExcelFile("/mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Ziv_Features/all_remaining_after_ziv_Sulstoni.xlsx")
 sulstoni_sheet_dict = {sheet_name: xls.parse(sheet_name) for sheet_name in xls.sheet_names}
 
 # elegans = elegans_sheet_dict["(D) Structural Features"]
-#elegans = pd.read_excel("/groups/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/Ziv_Features/all_remaining_after_ziv_Elegans.xlsx", sheet_name="(D) Structural Features")
-# macrosperma = pd.read_excel("/groups/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/Ziv_Features/all_remaining_after_ziv_Macrosperma.xlsx", sheet_name="(D) Structural Features")
-# sulstoni = pd.read_excel("/groups/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/Ziv_Features/all_remaining_after_ziv_Sulstoni.xlsx", sheet_name="(D) Structural Features")
+#elegans = pd.read_excel("/mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Ziv_Features/all_remaining_after_ziv_Elegans.xlsx", sheet_name="(D) Structural Features")
+# macrosperma = pd.read_excel("/mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Ziv_Features/all_remaining_after_ziv_Macrosperma.xlsx", sheet_name="(D) Structural Features")
+# sulstoni = pd.read_excel("/mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Ziv_Features/all_remaining_after_ziv_Sulstoni.xlsx", sheet_name="(D) Structural Features")
 
 elegans_sheet_dict["(D) Structural Features"]['Species'] = "Elegans"
 macrosperma_sheet_dict["(D) Structural Features"]['Species'] = "Macrosperma"
@@ -191,9 +191,9 @@ known_families_by_species(all.copy())
 boxplot_known_unknown_all_species(all.copy())
 mann_whitney_species(all.copy())
 
-save_back_to_all(elegans_sheet_dict, "/groups/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/Ziv_Features/all_remaining_after_ziv_Elegans.xlsx")
-save_back_to_all(macrosperma_sheet_dict, "/groups/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/Ziv_Features/all_remaining_after_ziv_Macrosperma.xlsx")
-save_back_to_all(sulstoni_sheet_dict, "/groups/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/Ziv_Features/all_remaining_after_ziv_Sulstoni.xlsx")
+save_back_to_all(elegans_sheet_dict, "/mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Ziv_Features/all_remaining_after_ziv_Elegans.xlsx")
+save_back_to_all(macrosperma_sheet_dict, "/mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Ziv_Features/all_remaining_after_ziv_Macrosperma.xlsx")
+save_back_to_all(sulstoni_sheet_dict, "/mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Ziv_Features/all_remaining_after_ziv_Sulstoni.xlsx")
 # # Save to original all candidates files
 # elegans_sheet_dict["(D) Structural Features"].drop(['Species'], axis=1, inplace=True)
 # macrosperma.drop(['Species'], axis=1, inplace=True)
@@ -205,7 +205,7 @@ save_back_to_all(sulstoni_sheet_dict, "/groups/vaksler-group/IsanaRNA/Isana_Tzah
 # sulstoni = pd.merge(sulstoni, seeds_by_species, on=["Seed", "Family"], how="left")
 #
 # # Save the changes back to the same sheet
-# with pd.ExcelWriter("/groups/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/Ziv_Features/all_remaining_after_ziv_Elegans.xlsx", engine='openpyxl') as writer:
+# with pd.ExcelWriter("/mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Ziv_Features/all_remaining_after_ziv_Elegans.xlsx", engine='openpyxl') as writer:
 #     writer.book = writer.book  # Needed for openpyxl compatibility
 #     writer.sheets = {ws.title: ws for ws in writer.book.worksheets}
 #     # elegans.to_excel(writer, "(D) Structural Features", index=False)

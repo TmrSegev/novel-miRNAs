@@ -84,14 +84,14 @@ args = parser.parse_args()
 SPECIES = args.species
 
 # Input file configuration
-input_excel = Path(f"/groups/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/Ziv_Features/all_remaining_after_ziv_{SPECIES}.xlsx")
+input_excel = Path(f"/mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Ziv_Features/all_remaining_after_ziv_{SPECIES}.xlsx")
 sheet_name = "(A) Unfiltered" if SPECIES in ["Hofstenia", "Hofstenia_newGenome"] else "(D) Structural Features"
 
 # Output path
 if SPECIES in ["Hofstenia", "Hofstenia_newGenome"]:
-    output_gff = Path(f"/groups/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/{SPECIES}/miRge_after_Ziv/miRNA_candidates.gff3")
+    output_gff = Path(f"/mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/{SPECIES}/miRge_after_Ziv/miRNA_candidates.gff3")
 else:
-    output_gff = Path(f"/groups/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/{SPECIES}/miRge/miRNA_candidates.gff3")
+    output_gff = Path(f"/mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/{SPECIES}/miRge/miRNA_candidates.gff3")
 
 # Load Excel data
 df = pd.read_excel(input_excel, sheet_name=sheet_name, dtype=str)

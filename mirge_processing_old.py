@@ -18,7 +18,7 @@ dir = args.dir
 SPECIES = args.species
 
 # Configure the input Excel file path and sheet name
-input_excel = Path(f"/groups/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/Ziv_Features/all_remaining_after_ziv_{SPECIES}.xlsx")
+input_excel = Path(f"/mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Ziv_Features/all_remaining_after_ziv_{SPECIES}.xlsx")
 # Note: Corrected a potential typo in the sheet name from "(A) Unfiltered)"
 sheet_name = "(A) Unfiltered" if SPECIES == "Hofstenia" else "(D) Structural Features"
 
@@ -32,7 +32,7 @@ maturity_df = maturity_df[['Description', 'mature']].dropna()
 maturity_map = pd.Series(maturity_df['mature'].values, index=maturity_df['Description'].str.strip()).to_dict()
 
 # Define the base directory containing all libraries
-# base_dir = '/groups/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/Hofstenia/miRge_output/results/'
+# base_dir = '/mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Hofstenia/miRge_output/results/'
 base_dir = dir + '/results_m18/'
 
 # Variables to track the number of miRNAs missing 3p or 5p across all libraries
@@ -137,7 +137,7 @@ for library_folder in os.listdir(base_dir):
     all_data.append(report_df)
 
     # # Save the individual library report
-    # output_dir = "/groups/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/Hofstenia/miRge_output/processing_results/"
+    # output_dir = "/mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Hofstenia/miRge_output/processing_results/"
     # output_filename = os.path.join(output_dir, f'miRNA_isomiR_report_{library_name}.csv')
     # report_df.to_csv(output_filename, index=False)
 
@@ -217,7 +217,7 @@ final_df = final_df[cols]
 # --- END NEW SECTION ---
 
 # Save the final concatenated and sorted paired dataframe
-# output_dir = "/groups/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/Hofstenia/miRge_output/processing_results/"
+# output_dir = "/mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Hofstenia/miRge_output/processing_results/"
 output_dir = dir + "/processing_results_m18/"
 os.makedirs(output_dir, exist_ok=True)
 # final_output_filename = os.path.join(output_dir, 'final_miRNA_isomiR_paired_report.csv')

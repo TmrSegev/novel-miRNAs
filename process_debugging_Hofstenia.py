@@ -19,11 +19,11 @@ alt_tool_name = "miRDeep" if tool_name == "sRNAbench" else "sRNAbench"
 
 # Determine base path based on genome version
 if args.new_genome:
-    base_path = "/groups/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/Hofstenia_newGenome/scripts/"
-    output_path = "/groups/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/Hofstenia_newGenome/good_candidates/"
+    base_path = "/mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Hofstenia_newGenome/scripts/"
+    output_path = "/mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Hofstenia_newGenome/good_candidates/"
 else:
-    base_path = "/groups/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/Hofstenia/scripts/"
-    output_path = "/groups/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/Hofstenia/good_candidates/"
+    base_path = "/mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Hofstenia/scripts/"
+    output_path = "/mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Hofstenia/good_candidates/"
 if tool_name == "miRDeep":
     file1 = f"{base_path}debugging_Hofstenia_miRDeep_1.csv"
     file2 = f"{base_path}debugging_Hofstenia_miRDeep_2.csv"

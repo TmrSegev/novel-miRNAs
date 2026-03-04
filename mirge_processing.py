@@ -24,7 +24,7 @@ SPECIES = args.species
 
 # Configure the input Excel file path and sheet name
 input_excel = Path(
-    f"/groups/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/Ziv_Features/all_remaining_after_ziv_{SPECIES}.xlsx")
+    f"/mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Ziv_Features/all_remaining_after_ziv_{SPECIES}.xlsx")
 # Note: Corrected a potential typo in the sheet name from "(A) Unfiltered)"
 sheet_name = "(A) Unfiltered" if SPECIES in ["Hofstenia", "Hofstenia_newGenome"] else "(D) Structural Features"
 
@@ -51,7 +51,7 @@ if 'Strand' in maturity_df.columns:
 
 
 # Define the base directory containing all libraries
-# base_dir = '/groups/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/Hofstenia/miRge_output/results/'
+# base_dir = '/mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Hofstenia/miRge_output/results/'
 base_dir = os.path.join(dir, f'results{m18_suffix}/')
 
 # Variables to track the number of miRNAs missing 3p or 5p across all libraries
@@ -111,7 +111,7 @@ for library_folder in os.listdir(base_dir):
 
     def process_mirna_group(group):
         total_hits = group['Hits'].sum()
-        total_hits_filtered = group[~group['Variant'].str.contains('iso_add5p|iso_add3p', na=False)]['Hits'].sum()
+        total_hits_filtered = group[~group['Variant'].str.contains('snv|iso_add5p|iso_add3p', na=False)]['Hits'].sum()
         ref_hits = group[group['Type'] == 'ref_miRNA']['Hits'].sum()
 
         higher_isomir = 'NA'
@@ -119,7 +119,9 @@ for library_folder in os.listdir(base_dir):
         higher_isomir_length = 'NA'
         higher_isomir_count = 'NA'
 
-        isomir_group = group[group['Type'] == 'isomiR']
+        # Filter out isomiRs containing snv, iso_add5p, or iso_add3p before finding the highest
+        isomir_group = group[(group['Type'] == 'isomiR') & 
+                             ~group['Variant'].str.contains('snv|iso_add5p|iso_add3p', na=False)]
         if not isomir_group.empty:
             max_isomir_row = isomir_group.loc[isomir_group['Hits'].idxmax()]
             if ref_hits == 0 or max_isomir_row['Hits'] > ref_hits:
@@ -129,9 +131,9 @@ for library_folder in os.listdir(base_dir):
                 higher_isomir_count = max_isomir_row['Hits']
 
         iso_5p_hits = group[group['Variant'].str.contains(r'iso_5p:', na=False) &
-                            ~group['Variant'].str.contains('iso_add5p|iso_add3p', na=False)]['Hits'].sum()
+                            ~group['Variant'].str.contains('snv|iso_add5p|iso_add3p', na=False)]['Hits'].sum()
         iso_3p_hits = group[group['Variant'].str.contains(r'iso_3p', na=False) &
-                            ~group['Variant'].str.contains('iso_add5p|iso_add3p', na=False)]['Hits'].sum()
+                            ~group['Variant'].str.contains('snv|iso_add5p|iso_add3p', na=False)]['Hits'].sum()
         iso_add5p_hits = group[group['Variant'].str.contains('iso_add5p', na=False)]['Hits'].sum()
         iso_add3p_hits = group[group['Variant'].str.contains('iso_add3p', na=False)]['Hits'].sum()
 
@@ -332,49 +334,66 @@ pivot_star_total = final_df[final_df['mature'] == 'star'].pivot_table(
     index='miRNA', columns='Library', values='Total Hits Filtered', fill_value=0
 )
 
-# Initialize new columns for each library
+# Initialize dictionary to collect all new columns at once
+new_columns_data = {}
 for lib in libraries:
-    enhanced_df[f'Mature-T-{lib}'] = float('nan')
-    enhanced_df[f'Mature-%5p-{lib}'] = float('nan')
-    enhanced_df[f'Mature-%3p-{lib}'] = float('nan')
-    enhanced_df[f'Star-T-{lib}'] = float('nan')
-    enhanced_df[f'Star-%5p-{lib}'] = float('nan')
-    enhanced_df[f'Star-%3p-{lib}'] = float('nan')
+    new_columns_data[f'Mature-T-{lib}'] = []
+    new_columns_data[f'Mature-%5p-{lib}'] = []
+    new_columns_data[f'Mature-%3p-{lib}'] = []
+    new_columns_data[f'Star-T-{lib}'] = []
+    new_columns_data[f'Star-%5p-{lib}'] = []
+    new_columns_data[f'Star-%3p-{lib}'] = []
 
-# Populate the columns
+# Populate the columns efficiently
 for idx, row in enhanced_df.iterrows():
     candidate_name = row['Description'].strip()
     mirna_5p = f"{candidate_name}-5p"
     mirna_3p = f"{candidate_name}-3p"
 
     for lib in libraries:
+        # Initialize with NaN
+        mature_t = mature_5p = mature_3p = float('nan')
+        star_t = star_5p = star_3p = float('nan')
+        
         # Mature data
         if mirna_5p in pivot_mature_total.index and lib in pivot_mature_total.columns:
-            enhanced_df.loc[idx, f'Mature-T-{lib}'] = pivot_mature_total.loc[mirna_5p, lib]
-            enhanced_df.loc[idx, f'Mature-%5p-{lib}'] = pivot_mature_5p.loc[mirna_5p, lib]
-            enhanced_df.loc[idx, f'Mature-%3p-{lib}'] = pivot_mature_3p.loc[mirna_5p, lib]
+            mature_t = pivot_mature_total.loc[mirna_5p, lib]
+            mature_5p = pivot_mature_5p.loc[mirna_5p, lib]
+            mature_3p = pivot_mature_3p.loc[mirna_5p, lib]
         elif mirna_3p in pivot_mature_total.index and lib in pivot_mature_total.columns:
-            enhanced_df.loc[idx, f'Mature-T-{lib}'] = pivot_mature_total.loc[mirna_3p, lib]
-            enhanced_df.loc[idx, f'Mature-%5p-{lib}'] = pivot_mature_5p.loc[mirna_3p, lib]
-            enhanced_df.loc[idx, f'Mature-%3p-{lib}'] = pivot_mature_3p.loc[mirna_3p, lib]
+            mature_t = pivot_mature_total.loc[mirna_3p, lib]
+            mature_5p = pivot_mature_5p.loc[mirna_3p, lib]
+            mature_3p = pivot_mature_3p.loc[mirna_3p, lib]
 
         # Star data
         if mirna_5p in pivot_star_total.index and lib in pivot_star_total.columns:
-            enhanced_df.loc[idx, f'Star-T-{lib}'] = pivot_star_total.loc[mirna_5p, lib]
-            enhanced_df.loc[idx, f'Star-%5p-{lib}'] = pivot_star_5p.loc[mirna_5p, lib]
-            enhanced_df.loc[idx, f'Star-%3p-{lib}'] = pivot_star_3p.loc[mirna_5p, lib]
+            star_t = pivot_star_total.loc[mirna_5p, lib]
+            star_5p = pivot_star_5p.loc[mirna_5p, lib]
+            star_3p = pivot_star_3p.loc[mirna_5p, lib]
         elif mirna_3p in pivot_star_total.index and lib in pivot_star_total.columns:
-            enhanced_df.loc[idx, f'Star-T-{lib}'] = pivot_star_total.loc[mirna_3p, lib]
-            enhanced_df.loc[idx, f'Star-%5p-{lib}'] = pivot_star_5p.loc[mirna_3p, lib]
-            enhanced_df.loc[idx, f'Star-%3p-{lib}'] = pivot_star_3p.loc[mirna_3p, lib]
+            star_t = pivot_star_total.loc[mirna_3p, lib]
+            star_5p = pivot_star_5p.loc[mirna_3p, lib]
+            star_3p = pivot_star_3p.loc[mirna_3p, lib]
+        
+        # Append to lists
+        new_columns_data[f'Mature-T-{lib}'].append(mature_t)
+        new_columns_data[f'Mature-%5p-{lib}'].append(mature_5p)
+        new_columns_data[f'Mature-%3p-{lib}'].append(mature_3p)
+        new_columns_data[f'Star-T-{lib}'].append(star_t)
+        new_columns_data[f'Star-%5p-{lib}'].append(star_5p)
+        new_columns_data[f'Star-%3p-{lib}'].append(star_3p)
 
-# Initialize Max columns
-enhanced_df['Mature-T-Max'] = float('nan')
-enhanced_df['Mature-%5p-Max'] = float('nan')
-enhanced_df['Mature-T-Max-Library'] = ''
-enhanced_df['Star-T-Max'] = float('nan')
-enhanced_df['Star-%5p-Max'] = float('nan')
-enhanced_df['Star-T-Max-Library'] = ''
+# Add all columns at once using concat (much faster than repeated column assignment)
+new_columns_df = pd.DataFrame(new_columns_data, index=enhanced_df.index)
+enhanced_df = pd.concat([enhanced_df, new_columns_df], axis=1)
+
+# Initialize lists for Max columns
+mature_t_max_list = []
+mature_5p_max_list = []
+mature_t_max_lib_list = []
+star_t_max_list = []
+star_5p_max_list = []
+star_t_max_lib_list = []
 
 # Find the library with max Mature-T and Star-T for each row
 for idx, row in enhanced_df.iterrows():
@@ -393,9 +412,13 @@ for idx, row in enhanced_df.iterrows():
     
     if mature_t_values:
         max_mature_lib = max(mature_t_values, key=mature_t_values.get)
-        enhanced_df.loc[idx, 'Mature-T-Max'] = mature_t_values[max_mature_lib]
-        enhanced_df.loc[idx, 'Mature-%5p-Max'] = mature_5p_values[max_mature_lib]
-        enhanced_df.loc[idx, 'Mature-T-Max-Library'] = max_mature_lib
+        mature_t_max_list.append(mature_t_values[max_mature_lib])
+        mature_5p_max_list.append(mature_5p_values[max_mature_lib])
+        mature_t_max_lib_list.append(max_mature_lib)
+    else:
+        mature_t_max_list.append(float('nan'))
+        mature_5p_max_list.append(float('nan'))
+        mature_t_max_lib_list.append('')
     
     # Find max Star-T across all libraries
     star_t_values = {}
@@ -412,9 +435,21 @@ for idx, row in enhanced_df.iterrows():
     
     if star_t_values:
         max_star_lib = max(star_t_values, key=star_t_values.get)
-        enhanced_df.loc[idx, 'Star-T-Max'] = star_t_values[max_star_lib]
-        enhanced_df.loc[idx, 'Star-%5p-Max'] = star_5p_values[max_star_lib]
-        enhanced_df.loc[idx, 'Star-T-Max-Library'] = max_star_lib
+        star_t_max_list.append(star_t_values[max_star_lib])
+        star_5p_max_list.append(star_5p_values[max_star_lib])
+        star_t_max_lib_list.append(max_star_lib)
+    else:
+        star_t_max_list.append(float('nan'))
+        star_5p_max_list.append(float('nan'))
+        star_t_max_lib_list.append('')
+
+# Add Max columns all at once
+enhanced_df['Mature-T-Max'] = mature_t_max_list
+enhanced_df['Mature-%5p-Max'] = mature_5p_max_list
+enhanced_df['Mature-T-Max-Library'] = mature_t_max_lib_list
+enhanced_df['Star-T-Max'] = star_t_max_list
+enhanced_df['Star-%5p-Max'] = star_5p_max_list
+enhanced_df['Star-T-Max-Library'] = star_t_max_lib_list
 
 
 # --- REORDER: Group by column type instead of by library ---
@@ -436,7 +471,7 @@ enhanced_df = enhanced_df[existing_cols + new_cols_order]
 
 
 # Save the enhanced dataframe
-candidates_dir = f"/groups/vaksler-group/IsanaRNA/Isana_Tzah/RNAcentral/miRNAs/{SPECIES}/"
+candidates_dir = f"/mnt/new_groups/vaksler_group/Isana_Tzah/RNAcentral/miRNAs/{SPECIES}/"
 output_excel_path = os.path.join(candidates_dir, f'final_candidates_v1{m18_suffix}.xlsx')
 enhanced_df.to_excel(output_excel_path, index=False)
 

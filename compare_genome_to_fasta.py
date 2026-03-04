@@ -30,8 +30,8 @@ output = args.output
 db = args.db
 
 # File paths
-# oscar_dir = "/groups/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/Hofstenia/miRge/"
-# genome_fasta = "/groups/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/Hofstenia/Genome/refs/Hmia_ref/Hmia.030120.fasta"
+# oscar_dir = "/mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Hofstenia/miRge/"
+# genome_fasta = "/mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Hofstenia/Genome/refs/Hmia_ref/Hmia.030120.fasta"
 # gff_file = oscar_dir + "miRNA_250203_reformatted.gff3"
 # pre_miRNA_fasta = oscar_dir + "pre_miR_1050_no_pre_in_seqid.fa"
 # mature_star_fasta = oscar_dir + "combined_mature_star_1050.fa"

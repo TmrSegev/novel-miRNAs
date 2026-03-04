@@ -44,11 +44,11 @@ def run(output, fasta_path=None, seed_path=None, good_candidates=False, new_geno
     
     # Determine base path based on genome version
     if new_genome:
-        base_path = "/groups/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/sRNAtoolboxDB/out/Hofstenia_newGenome/"
-        output_dir = "/groups/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/Hofstenia_newGenome/scripts/"
+        base_path = "/mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/sRNAtoolboxDB/out/Hofstenia_newGenome/"
+        output_dir = "/mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Hofstenia_newGenome/scripts/"
     else:
-        base_path = "/groups/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/sRNAtoolboxDB/out/"
-        output_dir = "/groups/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/Hofstenia/scripts/"
+        base_path = "/mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/sRNAtoolboxDB/out/"
+        output_dir = "/mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Hofstenia/scripts/"
     
     # Prepend output directory to all output file paths
     output = output_dir + output
@@ -126,9 +126,9 @@ def run(output, fasta_path=None, seed_path=None, good_candidates=False, new_geno
 
     if good_candidates:
         if new_genome:
-            good_candidates_path = "/groups/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/Hofstenia_newGenome/good_candidates/sRNAbench_goodCandidates.csv"
+            good_candidates_path = "/mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Hofstenia_newGenome/good_candidates/sRNAbench_goodCandidates.csv"
         else:
-            good_candidates_path = "/groups/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq/Hofstenia/good_candidates/sRNAbench_goodCandidates.csv"
+            good_candidates_path = "/mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Hofstenia/good_candidates/sRNAbench_goodCandidates.csv"
         try:
             table = pd.read_csv(good_candidates_path)
             if table.empty:
