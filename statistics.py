@@ -5,7 +5,7 @@ import sys
 import scipy.stats as stats
 from scipy.stats import ttest_ind
 
-from pipeline_config import build_description
+from pipeline_config import SPECIES_CONFIG, build_description, get_species_config
 
 # ---Creating a families by type pivot table
 
@@ -322,11 +322,14 @@ if __name__ == '__main__':
     xls = pd.ExcelFile(all_path)
     sheet_dict = {sheet_name: xls.parse(sheet_name) for sheet_name in xls.sheet_names}
     # all = pd.read_excel(all_path, sheet_name="(D) Structural Features")
-    if species in ("Hofstenia", "Hofstenia_newGenome"):
-        all = sheet_dict["(A) Unfiltered"]
-    else:
-        all = sheet_dict["(D) Structural Features"]
-    include_mirbase = species in ("elegans", "Elegans")
+    cfg = get_species_config(species) if species in SPECIES_CONFIG else None
+    if species == "Hofstenia_newGenome":
+        cfg = get_species_config("Hofstenia", variant="new_genome")
+    sheet_key = cfg["mirge_input_sheet"] if cfg else "(D) Structural Features"
+    if species in ("Hofstenia", "Hofstenia_newGenome") and not cfg:
+        sheet_key = "(A) Unfiltered"
+    all = sheet_dict[sheet_key]
+    include_mirbase = cfg.get("use_mirbase_intersects", False) if cfg else species in ("elegans", "Elegans")
     all["Description"] = build_description(all, include_mirbase=include_mirbase)
     families_by_type(all.copy())
     unknown_families_by_type(all.copy())
@@ -338,7 +341,7 @@ if __name__ == '__main__':
     # wilcoxon_test(all)
     # t_test(all)
     mann_whitney(all.copy())
-    if species == "Elegans" or species == "elegans":
+    if cfg and cfg.get("run_sensitivity_plots"):
         mann_whitney_algorithm(all.copy())
     clusters()
     all = all.drop(['Description'], axis=1)

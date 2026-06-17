@@ -105,17 +105,17 @@ sbatch filter\_hof\_sRNAbench.sbatch
 Instructions: 
 
 1. Run the GFF creation script below once with good\_candidates=False to create the debugging hofstenia file.  
-2. Process it using the script process\_debugging\_hofstenia.py.  
+2. Process it using `processGoodCandidates.py`.  
 3. Then run again the GFF script with good\_candidates=True
 
 \#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#
 
 **Uniting, removing overlaps and creating GFF:**  
-python hofsteniasRNAbenchGFF.py \-o Hofstenia\_sRNAbench.gff3 \-seed /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/mirbase\_data/ALL\_seed\_family\_from\_mirgendb.csv \--create-fasta Hofstenia\_sRNAbench.fasta \-s Hofstenia \--goodcandidates False \--new-genome False
+python srnabenchUniteGFF.py -o Hofstenia_sRNAbench.gff3 -s Hofstenia --base-path /mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq --create-fasta Hofstenia_sRNAbench.fasta --goodcandidates False
 
 **process\_debugging\_Hofstenia command:**
 
-python /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/scripts/process\_debugging\_Hofstenia.py \--tool sRNAbench (or miRDeep) (--new-genome)
+python processGoodCandidates.py --tool sRNAbench -s Hofstenia --base-path /mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq
 
 **New genome:** add boolean flag \--new-genome True
 
@@ -123,18 +123,18 @@ python /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/script
 Filtering and creating remaining.csv files (Note: make sure conda activate is off\!):  
 sbatch filter\_hof\_mirdeep.sbatch
 
-python hofsteniaMirdeepFilter.py \-i \*.csv \--filter-s 10 \--filter-mc 10 \--exclude-c 100 
+python mirdeepPerLibraryFilter.py -i *.csv --filter-s 10 --filter-mc 10 --exclude-c 100 
 
 \#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#  
 Instructions: 
 
 4. Run the GFF creation script below once with good\_candidates=False to create the debugging hofstenia file.  
-5. Process it using the script process\_debugging\_hofstenia.py.  
+5. Process it using `processGoodCandidates.py`.  
 6. Then run again the GFF script with good\_candidates=True
 
 \#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#  
 **Uniting, removing overlaps and creating GFF:**  
-python hofsteniaMirdeepGFF.py \-o Hofstenia\_mirdeep.gff3 \--create-fasta Hofstenia\_mirdeep.fasta \-s Hofstenia \-seed /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/mirbase\_data/ALL\_seed\_family\_from\_mirgendb.csv \--goodcandidates False \--new-genome True
+python mirdeepUniteGFF.py -o Hofstenia_mirdeep.gff3 --create-fasta Hofstenia_mirdeep.fasta -s Hofstenia --base-path /mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq --goodcandidates False --variant new_genome
 
 **process\_debugging\_Hofstenia command:**
 
@@ -276,12 +276,12 @@ featureCounts \-F GFF \-t pre\_miRNA \-g ID \-O \-s 1 \-M \-a /mnt/new\_groups/v
 
 1. Path: /mnt/new\_groups/vaksler\_group/Isana\_Tzah/RNAcentral/miRNAs/Hofstenia  
 2. Command for script:  
-   python intersectionsTableHofstenia.py \-s Hofstenia \--mirdeep-inter-table /mnt/new\_groups/vaksler\_group/Isana\_Tzah/RNAcentral/miRNAs/Hofstenia/miRdeep\_sRNAbench\_intersect.bed \--sRNAbench-inter-table /mnt/new\_groups/vaksler\_group/Isana\_Tzah/RNAcentral/miRNAs/Hofstenia/sRNAbench\_miRdeep\_intersect.bed \--fc-mirdeep /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/counts\_sep/miRNA\_miRdeep\_counts.txt \--fc-pre-mirdeep /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/counts\_sep/miRNA\_miRdeep\_counts\_flanked.txt \--fc-sRNAbench /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/counts\_sep/miRNA\_sRNAbench\_counts.txt \--fc-pre-sRNAbench /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/counts\_sep/miRNA\_sRNAbench\_counts\_flanked.txt \-rm /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/scripts/mirdeep\_all\_remaining\_filtered.csv \-rs /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/scripts/sRNAbench\_all\_remaining\_filtered.csv \-l EC1,EC2,EC3,GA1,GA2,GA3,DI1,DI2,DI3,PDi1,PDi2,PDi3,PDii1,PDii2,PDii3,PL1,PL2,PL3,PH1,PH2,PH3,HL1,HL2,HL3,IST1,IST2,IST3,AMP1,AMP2,AMP3,SMA1,SMA2,SMA3 \--sum-fc-thres 100  
+   python intersectionsTable.py \-s Hofstenia \--mirdeep-inter-table /mnt/new\_groups/vaksler\_group/Isana\_Tzah/RNAcentral/miRNAs/Hofstenia/miRdeep\_sRNAbench\_intersect.bed \--sRNAbench-inter-table /mnt/new\_groups/vaksler\_group/Isana\_Tzah/RNAcentral/miRNAs/Hofstenia/sRNAbench\_miRdeep\_intersect.bed \--fc-mirdeep /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/counts\_sep/miRNA\_miRdeep\_counts.txt \--fc-pre-mirdeep /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/counts\_sep/miRNA\_miRdeep\_counts\_flanked.txt \--fc-sRNAbench /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/counts\_sep/miRNA\_sRNAbench\_counts.txt \--fc-pre-sRNAbench /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/counts\_sep/miRNA\_sRNAbench\_counts\_flanked.txt \-rm /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/scripts/mirdeep\_all\_remaining\_filtered.csv \-rs /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/scripts/sRNAbench\_all\_remaining\_filtered.csv \-l EC1,EC2,EC3,GA1,GA2,GA3,DI1,DI2,DI3,PDi1,PDi2,PDi3,PDii1,PDii2,PDii3,PL1,PL2,PL3,PH1,PH2,PH3,HL1,HL2,HL3,IST1,IST2,IST3,AMP1,AMP2,AMP3,SMA1,SMA2,SMA3 \--sum-fc-thres 100  
    Output:  
    intersections\_table\_Hofstenia.xlsx  
      
    **New genome command:**  
-   python  /mnt/new\_groups/vaksler\_group/Isana\_Tzah/RNAcentral/miRNAs/Hofstenia/intersectionsTableHofstenia.py \-s Hofstenia \--mirdeep-inter-table /mnt/new\_groups/vaksler\_group/Isana\_Tzah/RNAcentral/miRNAs/Hofstenia\_newGenome/miRdeep\_sRNAbench\_intersect.bed \--sRNAbench-inter-table /mnt/new\_groups/vaksler\_group/Isana\_Tzah/RNAcentral/miRNAs/Hofstenia\_newGenome/sRNAbench\_miRdeep\_intersect.bed \--fc-mirdeep /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia\_newGenome/counts\_sep/miRNA\_miRdeep\_counts.txt \--fc-pre-mirdeep /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia\_newGenome/counts\_sep/miRNA\_miRdeep\_counts\_flanked.txt \--fc-sRNAbench /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia\_newGenome/counts\_sep/miRNA\_sRNAbench\_counts.txt \--fc-pre-sRNAbench /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia\_newGenome/counts\_sep/miRNA\_sRNAbench\_counts\_flanked.txt \-rm /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia\_newGenome/scripts/mirdeep\_all\_remaining\_filtered.csv \-rs /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia\_newGenome/scripts/sRNAbench\_all\_remaining\_filtered.csv \-l EC1,EC2,EC3,GA1,GA2,GA3,DI1,DI2,DI3,PDi1,PDi2,PDi3,PDii1,PDii2,PDii3,PL1,PL2,PL3,PH1,PH2,PH3,HL1,HL2,HL3,IST1,IST2,IST3,AMP1,AMP2,AMP3,SMA1,SMA2,SMA3 \--sum-fc-thres 100 \--new-genome
+   python  /mnt/new\_groups/vaksler\_group/Isana\_TzahintersectionsTable.py \-s Hofstenia \--mirdeep-inter-table /mnt/new\_groups/vaksler\_group/Isana\_Tzah/RNAcentral/miRNAs/Hofstenia\_newGenome/miRdeep\_sRNAbench\_intersect.bed \--sRNAbench-inter-table /mnt/new\_groups/vaksler\_group/Isana\_Tzah/RNAcentral/miRNAs/Hofstenia\_newGenome/sRNAbench\_miRdeep\_intersect.bed \--fc-mirdeep /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia\_newGenome/counts\_sep/miRNA\_miRdeep\_counts.txt \--fc-pre-mirdeep /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia\_newGenome/counts\_sep/miRNA\_miRdeep\_counts\_flanked.txt \--fc-sRNAbench /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia\_newGenome/counts\_sep/miRNA\_sRNAbench\_counts.txt \--fc-pre-sRNAbench /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia\_newGenome/counts\_sep/miRNA\_sRNAbench\_counts\_flanked.txt \-rm /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia\_newGenome/scripts/mirdeep\_all\_remaining\_filtered.csv \-rs /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia\_newGenome/scripts/sRNAbench\_all\_remaining\_filtered.csv \-l EC1,EC2,EC3,GA1,GA2,GA3,DI1,DI2,DI3,PDi1,PDi2,PDi3,PDii1,PDii2,PDii3,PL1,PL2,PL3,PH1,PH2,PH3,HL1,HL2,HL3,IST1,IST2,IST3,AMP1,AMP2,AMP3,SMA1,SMA2,SMA3 \--sum-fc-thres 100 \--new-genome
 
 **Generate all candidates fasta**
 

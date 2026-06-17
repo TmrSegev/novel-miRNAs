@@ -2,8 +2,60 @@
 
 import os
 
-DEFAULT_BASE_PATH = "/sise/vaksler-group/IsanaRNA/Isana_Tzah/Charles_seq"
-DEFAULT_NCRNA_DIR = "/sise/vaksler-group/IsanaRNA/Isana_Tzah/RNAcentral/ncRNAs_Caenorhabditis"
+DEFAULT_BASE_PATH = "/mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq"
+DEFAULT_NCRNA_DIR = "/mnt/new_groups/vaksler_group/Isana_Tzah/RNAcentral/ncRNAs_Caenorhabditis"
+
+# Global filter defaults (Hofstenia values; overridable via CLI).
+# Historical nematode values: filter_mc=100, exclude_c=1000, low_score_total=1000
+FILTER_MC_DEFAULT = 10
+EXCLUDE_C_DEFAULT = 100
+LOW_SCORE_TOTAL_DEFAULT = 100
+
+SEED_FILE_NEMATODE = "mirbase_data/Seeds.txt"
+SEED_FILE_HOFSTENIA = "mirbase_data/ALL_seed_family_from_mirgendb.csv"
+
+DEFAULT_BLAST_DB = os.path.join(
+    DEFAULT_BASE_PATH, "mirbase_data/Caenorhabditis_pre_miRNAsDB"
+)
+
+NEMATODE_PROFILE = {
+    "seed_file": SEED_FILE_NEMATODE,
+    "seed_sep": "\t",
+    "seed_encoding": "utf-8",
+    "use_blast": True,
+    "use_mirbase_intersects": False,
+    "ziv_profile": "structural_sheets",
+    "mirge_input_sheet": "(D) Structural Features",
+    "apply_manual_corrections": False,
+    "compare_genome_qc": True,
+    "run_sensitivity_plots": False,
+    "ncrna_dir": DEFAULT_NCRNA_DIR,
+    "output_subdir": "RNAcentral/miRNAs/{species}",
+}
+
+HOFSTENIA_PROFILE = {
+    "seed_file": SEED_FILE_HOFSTENIA,
+    "seed_sep": ",",
+    "seed_encoding": "latin-1",
+    "use_blast": False,
+    "use_mirbase_intersects": False,
+    "ziv_profile": "unfiltered_only",
+    "mirge_input_sheet": "(A) Unfiltered",
+    "apply_manual_corrections": True,
+    "compare_genome_qc": False,
+    "run_sensitivity_plots": False,
+    "ncrna_dir": DEFAULT_NCRNA_DIR,
+    "output_subdir": "RNAcentral/miRNAs/{species}",
+}
+
+HOFSTENIA_NEW_GENOME_VARIANT = {
+    "mirdeep_out_subdir": "Hofstenia_newGenome/mirdeep_out",
+    "scripts_subdir": "Hofstenia_newGenome/scripts",
+    "good_candidates_subdir": "Hofstenia_newGenome/good_candidates",
+    "srnabench_out_subdir": "sRNAtoolboxDB/out/Hofstenia_newGenome",
+    "output_subdir": "RNAcentral/miRNAs/Hofstenia_newGenome",
+    "species_label": "Hofstenia",
+}
 
 SPECIES_CONFIG = {
     "Elegans": {
@@ -17,6 +69,9 @@ SPECIES_CONFIG = {
         "good_candidates_subdir": "Elegans/good_candidates",
         "srnabench_folder_prefix": "Elegans_",
         "support_mode": "distinct_libraries",
+        **NEMATODE_PROFILE,
+        "use_mirbase_intersects": True,
+        "run_sensitivity_plots": True,
     },
     "Macrosperma": {
         "libraries": ["MR4", "MR5", "MR6", "MR7", "MR8"],
@@ -26,6 +81,7 @@ SPECIES_CONFIG = {
         "good_candidates_subdir": "Macrosperma/good_candidates",
         "srnabench_folder_prefix": "Macrosperma_",
         "support_mode": "distinct_libraries",
+        **NEMATODE_PROFILE,
     },
     "Sulstoni": {
         "libraries": ["SR0", "SR1", "SR2", "SR3", "SR4", "SR5", "SR6", "SR7"],
@@ -35,6 +91,7 @@ SPECIES_CONFIG = {
         "good_candidates_subdir": "Sulstoni/good_candidates",
         "srnabench_folder_prefix": "Sulstoni_",
         "support_mode": "distinct_libraries",
+        **NEMATODE_PROFILE,
     },
     "Hofstenia": {
         "libraries": [
@@ -49,11 +106,12 @@ SPECIES_CONFIG = {
         "good_candidates_subdir": "Hofstenia/good_candidates",
         "srnabench_folder_prefix": "Hofstenia_",
         "support_mode": "dev_condition_replicates",
+        **HOFSTENIA_PROFILE,
     },
 }
 
 
-def get_species_config(species, base_path=None):
+def get_species_config(species, base_path=None, variant=None):
     if species not in SPECIES_CONFIG:
         raise ValueError(
             f"Unknown species '{species}'. "
@@ -62,11 +120,49 @@ def get_species_config(species, base_path=None):
     cfg = SPECIES_CONFIG[species].copy()
     cfg["species"] = species
     cfg["base_path"] = base_path or DEFAULT_BASE_PATH
+
+    if variant == "new_genome":
+        if species != "Hofstenia":
+            raise ValueError("--variant new_genome is only supported for Hofstenia")
+        cfg.update(HOFSTENIA_NEW_GENOME_VARIANT)
+
     cfg["scripts_dir"] = os.path.join(cfg["base_path"], cfg["scripts_subdir"])
     cfg["good_candidates_dir"] = os.path.join(cfg["base_path"], cfg["good_candidates_subdir"])
     cfg["srnabench_out_dir"] = os.path.join(cfg["base_path"], cfg["srnabench_out_subdir"])
     cfg["mirdeep_out_dir"] = os.path.join(cfg["base_path"], cfg["mirdeep_out_subdir"])
+    cfg["seed_path"] = os.path.join(cfg["base_path"], cfg["seed_file"])
+    cfg["output_dir"] = os.path.join(
+        cfg["base_path"],
+        cfg["output_subdir"].format(species=cfg.get("species_label", species)),
+    )
+    cfg["display_species"] = cfg.get("species_label", species)
     return cfg
+
+
+def resolve_seed_path(cfg, seed_override=None):
+    if seed_override:
+        return seed_override
+    return cfg["seed_path"]
+
+
+def load_seed_table(path, encoding="utf-8", sep="\t"):
+    import pandas as pd
+
+    if sep == "\t":
+        return pd.read_csv(path, sep=sep, encoding=encoding)
+    return pd.read_csv(path, encoding=encoding)
+
+
+def species_uses_blast(cfg):
+    return cfg.get("use_blast", False)
+
+
+def species_uses_mirbase(cfg):
+    return cfg.get("use_mirbase_intersects", False)
+
+
+def species_ziv_unfiltered_only(cfg):
+    return cfg.get("ziv_profile") == "unfiltered_only"
 
 
 def srnabench_folder_name(cfg, library):
@@ -81,8 +177,6 @@ def dev_condition(cfg, library_name, tool_name):
     """Return grouping key for good_candidates support filtering."""
     lib = library_name.split("_")[-1]
     if cfg["support_mode"] == "dev_condition_replicates":
-        if tool_name == "sRNAbench":
-            return lib[:-1] if len(lib) > 1 else lib
         return lib[:-1] if len(lib) > 1 else lib
     return lib
 

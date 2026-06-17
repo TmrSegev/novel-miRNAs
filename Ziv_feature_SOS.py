@@ -9,7 +9,7 @@ import sys
 import numpy as np
 import pprint
 
-from pipeline_config import build_description
+from pipeline_config import build_description, get_species_config, species_ziv_unfiltered_only
 
 
 def get_seq_data(path, start_end_mark=False):
@@ -268,12 +268,23 @@ if __name__ == '__main__':
     new_genome = False
     args = []
 
+    variant = None
+    base_path = None
+
     i = 1
     while i < len(sys.argv):
         arg = sys.argv[i]
         if arg == '--new-genome':
-            new_genome = True
+            variant = "new_genome"
             i += 1
+            continue
+        if arg == '--variant':
+            variant = sys.argv[i + 1]
+            i += 2
+            continue
+        if arg == '--base-path':
+            base_path = sys.argv[i + 1]
+            i += 2
             continue
         if arg == '--precursors':
             precursors = sys.argv[i + 1]
@@ -295,11 +306,18 @@ if __name__ == '__main__':
             sys.exit()
         i += 2
 
-    # Determine output directory based on new_genome flag
-    if new_genome:
-        output_dir = "/mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Ziv_Features/"
-    else:
-        output_dir = "./"
+    # Determine output directory
+    output_dir = "./"
+    cfg = None
+    if species and species != "miRGeneDB":
+        sp_key = "Hofstenia" if species in ("Hofstenia", "Hofstenia_newGenome") else species
+        v = variant or ("new_genome" if species == "Hofstenia_newGenome" else None)
+        try:
+            cfg = get_species_config(sp_key, base_path, variant=v)
+            if variant == "new_genome" or species == "Hofstenia_newGenome":
+                output_dir = "/mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Ziv_Features/"
+        except ValueError:
+            cfg = None
 
     precursors = get_seq_data(precursors, start_end_mark=False)
     mature = get_seq_data(mature, start_end_mark=False)
@@ -373,21 +391,23 @@ if __name__ == '__main__':
             output['star_seq_fasta'] = [star.get(name, '') if name else '' for name in padded_names]
             print(f"Added fasta name and sequence columns from input fasta files (with padding/truncation due to length mismatch)")
 
-    if species == "miRGeneDB" or species == "Hofstenia" or species == "Hofstenia_newGenome":
+    unfiltered_only = species == "miRGeneDB" or (cfg and species_ziv_unfiltered_only(cfg))
+
+    if unfiltered_only:
         output = output.astype(
             {'Mature_BP_ratio_ziv': 'float', 'Mature_max_bulge_ziv': 'float', 'Star_BP_ratio_ziv': 'float',
              'Star_max_bulge_ziv': 'float'})
-        if species == "Hofstenia" or species == "Hofstenia_newGenome":
+        if cfg and cfg.get("apply_manual_corrections"):
             output['Description'] = output[['Description_mirdeep', 'Description_sRNAbench']].astype(str).agg('__'.join, axis=1).str.replace(';', '|', regex=False).str.replace('ID=', '', regex=False).str.replace('.', '', regex=False)
-            output = manual_change(output, new_genome=new_genome)
+            output = manual_change(output, new_genome=(variant == "new_genome"))
         writer = pd.ExcelWriter(output_dir + 'all_remaining_after_ziv_{}.xlsx'.format(species))
         output.to_excel(writer, sheet_name='(A) Unfiltered', index=False)
         writer.save()
-    if species != "miRGeneDB" and species != "Hofstenia" and species != "Hofstenia_newGenome":
+    elif species != "miRGeneDB":
         output = output.astype(
             {'Mature_BP_ratio_ziv': 'float', 'Mature_max_bulge_ziv': 'float', 'Star_BP_ratio_ziv': 'float',
              'Star_max_bulge_ziv': 'float'})
-        include_mirbase = species == "Elegans"
+        include_mirbase = cfg and cfg.get("use_mirbase_intersects", False)
         output['Description'] = build_description(output, include_mirbase=include_mirbase)
         writer = pd.ExcelWriter(output_dir + 'all_remaining_after_ziv_{}.xlsx'.format(species))
         output.to_excel(writer, sheet_name='(A) Unfiltered', index=False)
@@ -418,8 +438,8 @@ if __name__ == '__main__':
         structural.to_excel(writer, sheet_name='(D) Structural Features', index=False)
         writer.save()
 
-    if species != "miRGeneDB" and species != "Hofstenia" and species != "Hofstenia_newGenome":
-        if species == "Elegans":
+    if species != "miRGeneDB" and not unfiltered_only:
+        if cfg and cfg.get("use_mirbase_intersects"):
             mirgenedb = output[(output['Description_mirgenedb'] != '.') & (output['Valid mir_ziv'] == True)]
         else:
             mirgenedb = output[output['Valid mir_ziv'] == True]

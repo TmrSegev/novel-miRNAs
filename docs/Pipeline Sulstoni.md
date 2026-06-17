@@ -5,9 +5,9 @@
 Check position in genome:  
 samtools faidx ../genome/CSULS.caenorhabditis\_sulstoni\_JU2788\_v1.scaffolds.fna CSULS.scaffold02010:60847-60868
 
-basePath \= /sise/vaksler-group/IsanaRNA/Isana\_Tzah/Charles\_seq
+basePath \= /mnt/new_groups/vaksler_group/Isana\_Tzah/Charles\_seq
 
-Pipeline scripts (novel-miRNAs repo): nematodesRNAbenchFilter.py, nematodeMirdeepFilter.py, nematodesRNAbenchGFF.py, nematodeMirdeepGFF.py, process_debugging.py, compare_genome_to_fasta.py
+Pipeline scripts (novel-miRNAs repo): srnabenchPerLibraryFilter.py, mirdeepPerLibraryFilter.py, srnabenchUniteGFF.py, mirdeepUniteGFF.py, processGoodCandidates.py, compare_genome_to_fasta.py
 
 filter fasta files with only matures \= sed \-e '/|s|/,+1d' Sulstoni\_mirdeep.txt \> Sulstoni\_mirdeep\_mature.fasta
 
@@ -96,7 +96,7 @@ Sulstoni:
 
 5) **mirDeep2.pl** — run **per library** in `{base}/Sulstoni/mirdeep_out/{SR0|…|SR7}/`. Filter each folder:
 
-   python nematodeMirdeepFilter.py -i result\_\*.csv --filter-s 10 --exclude-c 1000 --filter-mc 100
+   python mirdeepPerLibraryFilter.py -i result\_\*.csv --filter-s 10 --exclude-c 1000 --filter-mc 100
 
    **Legacy combined run** (superseded):
 
@@ -146,11 +146,11 @@ path: \<basePath\>/Sulstoni/mirdeep\_out/\*
 
 8) **sRNAbench.jar** — run **per library**. Example SR0:
 
-   java \-jar ../../sRNAtoolboxDB/exec/sRNAbench.jar input=../TrimmedFastq/SRR13072570.1\_trimmed.fastq output=../../sRNAtoolboxDB/out/Sulstoni/Sulstoni\_SR0 predict=true species=sulstoniGenomeIndexed dbPath=/sise/vaksler-group/IsanaRNA/Isana\_Tzah/Charles\_seq/sRNAtoolboxDB hairpin=animalsHairpin.fa mature=animalsMature.fa
+   java \-jar ../../sRNAtoolboxDB/exec/sRNAbench.jar input=../TrimmedFastq/SRR13072570.1\_trimmed.fastq output=../../sRNAtoolboxDB/out/Sulstoni/Sulstoni\_SR0 predict=true species=sulstoniGenomeIndexed dbPath=/mnt/new_groups/vaksler_group/Isana\_Tzah/Charles\_seq/sRNAtoolboxDB hairpin=animalsHairpin.fa mature=animalsMature.fa
 
    Repeat for SR1–SR7. Filter in each folder:
 
-   python nematodesRNAbenchFilter.py -i novel.txt -a novel451.txt --filter-mc 100
+   python srnabenchPerLibraryFilter.py -i novel.txt -a novel451.txt --filter-mc 100
 
    **Legacy combined run** (superseded):
 
@@ -176,15 +176,15 @@ path: \<basePath\>/Sulstoni/mirdeep\_out/\*
 
 Working directory: `{base}/Sulstoni/scripts/`
 
-Two-pass workflow (see Pipeline Hofstenia / Elegans): `--goodcandidates False` → `process_debugging.py` → `--goodcandidates True` → `compare_genome_to_fasta.py --mode discovery`
+Two-pass workflow (see Pipeline Hofstenia / Elegans): `--goodcandidates False` → `processGoodCandidates.py` → `--goodcandidates True` → `compare_genome_to_fasta.py --mode discovery`
 
-python nematodesRNAbenchGFF.py -o Sulstoni\_sRNAbench.gff3 -seed ../../mirbase\_data/Seeds.txt --create-fasta Sulstoni\_sRNAbench.fasta -s Sulstoni --goodcandidates False  
-python process_debugging.py --tool sRNAbench -s Sulstoni  
-python nematodesRNAbenchGFF.py -o Sulstoni\_sRNAbench.gff3 -seed ../../mirbase\_data/Seeds.txt --create-fasta Sulstoni\_sRNAbench.fasta -s Sulstoni --goodcandidates True  
+python srnabenchUniteGFF.py -o Sulstoni\_sRNAbench.gff3 -seed ../../mirbase\_data/Seeds.txt --create-fasta Sulstoni\_sRNAbench.fasta -s Sulstoni --goodcandidates False  
+python processGoodCandidates.py --tool sRNAbench -s Sulstoni  
+python srnabenchUniteGFF.py -o Sulstoni\_sRNAbench.gff3 -seed ../../mirbase\_data/Seeds.txt --create-fasta Sulstoni\_sRNAbench.fasta -s Sulstoni --goodcandidates True  
 
-python nematodeMirdeepGFF.py -o Sulstoni\_mirdeep.gff3 --create-fasta Sulstoni\_mirdeep.fasta -seed ../../mirbase\_data/Seeds.txt -s Sulstoni --goodcandidates False  
-python process_debugging.py --tool miRDeep -s Sulstoni  
-python nematodeMirdeepGFF.py -o Sulstoni\_mirdeep.gff3 --create-fasta Sulstoni\_mirdeep.fasta -seed ../../mirbase\_data/Seeds.txt -s Sulstoni --goodcandidates True  
+python mirdeepUniteGFF.py -o Sulstoni\_mirdeep.gff3 --create-fasta Sulstoni\_mirdeep.fasta -seed ../../mirbase\_data/Seeds.txt -s Sulstoni --goodcandidates False  
+python processGoodCandidates.py --tool miRDeep -s Sulstoni  
+python mirdeepUniteGFF.py -o Sulstoni\_mirdeep.gff3 --create-fasta Sulstoni\_mirdeep.fasta -seed ../../mirbase\_data/Seeds.txt -s Sulstoni --goodcandidates True  
 
 **Filtering (nematodes: --filter-mc 100):** same criteria as Elegans/Macrosperma; all novel451 discarded; good_candidates requires ≥2 libraries in cluster.
 
@@ -201,23 +201,23 @@ The one that has higher counts will be marked as “sense” and the other as �
    sed \-i 's/\\t\*$//' Sulstoni\_sRNAbench\_pre\_only.gff3  
 1. Run intersections.sbatch file. The commands inside:  
    mirdeep-mirdeep bedtools intersect command:  
-   bedtools intersect \-wao \-loj \-f 0.4 \-a /sise/vaksler-group/IsanaRNA/Isana\_Tzah/Charles\_seq/Sulstoni/scripts/Sulstoni\_mirdeep\_pre\_only.gff3 \-b /sise/vaksler-group/IsanaRNA/Isana\_Tzah/Charles\_seq/Sulstoni/scripts/Sulstoni\_mirdeep\_pre\_only.gff3 \> miRdeep\_intersect.bed  
+   bedtools intersect \-wao \-loj \-f 0.4 \-a /mnt/new_groups/vaksler_group/Isana\_Tzah/Charles\_seq/Sulstoni/scripts/Sulstoni\_mirdeep\_pre\_only.gff3 \-b /mnt/new_groups/vaksler_group/Isana\_Tzah/Charles\_seq/Sulstoni/scripts/Sulstoni\_mirdeep\_pre\_only.gff3 \> miRdeep\_intersect.bed  
      
    sRNAbench-sRNAbench bedtools intersect command:  
-   bedtools intersect \-wao \-loj \-f 0.4 \-a /sise/vaksler-group/IsanaRNA/Isana\_Tzah/Charles\_seq/Sulstoni/scripts/Sulstoni\_sRNAbench\_pre\_only.gff3 \-b /sise/vaksler-group/IsanaRNA/Isana\_Tzah/Charles\_seq/Sulstoni/scripts/Sulstoni\_sRNAbench\_pre\_only.gff3 \> sRNAbench\_intersect.bed  
+   bedtools intersect \-wao \-loj \-f 0.4 \-a /mnt/new_groups/vaksler_group/Isana\_Tzah/Charles\_seq/Sulstoni/scripts/Sulstoni\_sRNAbench\_pre\_only.gff3 \-b /mnt/new_groups/vaksler_group/Isana\_Tzah/Charles\_seq/Sulstoni/scripts/Sulstoni\_sRNAbench\_pre\_only.gff3 \> sRNAbench\_intersect.bed  
 2. Script commands for marking as overlaps or sense/antisense:  
    mirdeep:  
-   python overlapSenseAnti.py \--intersections-table /sise/vaksler-group/IsanaRNA/Isana\_Tzah/RNAcentral/miRNAs/Sulstoni/miRdeep\_intersect.bed \--gff /sise/vaksler-group/IsanaRNA/Isana\_Tzah/Charles\_seq/Sulstoni/scripts/Sulstoni\_mirdeep\_pre\_only.gff3  
+   python overlapSenseAnti.py \--intersections-table /mnt/new_groups/vaksler_group/Isana\_Tzah/RNAcentral/miRNAs/Sulstoni/miRdeep\_intersect.bed \--gff /mnt/new_groups/vaksler_group/Isana\_Tzah/Charles\_seq/Sulstoni/scripts/Sulstoni\_mirdeep\_pre\_only.gff3  
      
    sRNAbench:  
-   python overlapSenseAnti.py \--intersections-table /sise/vaksler-group/IsanaRNA/Isana\_Tzah/RNAcentral/miRNAs/Sulstoni/sRNAbench\_intersect.bed \--gff /sise/vaksler-group/IsanaRNA/Isana\_Tzah/Charles\_seq/Sulstoni/scripts/Sulstoni\_sRNAbench\_pre\_only.gff3  
+   python overlapSenseAnti.py \--intersections-table /mnt/new_groups/vaksler_group/Isana\_Tzah/RNAcentral/miRNAs/Sulstoni/sRNAbench\_intersect.bed \--gff /mnt/new_groups/vaksler_group/Isana\_Tzah/Charles\_seq/Sulstoni/scripts/Sulstoni\_sRNAbench\_pre\_only.gff3  
    
 
 The output changes the pre\_only gff files in the respective folders.
 
 **Intersecting miRdeep & sRNAbench & Known Results (bedtools)**  
 Finding candidates that are part of the intersection between two tools or known miRNAs.  
-path: /sise/vaksler-group/IsanaRNA/Isana\_Tzah/RNAcentral/miRNAs/  
+path: /mnt/new_groups/vaksler_group/Isana\_Tzah/RNAcentral/miRNAs/  
 All commands documented in \<path\>/Command.txt
 
 2. When applying intersect force use “-s” for strandness, \-f for minimum overlap.  
@@ -256,19 +256,19 @@ All commands documented in \<path\>/Command.txt
 3) **featureCounts** for **sRNAbench gff3 & miRDeep gff3** \- command:  
    mirdeep:
 
-   featureCounts \-t miRNA \-g ID \-O \-s 1 \-M \-a /sise/vaksler-group/IsanaRNA/Isana\_Tzah/Charles\_seq/Sulstoni/scripts/Sulstoni\_mirdeep.gff3 \-o ../counts\_sep/miRNA\_miRdeep\_counts.txt ../STAR/align\_to\_genome/SR7/Sulstoni\_Aligned.out.sam ../STAR/align\_to\_genome/SR6/Sulstoni\_Aligned.out.sam ../STAR/align\_to\_genome/SR5/Sulstoni\_Aligned.out.sam ../STAR/align\_to\_genome/SR4/Sulstoni\_Aligned.out.sam ../STAR/align\_to\_genome/SR3/Sulstoni\_Aligned.out.sam ../STAR/align\_to\_genome/SR2/Sulstoni\_Aligned.out.sam ../STAR/align\_to\_genome/SR1/Sulstoni\_Aligned.out.sam ../STAR/align\_to\_genome/SR0/Sulstoni\_Aligned.out.sam  
+   featureCounts \-t miRNA \-g ID \-O \-s 1 \-M \-a /mnt/new_groups/vaksler_group/Isana\_Tzah/Charles\_seq/Sulstoni/scripts/Sulstoni\_mirdeep.gff3 \-o ../counts\_sep/miRNA\_miRdeep\_counts.txt ../STAR/align\_to\_genome/SR7/Sulstoni\_Aligned.out.sam ../STAR/align\_to\_genome/SR6/Sulstoni\_Aligned.out.sam ../STAR/align\_to\_genome/SR5/Sulstoni\_Aligned.out.sam ../STAR/align\_to\_genome/SR4/Sulstoni\_Aligned.out.sam ../STAR/align\_to\_genome/SR3/Sulstoni\_Aligned.out.sam ../STAR/align\_to\_genome/SR2/Sulstoni\_Aligned.out.sam ../STAR/align\_to\_genome/SR1/Sulstoni\_Aligned.out.sam ../STAR/align\_to\_genome/SR0/Sulstoni\_Aligned.out.sam  
    
 
 	sRNAbench:  
-		featureCounts \-t miRNA \-g ID \-O \-s 1 \-M \-a /sise/vaksler-group/IsanaRNA/Isana\_Tzah/Charles\_seq/Sulstoni/scripts/Sulstoni\_sRNAbench.gff3 \-o ../counts\_sep/miRNA\_sRNAbench\_counts.txt ../STAR/align\_to\_genome/SR7/Sulstoni\_Aligned.out.sam ../STAR/align\_to\_genome/SR6/Sulstoni\_Aligned.out.sam ../STAR/align\_to\_genome/SR5/Sulstoni\_Aligned.out.sam ../STAR/align\_to\_genome/SR4/Sulstoni\_Aligned.out.sam ../STAR/align\_to\_genome/SR3/Sulstoni\_Aligned.out.sam ../STAR/align\_to\_genome/SR2/Sulstoni\_Aligned.out.sam ../STAR/align\_to\_genome/SR1/Sulstoni\_Aligned.out.sam ../STAR/align\_to\_genome/SR0/Sulstoni\_Aligned.out.sam
+		featureCounts \-t miRNA \-g ID \-O \-s 1 \-M \-a /mnt/new_groups/vaksler_group/Isana\_Tzah/Charles\_seq/Sulstoni/scripts/Sulstoni\_sRNAbench.gff3 \-o ../counts\_sep/miRNA\_sRNAbench\_counts.txt ../STAR/align\_to\_genome/SR7/Sulstoni\_Aligned.out.sam ../STAR/align\_to\_genome/SR6/Sulstoni\_Aligned.out.sam ../STAR/align\_to\_genome/SR5/Sulstoni\_Aligned.out.sam ../STAR/align\_to\_genome/SR4/Sulstoni\_Aligned.out.sam ../STAR/align\_to\_genome/SR3/Sulstoni\_Aligned.out.sam ../STAR/align\_to\_genome/SR2/Sulstoni\_Aligned.out.sam ../STAR/align\_to\_genome/SR1/Sulstoni\_Aligned.out.sam ../STAR/align\_to\_genome/SR0/Sulstoni\_Aligned.out.sam
 
 **Flanked precursor counts:**
 
 python add_flank_to_GFF.py -s Sulstoni
 
-featureCounts \-F GFF \-t pre\_miRNA \-g ID \-O \-s 1 \-M \-a /sise/vaksler-group/IsanaRNA/Isana\_Tzah/Charles\_seq/Sulstoni/scripts/Sulstoni\_mirdeep\_flanked\_pre.gff3 \-o ../counts\_sep/miRNA\_miRdeep\_counts\_flanked.txt \<SR0–SR7 SAM files\>
+featureCounts \-F GFF \-t pre\_miRNA \-g ID \-O \-s 1 \-M \-a /mnt/new_groups/vaksler_group/Isana\_Tzah/Charles\_seq/Sulstoni/scripts/Sulstoni\_mirdeep\_flanked\_pre.gff3 \-o ../counts\_sep/miRNA\_miRdeep\_counts\_flanked.txt \<SR0–SR7 SAM files\>
 
-featureCounts \-F GFF \-t pre\_miRNA \-g ID \-O \-s 1 \-M \-a /sise/vaksler-group/IsanaRNA/Isana\_Tzah/Charles\_seq/Sulstoni/scripts/Sulstoni\_sRNAbench\_flanked\_pre.gff3 \-o ../counts\_sep/miRNA\_sRNAbench\_counts\_flanked.txt \<SR0–SR7 SAM files\>
+featureCounts \-F GFF \-t pre\_miRNA \-g ID \-O \-s 1 \-M \-a /mnt/new_groups/vaksler_group/Isana\_Tzah/Charles\_seq/Sulstoni/scripts/Sulstoni\_sRNAbench\_flanked\_pre.gff3 \-o ../counts\_sep/miRNA\_sRNAbench\_counts\_flanked.txt \<SR0–SR7 SAM files\>
 
 **BLAST** 
 
@@ -276,16 +276,16 @@ featureCounts \-F GFF \-t pre\_miRNA \-g ID \-O \-s 1 \-M \-a /sise/vaksler-grou
    1. Create blast DB, command:  
       makeblastdb \-in ../BLAST\_DB/Caenorhabditis\_pre\_miRNA.fasta \-title miRNADB \-dbtype nucl \-out ../BLAST\_DB/Caenorhabditis\_pre\_miRNAsDB  
 2. Blast mature results from miRdeep and sRNAbench. Commands:  
-   blastn \-query /sise/vaksler-group/IsanaRNA/Isana\_Tzah/Charles\_seq/Sulstoni/scripts/Sulstoni\_mirdeep.fasta \-db ../BLAST\_DB/Caenorhabditis\_pre\_miRNAsDB \-out ../queries/Sulstoni/miRdeep\_blastn\_compact \-outfmt 6 \-evalue 10 \-task blastn-short  
-   blastn \-query /sise/vaksler-group/IsanaRNA/Isana\_Tzah/Charles\_seq/Sulstoni/scripts/Sulstoni\_sRNAbench.fasta \-db ../BLAST\_DB/Caenorhabditis\_pre\_miRNAsDB \-out ../queries/Sulstoni/sRNAbench\_blastn\_compact \-outfmt 6 \-evalue 10 \-task blastn-short  
-   path: /sise/vaksler-group/IsanaRNA/Isana\_Tzah/RNAcentral/bash/blast\_sulstoni\_queries.sbatch  
+   blastn \-query /mnt/new_groups/vaksler_group/Isana\_Tzah/Charles\_seq/Sulstoni/scripts/Sulstoni\_mirdeep.fasta \-db ../BLAST\_DB/Caenorhabditis\_pre\_miRNAsDB \-out ../queries/Sulstoni/miRdeep\_blastn\_compact \-outfmt 6 \-evalue 10 \-task blastn-short  
+   blastn \-query /mnt/new_groups/vaksler_group/Isana\_Tzah/Charles\_seq/Sulstoni/scripts/Sulstoni\_sRNAbench.fasta \-db ../BLAST\_DB/Caenorhabditis\_pre\_miRNAsDB \-out ../queries/Sulstoni/sRNAbench\_blastn\_compact \-outfmt 6 \-evalue 10 \-task blastn-short  
+   path: /mnt/new_groups/vaksler_group/Isana\_Tzah/RNAcentral/bash/blast\_sulstoni\_queries.sbatch  
    
 
 **Generate Intersections Table**
 
-1. Path: /sise/vaksler-group/IsanaRNA/Isana\_Tzah/RNAcentral/miRNAs/Sulstoni  
+1. Path: /mnt/new_groups/vaksler_group/Isana\_Tzah/RNAcentral/miRNAs/Sulstoni  
 2. Command for script:  
-   python ‏‏‏‏intersectionsTable.py \-s sulstoni \--mirdeep-inter-table /sise/vaksler-group/IsanaRNA/Isana\_Tzah/RNAcentral/miRNAs/Sulstoni/miRdeep\_sRNAbench\_intersect.bed \--sRNAbench-inter-table /sise/vaksler-group/IsanaRNA/Isana\_Tzah/RNAcentral/miRNAs/Sulstoni/sRNAbench\_miRdeep\_intersect.bed \--blast-mirdeep /sise/vaksler-group/IsanaRNA/Isana\_Tzah/RNAcentral/queries/Sulstoni/miRdeep\_blastn\_compact \--blast-sRNAbench /sise/vaksler-group/IsanaRNA/Isana\_Tzah/RNAcentral/queries/Sulstoni/sRNAbench\_blastn\_compact \--fc-mirdeep /sise/vaksler-group/IsanaRNA/Isana\_Tzah/Charles\_seq/Sulstoni/counts\_sep/miRNA\_miRdeep\_counts.txt \--fc-pre-mirdeep /sise/vaksler-group/IsanaRNA/Isana\_Tzah/Charles\_seq/Sulstoni/counts\_sep/miRNA\_miRdeep\_counts\_flanked.txt \--fc-sRNAbench /sise/vaksler-group/IsanaRNA/Isana\_Tzah/Charles\_seq/Sulstoni/counts\_sep/miRNA\_sRNAbench\_counts.txt \--fc-pre-sRNAbench /sise/vaksler-group/IsanaRNA/Isana\_Tzah/Charles\_seq/Sulstoni/counts\_sep/miRNA\_sRNAbench\_counts\_flanked.txt \-rm /sise/vaksler-group/IsanaRNA/Isana\_Tzah/Charles\_seq/Sulstoni/scripts/mirdeep\_all\_remaining\_filtered.csv \-rs /sise/vaksler-group/IsanaRNA/Isana\_Tzah/Charles\_seq/Sulstoni/scripts/sRNAbench\_all\_remaining\_filtered.csv \-l SR7,SR6,SR5,SR4,SR3,SR2,SR1,SR0 \--sum-fc-thres 100  
+   python ‏‏‏‏intersectionsTable.py \-s sulstoni \--mirdeep-inter-table /mnt/new_groups/vaksler_group/Isana\_Tzah/RNAcentral/miRNAs/Sulstoni/miRdeep\_sRNAbench\_intersect.bed \--sRNAbench-inter-table /mnt/new_groups/vaksler_group/Isana\_Tzah/RNAcentral/miRNAs/Sulstoni/sRNAbench\_miRdeep\_intersect.bed \--blast-mirdeep /mnt/new_groups/vaksler_group/Isana\_Tzah/RNAcentral/queries/Sulstoni/miRdeep\_blastn\_compact \--blast-sRNAbench /mnt/new_groups/vaksler_group/Isana\_Tzah/RNAcentral/queries/Sulstoni/sRNAbench\_blastn\_compact \--fc-mirdeep /mnt/new_groups/vaksler_group/Isana\_Tzah/Charles\_seq/Sulstoni/counts\_sep/miRNA\_miRdeep\_counts.txt \--fc-pre-mirdeep /mnt/new_groups/vaksler_group/Isana\_Tzah/Charles\_seq/Sulstoni/counts\_sep/miRNA\_miRdeep\_counts\_flanked.txt \--fc-sRNAbench /mnt/new_groups/vaksler_group/Isana\_Tzah/Charles\_seq/Sulstoni/counts\_sep/miRNA\_sRNAbench\_counts.txt \--fc-pre-sRNAbench /mnt/new_groups/vaksler_group/Isana\_Tzah/Charles\_seq/Sulstoni/counts\_sep/miRNA\_sRNAbench\_counts\_flanked.txt \-rm /mnt/new_groups/vaksler_group/Isana\_Tzah/Charles\_seq/Sulstoni/scripts/mirdeep\_all\_remaining\_filtered.csv \-rs /mnt/new_groups/vaksler_group/Isana\_Tzah/Charles\_seq/Sulstoni/scripts/sRNAbench\_all\_remaining\_filtered.csv \-l SR7,SR6,SR5,SR4,SR3,SR2,SR1,SR0 \--sum-fc-thres 100  
    Output:  
    intersections\_table\_sulstoni.xlsx  
    Merges miRDeep results with blast, featurecounts, sRNAbench, miRbase and miRGeneDB.  
@@ -293,24 +293,24 @@ featureCounts \-F GFF \-t pre\_miRNA \-g ID \-O \-s 1 \-M \-a /sise/vaksler-grou
 
 **Generate all candidates fasta**
 
-path:  /sise/vaksler-group/IsanaRNA/Isana\_Tzah/RNAcentral/miRNAs/Sulstoni/
+path:  /mnt/new_groups/vaksler_group/Isana\_Tzah/RNAcentral/miRNAs/Sulstoni/
 
 command:
 
-python allCandidatesFasta.py \--all /sise/vaksler-group/IsanaRNA/Isana\_Tzah/RNAcentral/miRNAs/Sulstoni/intersections\_table\_sulstoni.xlsx \-s Sulstoni
+python allCandidatesFasta.py \--all /mnt/new_groups/vaksler_group/Isana\_Tzah/RNAcentral/miRNAs/Sulstoni/intersections\_table\_sulstoni.xlsx \-s Sulstoni
 
 **Feature Engineering with Ziv’s code**
 
-path: /sise/vaksler-group/IsanaRNA/Isana\_Tzah/Charles\_seq/Ziv\_Features
+path: /mnt/new_groups/vaksler_group/Isana\_Tzah/Charles\_seq/Ziv\_Features
 
 command:
 
-python Ziv\_feature\_SOS.py \--precursors /sise/vaksler-group/IsanaRNA/Isana\_Tzah/RNAcentral/miRNAs/Sulstoni/all\_candidates\_hairpin.fasta \--mature /sise/vaksler-group/IsanaRNA/Isana\_Tzah/RNAcentral/miRNAs/Sulstoni/all\_candidates\_mature.fasta \--star /sise/vaksler-group/IsanaRNA/Isana\_Tzah/RNAcentral/miRNAs/Sulstoni/all\_candidates\_star.fasta \--species Sulstoni \--all-remaining /sise/vaksler-group/IsanaRNA/Isana\_Tzah/RNAcentral/miRNAs/Sulstoni/intersections\_table\_sulstoni.xlsx
+python Ziv\_feature\_SOS.py \--precursors /mnt/new_groups/vaksler_group/Isana\_Tzah/RNAcentral/miRNAs/Sulstoni/all\_candidates\_hairpin.fasta \--mature /mnt/new_groups/vaksler_group/Isana\_Tzah/RNAcentral/miRNAs/Sulstoni/all\_candidates\_mature.fasta \--star /mnt/new_groups/vaksler_group/Isana\_Tzah/RNAcentral/miRNAs/Sulstoni/all\_candidates\_star.fasta \--species Sulstoni \--all-remaining /mnt/new_groups/vaksler_group/Isana\_Tzah/RNAcentral/miRNAs/Sulstoni/intersections\_table\_sulstoni.xlsx
 
 **Statistical Analysis**
 
-Path: /sise/vaksler-group/IsanaRNA/Isana\_Tzah/RNAcentral/miRNAs/Sulstoni/
+Path: /mnt/new_groups/vaksler_group/Isana\_Tzah/RNAcentral/miRNAs/Sulstoni/
 
 command:
 
-python statistics.py \--all /sise/vaksler-group/IsanaRNA/Isana\_Tzah/Charles\_seq/Ziv\_Features/all\_remaining\_after\_ziv\_Sulstoni.xlsx \-s Sulstoni
+python statistics.py \--all /mnt/new_groups/vaksler_group/Isana\_Tzah/Charles\_seq/Ziv\_Features/all\_remaining\_after\_ziv\_Sulstoni.xlsx \-s Sulstoni

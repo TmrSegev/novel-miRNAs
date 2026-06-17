@@ -5,19 +5,16 @@ import sys
 from pipeline_config import get_species_config
 
 parser = argparse.ArgumentParser(description="Add flanking regions to GFF3 pre_miRNA features")
-parser.add_argument("-s", "--species", required=True, help="Species name (Elegans, Macrosperma, Sulstoni, Hofstenia)")
+parser.add_argument("-s", "--species", required=True, help="Species name")
 parser.add_argument("--base-path", dest="base_path", help="Charles_seq base path")
-parser.add_argument("--new-genome", action="store_true", help="Use Hofstenia_newGenome folder (Hofstenia only)")
+parser.add_argument("--variant", help='Genome variant, e.g. "new_genome" for Hofstenia PacBio track')
+parser.add_argument("--new-genome", action="store_true", help="Deprecated: use --variant new_genome")
 args = parser.parse_args()
 
-if args.new_genome and args.species == "Hofstenia":
-    base_dir = os.path.join(args.base_path or "/mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq",
-                            "Hofstenia_newGenome/scripts/")
-    species_prefix = "Hofstenia"
-else:
-    cfg = get_species_config(args.species, args.base_path)
-    base_dir = cfg["scripts_dir"]
-    species_prefix = cfg["species"]
+variant = args.variant or ("new_genome" if args.new_genome else None)
+cfg = get_species_config(args.species, args.base_path, variant=variant)
+base_dir = cfg["scripts_dir"]
+species_prefix = cfg["display_species"]
 
 algorithms = ["mirdeep", "sRNAbench"]
 FLANK = 10

@@ -1,6 +1,6 @@
 **Macrosperma**
 
-**Pipeline scripts:** Per-library filter (`nematodesRNAbenchFilter.py`, `nematodeMirdeepFilter.py` with `--filter-mc 100`); unite + GFF in `{base}/Macrosperma/scripts/` (`nematodesRNAbenchGFF.py`, `nematodeMirdeepGFF.py`, `process_debugging.py`). See Pipeline Hofstenia for the two-pass good_candidates workflow. Legacy: `sRNAbenchResultsToGFF3.py`, `mirdeepResultsToGFF3.py`.
+**Pipeline scripts:** Per-library filter (`srnabenchPerLibraryFilter.py`, `mirdeepPerLibraryFilter.py`; default `--filter-mc 10`, nematodes historically `--filter-mc 100`); unite + GFF in `{base}/Macrosperma/scripts/` (`srnabenchUniteGFF.py`, `mirdeepUniteGFF.py`, `processGoodCandidates.py`). See Pipeline Hofstenia for the two-pass good_candidates workflow. Legacy: `sRNAbenchResultsToGFF3.py`, `mirdeepResultsToGFF3.py`.
 
 Libraries: MR4, MR5, MR6, MR7, MR8 (5 libraries — run miRDeep and sRNAbench **separately per library**, do not combine FASTQs for discovery).
 
@@ -81,7 +81,7 @@ path: \<basePath\>/Macrosperma/bash/config.txt
 
 5) **mirDeep2.pl** — run **per library** in `{base}/Macrosperma/mirdeep_out/{MR4|MR5|…}/` (legacy: single combined run below). Filter each folder:
 
-   python nematodeMirdeepFilter.py -i result\_\*.csv --filter-s 10 --exclude-c 1000 --filter-mc 100
+   python mirdeepPerLibraryFilter.py -i result\_\*.csv --filter-s 10 --exclude-c 1000 --filter-mc 100
 
    **Legacy combined run** (superseded):
 
@@ -137,11 +137,11 @@ path: \<basePath\>/Macrosperma/bash/config.txt
 
 8) **sRNAbench.jar** — run **per library**. Example MR4:
 
-   java \-jar ../../sRNAtoolboxDB/exec/sRNAbench.jar input=../TrimmedFastq/SRR13072564.1\_trimmed.fastq output=../../sRNAtoolboxDB/out/Macrosperma/Macrosperma\_MR4 predict=true species=macrospermaGenomeIndexed dbPath=/sise/vaksler-group/IsanaRNA/Isana\_Tzah/Charles\_seq/sRNAtoolboxDB hairpin=animalsHairpin.fa mature=animalsMature.fa
+   java \-jar ../../sRNAtoolboxDB/exec/sRNAbench.jar input=../TrimmedFastq/SRR13072564.1\_trimmed.fastq output=../../sRNAtoolboxDB/out/Macrosperma/Macrosperma\_MR4 predict=true species=macrospermaGenomeIndexed dbPath=/mnt/new_groups/vaksler_group/Isana\_Tzah/Charles\_seq/sRNAtoolboxDB hairpin=animalsHairpin.fa mature=animalsMature.fa
 
    Repeat for MR5–MR8. Filter in each folder:
 
-   python nematodesRNAbenchFilter.py -i novel.txt -a novel451.txt --filter-mc 100
+   python srnabenchPerLibraryFilter.py -i novel.txt -a novel451.txt --filter-mc 100
 
    **Legacy combined run** (superseded):
 
@@ -168,24 +168,24 @@ path: \<basePath\>/Macrosperma/bash/config.txt
 Working directory: `{base}/Macrosperma/scripts/`
 
 \#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#  
-1. GFF with `--goodcandidates False` → 2. `process_debugging.py` → 3. GFF with `--goodcandidates True` → 4. `compare_genome_to_fasta.py --mode discovery`  
+1. GFF with `--goodcandidates False` → 2. `processGoodCandidates.py` → 3. GFF with `--goodcandidates True` → 4. `compare_genome_to_fasta.py --mode discovery`  
 \#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#
 
-python nematodesRNAbenchGFF.py -o Macrosperma\_sRNAbench.gff3 -seed ../../mirbase\_data/Seeds.txt --create-fasta Macrosperma\_sRNAbench.fasta -s Macrosperma --goodcandidates False  
-python process_debugging.py --tool sRNAbench -s Macrosperma  
-python nematodesRNAbenchGFF.py -o Macrosperma\_sRNAbench.gff3 -seed ../../mirbase\_data/Seeds.txt --create-fasta Macrosperma\_sRNAbench.fasta -s Macrosperma --goodcandidates True  
+python srnabenchUniteGFF.py -o Macrosperma\_sRNAbench.gff3 -seed ../../mirbase\_data/Seeds.txt --create-fasta Macrosperma\_sRNAbench.fasta -s Macrosperma --goodcandidates False  
+python processGoodCandidates.py --tool sRNAbench -s Macrosperma  
+python srnabenchUniteGFF.py -o Macrosperma\_sRNAbench.gff3 -seed ../../mirbase\_data/Seeds.txt --create-fasta Macrosperma\_sRNAbench.fasta -s Macrosperma --goodcandidates True  
 
-python nematodeMirdeepGFF.py -o Macrosperma\_mirdeep.gff3 --create-fasta Macrosperma\_mirdeep.fasta -seed ../../mirbase\_data/Seeds.txt -s Macrosperma --goodcandidates False  
-python process_debugging.py --tool miRDeep -s Macrosperma  
-python nematodeMirdeepGFF.py -o Macrosperma\_mirdeep.gff3 --create-fasta Macrosperma\_mirdeep.fasta -seed ../../mirbase\_data/Seeds.txt -s Macrosperma --goodcandidates True  
+python mirdeepUniteGFF.py -o Macrosperma\_mirdeep.gff3 --create-fasta Macrosperma\_mirdeep.fasta -seed ../../mirbase\_data/Seeds.txt -s Macrosperma --goodcandidates False  
+python processGoodCandidates.py --tool miRDeep -s Macrosperma  
+python mirdeepUniteGFF.py -o Macrosperma\_mirdeep.gff3 --create-fasta Macrosperma\_mirdeep.fasta -seed ../../mirbase\_data/Seeds.txt -s Macrosperma --goodcandidates True  
 
-python compare_genome_to_fasta.py --mode discovery --species Macrosperma --dir /sise/vaksler-group/IsanaRNA/Isana\_Tzah/Charles\_seq/Macrosperma/scripts --genome_fasta /sise/vaksler-group/IsanaRNA/Isana\_Tzah/Charles\_seq/Macrosperma/genome/CMACR.caenorhabditis\_macrosperma\_JU2083\_v1.scaffolds.fna --gff Macrosperma\_sRNAbench.gff3 --mature Macrosperma\_sRNAbench.fasta --star Macrosperma\_sRNAbench\_star.fasta --hairpin-table sRNAbench\_all\_remaining\_filtered.csv --output sRNAbench\_coord\_check.csv  
+python compare_genome_to_fasta.py --mode discovery --species Macrosperma --dir /mnt/new_groups/vaksler_group/Isana\_Tzah/Charles\_seq/Macrosperma/scripts --genome_fasta /mnt/new_groups/vaksler_group/Isana\_Tzah/Charles\_seq/Macrosperma/genome/CMACR.caenorhabditis\_macrosperma\_JU2083\_v1.scaffolds.fna --gff Macrosperma\_sRNAbench.gff3 --mature Macrosperma\_sRNAbench.fasta --star Macrosperma\_sRNAbench\_star.fasta --hairpin-table sRNAbench\_all\_remaining\_filtered.csv --output sRNAbench\_coord\_check.csv  
 
 paths (final outputs):  
-/sise/vaksler-group/IsanaRNA/Isana\_Tzah/Charles\_seq/Macrosperma/scripts/Macrosperma\_sRNAbench.gff3  
-/sise/vaksler-group/IsanaRNA/Isana\_Tzah/Charles\_seq/Macrosperma/scripts/Macrosperma\_mirdeep.gff3  
-/sise/vaksler-group/IsanaRNA/Isana\_Tzah/Charles\_seq/Macrosperma/scripts/sRNAbench\_all\_remaining\_filtered.csv  
-/sise/vaksler-group/IsanaRNA/Isana\_Tzah/Charles\_seq/Macrosperma/scripts/mirdeep\_all\_remaining\_filtered.csv  
+/mnt/new_groups/vaksler_group/Isana\_Tzah/Charles\_seq/Macrosperma/scripts/Macrosperma\_sRNAbench.gff3  
+/mnt/new_groups/vaksler_group/Isana\_Tzah/Charles\_seq/Macrosperma/scripts/Macrosperma\_mirdeep.gff3  
+/mnt/new_groups/vaksler_group/Isana\_Tzah/Charles\_seq/Macrosperma/scripts/sRNAbench\_all\_remaining\_filtered.csv  
+/mnt/new_groups/vaksler_group/Isana\_Tzah/Charles\_seq/Macrosperma/scripts/mirdeep\_all\_remaining\_filtered.csv  
 
 	**Filtering (nematodes: --filter-mc 100):**  
 	sRNAbench: max(5pRC,3pRC)\<100 or matureBindings\<14; all novel451 discarded; ncRNA filter; hairpin trim in filter script.  
@@ -197,30 +197,30 @@ paths (final outputs):
 The one that has higher counts will be marked as “sense” and the other as “antisense” (the precursor will be marked in the pre-miRNA GFF3 files).  
 “Overlap” miRNAs overlap another miRNA/candidate on the **same** strand.  
 Strands were found by using bedtools intersect, commands:  
-Path: /sise/vaksler-group/IsanaRNA/Isana\_Tzah/RNAcentral/miRNAs/Macrosperma/
+Path: /mnt/new_groups/vaksler_group/Isana\_Tzah/RNAcentral/miRNAs/Macrosperma/
 
 1. Preprocessing: remove ‘\\t’ from the end of lines in the gffs.  
    sed \-i 's/\\t\*$//' Macrosperma\_mirdeep\_pre\_only.gff3  
    sed \-i 's/\\t\*$//' Macrosperma\_sRNAbench\_pre\_only.gff3  
 2. Run intersections.sbatch file. The commands inside:  
    mirdeep-mirdeep bedtools intersect command:  
-   bedtools intersect \-wao \-loj \-f 0.4 \-a /sise/vaksler-group/IsanaRNA/Isana\_Tzah/Charles\_seq/Macrosperma/scripts/Macrosperma\_mirdeep\_pre\_only.gff3 \-b /sise/vaksler-group/IsanaRNA/Isana\_Tzah/Charles\_seq/Macrosperma/scripts/Macrosperma\_mirdeep\_pre\_only.gff3 \> miRdeep\_intersect.bed  
+   bedtools intersect \-wao \-loj \-f 0.4 \-a /mnt/new_groups/vaksler_group/Isana\_Tzah/Charles\_seq/Macrosperma/scripts/Macrosperma\_mirdeep\_pre\_only.gff3 \-b /mnt/new_groups/vaksler_group/Isana\_Tzah/Charles\_seq/Macrosperma/scripts/Macrosperma\_mirdeep\_pre\_only.gff3 \> miRdeep\_intersect.bed  
      
    sRNAbench-sRNAbench bedtools intersect command:  
-   bedtools intersect \-wao \-loj \-f 0.4 \-a /sise/vaksler-group/IsanaRNA/Isana\_Tzah/Charles\_seq/Macrosperma/scripts/Macrosperma\_sRNAbench\_pre\_only.gff3 \-b /sise/vaksler-group/IsanaRNA/Isana\_Tzah/Charles\_seq/Macrosperma/scripts/Macrosperma\_sRNAbench\_pre\_only.gff3 \> sRNAbench\_intersect.bed  
+   bedtools intersect \-wao \-loj \-f 0.4 \-a /mnt/new_groups/vaksler_group/Isana\_Tzah/Charles\_seq/Macrosperma/scripts/Macrosperma\_sRNAbench\_pre\_only.gff3 \-b /mnt/new_groups/vaksler_group/Isana\_Tzah/Charles\_seq/Macrosperma/scripts/Macrosperma\_sRNAbench\_pre\_only.gff3 \> sRNAbench\_intersect.bed  
 3. Script commands for marking as overlaps or sense/antisense:  
    mirdeep:  
-   python overlapSenseAnti.py \--intersections-table /sise/vaksler-group/IsanaRNA/Isana\_Tzah/RNAcentral/miRNAs/Macrosperma/miRdeep\_intersect.bed \--gff /sise/vaksler-group/IsanaRNA/Isana\_Tzah/Charles\_seq/Macrosperma/scripts/Macrosperma\_mirdeep\_pre\_only.gff3  
+   python overlapSenseAnti.py \--intersections-table /mnt/new_groups/vaksler_group/Isana\_Tzah/RNAcentral/miRNAs/Macrosperma/miRdeep\_intersect.bed \--gff /mnt/new_groups/vaksler_group/Isana\_Tzah/Charles\_seq/Macrosperma/scripts/Macrosperma\_mirdeep\_pre\_only.gff3  
      
    sRNAbench:  
-   python overlapSenseAnti.py \--intersections-table /sise/vaksler-group/IsanaRNA/Isana\_Tzah/RNAcentral/miRNAs/Macrosperma/sRNAbench\_intersect.bed \--gff /sise/vaksler-group/IsanaRNA/Isana\_Tzah/Charles\_seq/Macrosperma/scripts/Macrosperma\_sRNAbench\_pre\_only.gff3  
+   python overlapSenseAnti.py \--intersections-table /mnt/new_groups/vaksler_group/Isana\_Tzah/RNAcentral/miRNAs/Macrosperma/sRNAbench\_intersect.bed \--gff /mnt/new_groups/vaksler_group/Isana\_Tzah/Charles\_seq/Macrosperma/scripts/Macrosperma\_sRNAbench\_pre\_only.gff3  
    
 
 The output changes the pre\_only gff files in the respective folders.
 
 **Intersecting miRdeep & sRNAbench & Known Results (bedtools)**  
 Finding candidates that are part of the intersection between two tools or known miRNAs.  
-path: /sise/vaksler-group/IsanaRNA/Isana\_Tzah/RNAcentral/miRNAs/  
+path: /mnt/new_groups/vaksler_group/Isana\_Tzah/RNAcentral/miRNAs/  
 All commands documented in \<path\>/Command.txt
 
 1. When applying intersect force use “-s” for strandness, \-f for minimum overlap.  
@@ -260,20 +260,20 @@ All commands documented in \<path\>/Command.txt
    Run the “featurecounts\_\<name\>\_sep.sbatch” file in path.  
    sRNAbench:
 
-   featureCounts \-t miRNA \-g ID \-O \-s 1 \-M \-a /sise/vaksler-group/IsanaRNA/Isana\_Tzah/Charles\_seq/Macrosperma/scripts/Macrosperma\_sRNAbench.gff3 \-o ../counts\_sep/miRNA\_sRNAbench\_counts.txt ../STAR/align\_to\_genome/MR8/Macrosperma\_Aligned.out.sam ../STAR/align\_to\_genome/MR7/Macrosperma\_Aligned.out.sam ../STAR/align\_to\_genome/MR6/Macrosperma\_Aligned.out.sam ../STAR/align\_to\_genome/MR5/Macrosperma\_Aligned.out.sam ../STAR/align\_to\_genome/MR4/Macrosperma\_Aligned.out.sam  
+   featureCounts \-t miRNA \-g ID \-O \-s 1 \-M \-a /mnt/new_groups/vaksler_group/Isana\_Tzah/Charles\_seq/Macrosperma/scripts/Macrosperma\_sRNAbench.gff3 \-o ../counts\_sep/miRNA\_sRNAbench\_counts.txt ../STAR/align\_to\_genome/MR8/Macrosperma\_Aligned.out.sam ../STAR/align\_to\_genome/MR7/Macrosperma\_Aligned.out.sam ../STAR/align\_to\_genome/MR6/Macrosperma\_Aligned.out.sam ../STAR/align\_to\_genome/MR5/Macrosperma\_Aligned.out.sam ../STAR/align\_to\_genome/MR4/Macrosperma\_Aligned.out.sam  
    
 
 	mirdeep:
 
-featureCounts \-t miRNA \-g ID \-O \-s 1 \-M \-a /sise/vaksler-group/IsanaRNA/Isana\_Tzah/Charles\_seq/Macrosperma/scripts/Macrosperma\_mirdeep.gff3 \-o ../counts\_sep/miRNA\_miRdeep\_counts.txt ../STAR/align\_to\_genome/MR8/Macrosperma\_Aligned.out.sam ../STAR/align\_to\_genome/MR7/Macrosperma\_Aligned.out.sam ../STAR/align\_to\_genome/MR6/Macrosperma\_Aligned.out.sam ../STAR/align\_to\_genome/MR5/Macrosperma\_Aligned.out.sam ../STAR/align\_to\_genome/MR4/Macrosperma\_Aligned.out.sam
+featureCounts \-t miRNA \-g ID \-O \-s 1 \-M \-a /mnt/new_groups/vaksler_group/Isana\_Tzah/Charles\_seq/Macrosperma/scripts/Macrosperma\_mirdeep.gff3 \-o ../counts\_sep/miRNA\_miRdeep\_counts.txt ../STAR/align\_to\_genome/MR8/Macrosperma\_Aligned.out.sam ../STAR/align\_to\_genome/MR7/Macrosperma\_Aligned.out.sam ../STAR/align\_to\_genome/MR6/Macrosperma\_Aligned.out.sam ../STAR/align\_to\_genome/MR5/Macrosperma\_Aligned.out.sam ../STAR/align\_to\_genome/MR4/Macrosperma\_Aligned.out.sam
 
 **Flanked precursor counts (m/pre ratio):**
 
 python add_flank_to_GFF.py -s Macrosperma
 
-featureCounts \-F GFF \-t pre\_miRNA \-g ID \-O \-s 1 \-M \-a /sise/vaksler-group/IsanaRNA/Isana\_Tzah/Charles\_seq/Macrosperma/scripts/Macrosperma\_mirdeep\_flanked\_pre.gff3 \-o ../counts\_sep/miRNA\_miRdeep\_counts\_flanked.txt \<MR4–MR8 SAM files\>
+featureCounts \-F GFF \-t pre\_miRNA \-g ID \-O \-s 1 \-M \-a /mnt/new_groups/vaksler_group/Isana\_Tzah/Charles\_seq/Macrosperma/scripts/Macrosperma\_mirdeep\_flanked\_pre.gff3 \-o ../counts\_sep/miRNA\_miRdeep\_counts\_flanked.txt \<MR4–MR8 SAM files\>
 
-featureCounts \-F GFF \-t pre\_miRNA \-g ID \-O \-s 1 \-M \-a /sise/vaksler-group/IsanaRNA/Isana\_Tzah/Charles\_seq/Macrosperma/scripts/Macrosperma\_sRNAbench\_flanked\_pre.gff3 \-o ../counts\_sep/miRNA\_sRNAbench\_counts\_flanked.txt \<MR4–MR8 SAM files\>
+featureCounts \-F GFF \-t pre\_miRNA \-g ID \-O \-s 1 \-M \-a /mnt/new_groups/vaksler_group/Isana\_Tzah/Charles\_seq/Macrosperma/scripts/Macrosperma\_sRNAbench\_flanked\_pre.gff3 \-o ../counts\_sep/miRNA\_sRNAbench\_counts\_flanked.txt \<MR4–MR8 SAM files\>
 
 **BLAST** 
 
@@ -282,15 +282,15 @@ featureCounts \-F GFF \-t pre\_miRNA \-g ID \-O \-s 1 \-M \-a /sise/vaksler-grou
       makeblastdb \-in ../BLAST\_DB/Caenorhabditis\_pre\_miRNA.fasta \-title miRNADB \-dbtype nucl \-out ../BLAST\_DB/Caenorhabditis\_pre\_miRNAsDB  
 2. Blast mature results from miRdeep and sRNAbench. Commands:  
    blastn \-query ../../Charles\_seq/Macrosperma/scripts/Macrosperma\_mirdeep.fasta \-db ../BLAST\_DB/Caenorhabditis\_pre\_miRNAsDB \-out ../queries/Macrosperma/miRdeep\_blastn\_compact \-outfmt 6 \-evalue 10 \-task blastn-short  
-   blastn \-query /sise/vaksler-group/IsanaRNA/Isana\_Tzah/Charles\_seq/Macrosperma/scripts/Macrosperma\_sRNAbench.fasta \-db ../BLAST\_DB/Caenorhabditis\_pre\_miRNAsDB \-out ../queries/Macrosperma/sRNAbench\_blastn\_compact \-outfmt 6 \-evalue 10 \-task blastn-short  
-   path: /sise/vaksler-group/IsanaRNA/Isana\_Tzah/RNAcentral/bash/  
+   blastn \-query /mnt/new_groups/vaksler_group/Isana\_Tzah/Charles\_seq/Macrosperma/scripts/Macrosperma\_sRNAbench.fasta \-db ../BLAST\_DB/Caenorhabditis\_pre\_miRNAsDB \-out ../queries/Macrosperma/sRNAbench\_blastn\_compact \-outfmt 6 \-evalue 10 \-task blastn-short  
+   path: /mnt/new_groups/vaksler_group/Isana\_Tzah/RNAcentral/bash/  
    
 
 **Generate Intersections Table**
 
-1. Path: /sise/vaksler-group/IsanaRNA/Isana\_Tzah/RNAcentral/miRNAs/Macrosperma/  
+1. Path: /mnt/new_groups/vaksler_group/Isana\_Tzah/RNAcentral/miRNAs/Macrosperma/  
 2. Command for script:  
-   python ‏‏‏‏intersectionsTable.py \-s macrosperma \--mirdeep-inter-table /sise/vaksler-group/IsanaRNA/Isana\_Tzah/RNAcentral/miRNAs/Macrosperma/miRdeep\_sRNAbench\_intersect.bed \--sRNAbench-inter-table /sise/vaksler-group/IsanaRNA/Isana\_Tzah/RNAcentral/miRNAs/Macrosperma/sRNAbench\_miRdeep\_intersect.bed \--blast-mirdeep /sise/vaksler-group/IsanaRNA/Isana\_Tzah/RNAcentral/queries/Macrosperma/miRdeep\_blastn\_compact \--blast-sRNAbench /sise/vaksler-group/IsanaRNA/Isana\_Tzah/RNAcentral/queries/Macrosperma/sRNAbench\_blastn\_compact \--fc-mirdeep /sise/vaksler-group/IsanaRNA/Isana\_Tzah/Charles\_seq/Macrosperma/counts\_sep/miRNA\_miRdeep\_counts.txt \--fc-pre-mirdeep /sise/vaksler-group/IsanaRNA/Isana\_Tzah/Charles\_seq/Macrosperma/counts\_sep/miRNA\_miRdeep\_counts\_flanked.txt \--fc-sRNAbench /sise/vaksler-group/IsanaRNA/Isana\_Tzah/Charles\_seq/Macrosperma/counts\_sep/miRNA\_sRNAbench\_counts.txt \--fc-pre-sRNAbench /sise/vaksler-group/IsanaRNA/Isana\_Tzah/Charles\_seq/Macrosperma/counts\_sep/miRNA\_sRNAbench\_counts\_flanked.txt \-rm /sise/vaksler-group/IsanaRNA/Isana\_Tzah/Charles\_seq/Macrosperma/scripts/mirdeep\_all\_remaining\_filtered.csv \-rs /sise/vaksler-group/IsanaRNA/Isana\_Tzah/Charles\_seq/Macrosperma/scripts/sRNAbench\_all\_remaining\_filtered.csv \-l MR8,MR7,MR6,MR5,MR4 \--sum-fc-thres 100  
+   python ‏‏‏‏intersectionsTable.py \-s macrosperma \--mirdeep-inter-table /mnt/new_groups/vaksler_group/Isana\_Tzah/RNAcentral/miRNAs/Macrosperma/miRdeep\_sRNAbench\_intersect.bed \--sRNAbench-inter-table /mnt/new_groups/vaksler_group/Isana\_Tzah/RNAcentral/miRNAs/Macrosperma/sRNAbench\_miRdeep\_intersect.bed \--blast-mirdeep /mnt/new_groups/vaksler_group/Isana\_Tzah/RNAcentral/queries/Macrosperma/miRdeep\_blastn\_compact \--blast-sRNAbench /mnt/new_groups/vaksler_group/Isana\_Tzah/RNAcentral/queries/Macrosperma/sRNAbench\_blastn\_compact \--fc-mirdeep /mnt/new_groups/vaksler_group/Isana\_Tzah/Charles\_seq/Macrosperma/counts\_sep/miRNA\_miRdeep\_counts.txt \--fc-pre-mirdeep /mnt/new_groups/vaksler_group/Isana\_Tzah/Charles\_seq/Macrosperma/counts\_sep/miRNA\_miRdeep\_counts\_flanked.txt \--fc-sRNAbench /mnt/new_groups/vaksler_group/Isana\_Tzah/Charles\_seq/Macrosperma/counts\_sep/miRNA\_sRNAbench\_counts.txt \--fc-pre-sRNAbench /mnt/new_groups/vaksler_group/Isana\_Tzah/Charles\_seq/Macrosperma/counts\_sep/miRNA\_sRNAbench\_counts\_flanked.txt \-rm /mnt/new_groups/vaksler_group/Isana\_Tzah/Charles\_seq/Macrosperma/scripts/mirdeep\_all\_remaining\_filtered.csv \-rs /mnt/new_groups/vaksler_group/Isana\_Tzah/Charles\_seq/Macrosperma/scripts/sRNAbench\_all\_remaining\_filtered.csv \-l MR8,MR7,MR6,MR5,MR4 \--sum-fc-thres 100  
    Output:  
    intersections\_table\_script.xlsx  
    Merges miRDeep results with blast, featurecounts, sRNAbench  
@@ -298,25 +298,25 @@ featureCounts \-F GFF \-t pre\_miRNA \-g ID \-O \-s 1 \-M \-a /sise/vaksler-grou
 
 **Generate all candidates fasta**
 
-path: /sise/vaksler-group/IsanaRNA/Isana\_Tzah/RNAcentral/miRNAs/Macrosperma/
+path: /mnt/new_groups/vaksler_group/Isana\_Tzah/RNAcentral/miRNAs/Macrosperma/
 
 command:
 
-python allCandidatesFasta.py \--all /sise/vaksler-group/IsanaRNA/Isana\_Tzah/RNAcentral/miRNAs/Macrosperma/intersections\_table\_macrosperma.xlsx \-s Macrosperma
+python allCandidatesFasta.py \--all /mnt/new_groups/vaksler_group/Isana\_Tzah/RNAcentral/miRNAs/Macrosperma/intersections\_table\_macrosperma.xlsx \-s Macrosperma
 
 **Feature Engineering with Ziv’s code**
 
-path: /sise/vaksler-group/IsanaRNA/Isana\_Tzah/Charles\_seq/Ziv\_Features
+path: /mnt/new_groups/vaksler_group/Isana\_Tzah/Charles\_seq/Ziv\_Features
 
 command:
 
-python Ziv\_feature\_SOS.py \--precursors /sise/vaksler-group/IsanaRNA/Isana\_Tzah/RNAcentral/miRNAs/Macrosperma/all\_candidates\_hairpin.fasta \--mature /sise/vaksler-group/IsanaRNA/Isana\_Tzah/RNAcentral/miRNAs/Macrosperma/all\_candidates\_mature.fasta \--star /sise/vaksler-group/IsanaRNA/Isana\_Tzah/RNAcentral/miRNAs/Macrosperma/all\_candidates\_star.fasta \--species Macrosperma \--all-remaining /sise/vaksler-group/IsanaRNA/Isana\_Tzah/RNAcentral/miRNAs/Macrosperma/intersections\_table\_macrosperma.xlsx
+python Ziv\_feature\_SOS.py \--precursors /mnt/new_groups/vaksler_group/Isana\_Tzah/RNAcentral/miRNAs/Macrosperma/all\_candidates\_hairpin.fasta \--mature /mnt/new_groups/vaksler_group/Isana\_Tzah/RNAcentral/miRNAs/Macrosperma/all\_candidates\_mature.fasta \--star /mnt/new_groups/vaksler_group/Isana\_Tzah/RNAcentral/miRNAs/Macrosperma/all\_candidates\_star.fasta \--species Macrosperma \--all-remaining /mnt/new_groups/vaksler_group/Isana\_Tzah/RNAcentral/miRNAs/Macrosperma/intersections\_table\_macrosperma.xlsx
 
 **Statistical Analysis**
 
-Path: /sise/vaksler-group/IsanaRNA/Isana\_Tzah/RNAcentral/miRNAs/Macrosperma/
+Path: /mnt/new_groups/vaksler_group/Isana\_Tzah/RNAcentral/miRNAs/Macrosperma/
 
 command:
 
-python statistics.py \--all /sise/vaksler-group/IsanaRNA/Isana\_Tzah/Charles\_seq/Ziv\_Features/all\_remaining\_after\_ziv\_Macrosperma.xlsx \-s Macrosperma
+python statistics.py \--all /mnt/new_groups/vaksler_group/Isana\_Tzah/Charles\_seq/Ziv\_Features/all\_remaining\_after\_ziv\_Macrosperma.xlsx \-s Macrosperma
 

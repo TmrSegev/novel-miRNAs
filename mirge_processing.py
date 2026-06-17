@@ -4,6 +4,8 @@ import re
 import argparse
 from pathlib import Path
 
+from pipeline_config import SPECIES_CONFIG, get_species_config
+
 # --- Argument Parsing ---
 # Set up a parser to read command-line arguments
 parser = argparse.ArgumentParser(
@@ -12,7 +14,9 @@ parser = argparse.ArgumentParser(
 
 # Add a required positional argument for the base directory path
 parser.add_argument("--dir", help="")
-parser.add_argument("--species", help="")
+parser.add_argument("--species", required=True, help="Species name")
+parser.add_argument("--variant", help='Genome variant, e.g. "new_genome"')
+parser.add_argument("--base-path", dest="base_path", help="Charles_seq base path")
 # Add optional flag to toggle *_m18 naming
 parser.add_argument("--m18", action="store_true", help="If set, use *_m18 paths and filenames")
 
@@ -21,12 +25,16 @@ args = parser.parse_args()
 m18_suffix = "_m18" if args.m18 else ""
 dir = args.dir
 SPECIES = args.species
+cfg = None
+if SPECIES in SPECIES_CONFIG:
+    cfg = get_species_config(SPECIES, args.base_path, variant=args.variant)
+elif SPECIES == "Hofstenia_newGenome":
+    cfg = get_species_config("Hofstenia", args.base_path, variant="new_genome")
 
-# Configure the input Excel file path and sheet name
+sheet_name = cfg["mirge_input_sheet"] if cfg else "(D) Structural Features"
+
 input_excel = Path(
     f"/mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Ziv_Features/all_remaining_after_ziv_{SPECIES}.xlsx")
-# Note: Corrected a potential typo in the sheet name from "(A) Unfiltered)"
-sheet_name = "(A) Unfiltered" if SPECIES in ["Hofstenia", "Hofstenia_newGenome"] else "(D) Structural Features"
 
 print(f"Loading maturity info from: {input_excel} | Sheet: {sheet_name}")
 # Load the maturity data from the specified sheet in the Excel file

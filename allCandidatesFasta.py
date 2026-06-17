@@ -1,6 +1,8 @@
 import pandas as pd
 import sys
 
+from pipeline_config import SPECIES_CONFIG, get_species_config
+
 
 def create_all_candidatess_fasta(df):
     """
@@ -139,12 +141,23 @@ if __name__ == '__main__':
     output_explicitly_provided = False
 
     # Parse command-line arguments
+    variant = None
+    base_path = None
+
     i = 1
     while i < len(sys.argv):
         arg = sys.argv[i]
         if arg == '--new-genome':
-            new_genome = True
+            variant = "new_genome"
             i += 1
+            continue
+        if arg == '--variant':
+            variant = sys.argv[i + 1]
+            i += 2
+            continue
+        if arg == '--base-path':
+            base_path = sys.argv[i + 1]
+            i += 2
             continue
         if arg == '-s':
             species = sys.argv[i + 1]
@@ -168,9 +181,13 @@ if __name__ == '__main__':
             sys.exit()
         i += 2
 
-    # Override output path if --new-genome flag is set and --output was not explicitly provided
-    if new_genome and not output_explicitly_provided:
-        output = "/mnt/new_groups/vaksler_group/Isana_Tzah/RNAcentral/miRNAs/Hofstenia_newGenome/"
+    if not output_explicitly_provided and species in SPECIES_CONFIG:
+        sp_key = "Hofstenia" if species == "Hofstenia_newGenome" else species
+        v = variant or ("new_genome" if species == "Hofstenia_newGenome" else None)
+        cfg = get_species_config(sp_key, base_path, variant=v)
+        output = cfg["output_dir"]
+        if not output.endswith("/"):
+            output += "/"
 
     if not all_path:
         print("Error: Missing required argument --all <path>")

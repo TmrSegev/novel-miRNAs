@@ -3,6 +3,8 @@ from pathlib import Path
 import os
 import argparse
 
+from pipeline_config import SPECIES_CONFIG, get_species_config
+
 def locate_subseq(full_seq, sub_seq, strand, start_offset, end_offset): ## pass end_offset
     idx = full_seq.find(sub_seq)
     if idx == -1:
@@ -82,13 +84,16 @@ parser.add_argument(
 # Parse the arguments provided by the user
 args = parser.parse_args()
 SPECIES = args.species
+cfg = None
+if SPECIES in SPECIES_CONFIG:
+    cfg = get_species_config(SPECIES)
+elif SPECIES == "Hofstenia_newGenome":
+    cfg = get_species_config("Hofstenia", variant="new_genome")
 
-# Input file configuration
 input_excel = Path(f"/mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Ziv_Features/all_remaining_after_ziv_{SPECIES}.xlsx")
-sheet_name = "(A) Unfiltered" if SPECIES in ["Hofstenia", "Hofstenia_newGenome"] else "(D) Structural Features"
+sheet_name = cfg["mirge_input_sheet"] if cfg else "(D) Structural Features"
 
-# Output path
-if SPECIES in ["Hofstenia", "Hofstenia_newGenome"]:
+if cfg and cfg.get("ziv_profile") == "unfiltered_only":
     output_gff = Path(f"/mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/{SPECIES}/miRge_after_Ziv/miRNA_candidates.gff3")
 else:
     output_gff = Path(f"/mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/{SPECIES}/miRge/miRNA_candidates.gff3")
