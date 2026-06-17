@@ -32,6 +32,8 @@ blast_mirdeep_path = None
 blast_sRNAbench_path = None
 featurecounts_mirdeep_path = None
 featurecounts_sRNAbench_path = None
+featurecounts_pre_mirdeep_path = None
+featurecounts_pre_sRNAbench_path = None
 featurecounts_mirbase_path = None
 remaining1_mirdeep_path = None
 remaining2_mirdeep_path = None
@@ -55,6 +57,10 @@ for i in range(1, len(sys.argv), 2):
         featurecounts_mirdeep_path = sys.argv[i + 1]
     elif arg == '--fc-sRNAbench':
         featurecounts_sRNAbench_path = sys.argv[i + 1]
+    elif arg == '--fc-pre-mirdeep':
+        featurecounts_pre_mirdeep_path = sys.argv[i + 1]
+    elif arg == '--fc-pre-sRNAbench':
+        featurecounts_pre_sRNAbench_path = sys.argv[i + 1]
     elif arg == '--fc_mirbase':
         featurecounts_mirbase_path = sys.argv[i + 1]
     elif arg == '-r1m':
@@ -92,6 +98,8 @@ for i in range(1, len(sys.argv), 2):
               f' --blast-sRNAbench <path>: path to sRNAbench blast results file.\n'
               f' --fc-mirdeep <path>: path to mirdeep featurecounts results file (full counts, not the summary file).\n'
               f' --fc-sRNAbench <path>: path to sRNAbench featurecounts results file (full counts, not the summary file).\n'
+              f' --fc-pre-mirdeep <path>: path to flanked pre_miRNA mirdeep featurecounts file.\n'
+              f' --fc-pre-sRNAbench <path>: path to flanked pre_miRNA sRNAbench featurecounts file.\n'
               f' -r1m <path>: path to the first remaining mirdeep candidates file, remaining_file_1.csv.\n'
               f' -r2m <path>: path to the second remaining mirdeep candidates file, remaining_file_2.csv.\n'
               f' -rs <path>: path to remaining sRNAbench candidates file, sRNAbench_remaining.csv.\n'
@@ -302,9 +310,27 @@ star_counts['sum_FC_s'] = star_counts[libraries_star].sum(axis=1)
 star_counts['sum_FC_s > 100?'] = np.where(star_counts['sum_FC_s'] > 100, 1, 0)
 star_counts = star_counts.drop('mature/star', axis=1)
 
-# Merge mirdeep & blast results and featurecounts results
-mirdeep_blast_m_intersections_table = pd.merge(mirdeep_blast_intersections_table, mature_counts, on='index', how='left')
-mirdeep_blast_fc_intersections_table = pd.merge(mirdeep_blast_m_intersections_table, star_counts, on='index', how='left')
+use_flanked_pre = featurecounts_pre_mirdeep_path and featurecounts_pre_sRNAbench_path
+if use_flanked_pre:
+    featurecounts_pre_mirdeep = pd.read_csv(
+        featurecounts_pre_mirdeep_path, sep='\t',
+        names=['Geneid', 'Chr', 'Start', 'End', 'Strand', 'Length'] + libraries
+    )
+    featurecounts_pre_mirdeep = featurecounts_pre_mirdeep.drop(['Chr', 'Start', 'End', 'Strand', 'Length'], axis=1)
+    featurecounts_pre_mirdeep = featurecounts_pre_mirdeep.iloc[2:]
+    featurecounts_pre_mirdeep["index"] = ["index={}".format(i) for i in range(len(featurecounts_pre_mirdeep))]
+    libraries_pre = [library + '_pre' for library in libraries]
+    rename_dict_pre = dict(zip(libraries, libraries_pre))
+    precursor_counts = featurecounts_pre_mirdeep.rename(columns=rename_dict_pre)
+    precursor_counts = precursor_counts.astype({k: 'int64' for k in libraries_pre})
+    precursor_counts['sum_FC_pre'] = precursor_counts[libraries_pre].sum(axis=1)
+    mirdeep_blast_m_intersections_table = pd.merge(mirdeep_blast_intersections_table, mature_counts, on='index', how='left')
+    mirdeep_blast_ms_intersections_table = pd.merge(mirdeep_blast_m_intersections_table, star_counts, on='index', how='left')
+    mirdeep_blast_fc_intersections_table = pd.merge(mirdeep_blast_ms_intersections_table, precursor_counts, on='index', how='left')
+else:
+    mirdeep_blast_m_intersections_table = pd.merge(mirdeep_blast_intersections_table, mature_counts, on='index', how='left')
+    mirdeep_blast_fc_intersections_table = pd.merge(mirdeep_blast_m_intersections_table, star_counts, on='index', how='left')
+
 mirdeep_blast_fc_intersections_table = mirdeep_blast_fc_intersections_table.drop('index', axis=1)
 
 # filter by sum_fc_m < threshold
@@ -331,21 +357,49 @@ mirdeep_blast_fc_intersections_table['Diff Sum_FC_s / RC_s sRNAbench'] = mirdeep
 # Normalize featurecounts to reads per million
 mature_rpm = [column + "_rpm" for column in libraries_mature]
 star_rpm = [column + "_rpm" for column in libraries_star]
+if use_flanked_pre:
+    pre_rpm = [column + "_rpm" for column in libraries_pre]
 
 for i in range(0, len(libraries)):
     library_m = libraries_mature[i]
     library_s = libraries_star[i]
-    total = mirdeep_blast_fc_intersections_table[[library_m, library_s]].sum().sum()
-    mirdeep_blast_fc_intersections_table[[mature_rpm[i], star_rpm[i]]] = round((mirdeep_blast_fc_intersections_table[[library_m, library_s]] / total) * 1000000, 0)
+    if use_flanked_pre:
+        library_pre = libraries_pre[i]
+        total = mirdeep_blast_fc_intersections_table[[library_m, library_s, library_pre]].sum().sum()
+        mirdeep_blast_fc_intersections_table[[mature_rpm[i], star_rpm[i], pre_rpm[i]]] = round(
+            (mirdeep_blast_fc_intersections_table[[library_m, library_s, library_pre]] / total) * 1000000, 0
+        )
+    else:
+        total = mirdeep_blast_fc_intersections_table[[library_m, library_s]].sum().sum()
+        mirdeep_blast_fc_intersections_table[[mature_rpm[i], star_rpm[i]]] = round(
+            (mirdeep_blast_fc_intersections_table[[library_m, library_s]] / total) * 1000000, 0
+        )
 
-mirdeep_blast_fc_intersections_table['sum_FC_m_rpm'] = np.zeros(len(mirdeep_blast_fc_intersections_table))
-for library in mature_rpm:
-    mirdeep_blast_fc_intersections_table['sum_FC_m_rpm'] += mirdeep_blast_fc_intersections_table[library]
-mirdeep_blast_fc_intersections_table['sum_FC_s_rpm'] = np.zeros(len(mirdeep_blast_fc_intersections_table))
-for library in star_rpm:
-    mirdeep_blast_fc_intersections_table['sum_FC_s_rpm'] += mirdeep_blast_fc_intersections_table[library]
-mirdeep_blast_fc_intersections_table['mean_m_rpm'] = round(mirdeep_blast_fc_intersections_table[mature_rpm].mean(axis=1), 2)
-mirdeep_blast_fc_intersections_table['mean_s_rpm'] = round(mirdeep_blast_fc_intersections_table[star_rpm].mean(axis=1), 2)
+if use_flanked_pre:
+    mirdeep_blast_fc_intersections_table['sum_FC_m_rpm'] = mirdeep_blast_fc_intersections_table[mature_rpm].sum(axis=1)
+    mirdeep_blast_fc_intersections_table['sum_FC_s_rpm'] = mirdeep_blast_fc_intersections_table[star_rpm].sum(axis=1)
+    mirdeep_blast_fc_intersections_table['sum_FC_pre_rpm'] = mirdeep_blast_fc_intersections_table[pre_rpm].sum(axis=1)
+    mirdeep_blast_fc_intersections_table['mean_m_rpm'] = round(mirdeep_blast_fc_intersections_table[mature_rpm].mean(axis=1), 2)
+    mirdeep_blast_fc_intersections_table['mean_s_rpm'] = round(mirdeep_blast_fc_intersections_table[star_rpm].mean(axis=1), 2)
+    mirdeep_blast_fc_intersections_table['mean_pre_rpm'] = round(mirdeep_blast_fc_intersections_table[pre_rpm].mean(axis=1), 2)
+    for library in libraries:
+        mature_col = f'{library}_m'
+        pre_col = f'{library}_pre'
+        ratio_col = f'{library}_m/pre_ratio'
+        mirdeep_blast_fc_intersections_table[ratio_col] = np.divide(
+            mirdeep_blast_fc_intersections_table[mature_col],
+            mirdeep_blast_fc_intersections_table[pre_col]
+        ).fillna(0)
+    mirdeep_blast_fc_intersections_table.replace([np.inf, -np.inf], 0, inplace=True)
+else:
+    mirdeep_blast_fc_intersections_table['sum_FC_m_rpm'] = np.zeros(len(mirdeep_blast_fc_intersections_table))
+    for library in mature_rpm:
+        mirdeep_blast_fc_intersections_table['sum_FC_m_rpm'] += mirdeep_blast_fc_intersections_table[library]
+    mirdeep_blast_fc_intersections_table['sum_FC_s_rpm'] = np.zeros(len(mirdeep_blast_fc_intersections_table))
+    for library in star_rpm:
+        mirdeep_blast_fc_intersections_table['sum_FC_s_rpm'] += mirdeep_blast_fc_intersections_table[library]
+    mirdeep_blast_fc_intersections_table['mean_m_rpm'] = round(mirdeep_blast_fc_intersections_table[mature_rpm].mean(axis=1), 2)
+    mirdeep_blast_fc_intersections_table['mean_s_rpm'] = round(mirdeep_blast_fc_intersections_table[star_rpm].mean(axis=1), 2)
 
 # ---sRNAbench:
 featurecounts_sRNAbench = pd.read_csv(featurecounts_sRNAbench_path, sep='\t', names=['Geneid', 'Chr', 'Start', 'End', 'Strand', 'Length'] + libraries)
@@ -391,9 +445,24 @@ star_counts['sum_FC_s'] = star_counts[libraries_star].sum(axis=1)
 star_counts['sum_FC_s > 100?'] = np.where(star_counts['sum_FC_s'] > 100, 1, 0)
 star_counts = star_counts.drop(['mature/star', 'mature'], axis=1)
 
-# Merge sRNAbench & blast results and featurecounts results
-sRNAbench_blast_m_intersections_table = pd.merge(sRNAbench_blast_intersections_table, mature_counts, on='index', how='left')
-sRNAbench_blast_fc_intersections_table = pd.merge(sRNAbench_blast_m_intersections_table, star_counts, on='index', how='left')
+if use_flanked_pre:
+    featurecounts_pre_sRNAbench = pd.read_csv(
+        featurecounts_pre_sRNAbench_path, sep='\t',
+        names=['Geneid', 'Chr', 'Start', 'End', 'Strand', 'Length'] + libraries
+    )
+    featurecounts_pre_sRNAbench = featurecounts_pre_sRNAbench.drop(['Chr', 'Start', 'End', 'Strand', 'Length'], axis=1)
+    featurecounts_pre_sRNAbench = featurecounts_pre_sRNAbench.iloc[2:]
+    featurecounts_pre_sRNAbench["index"] = ["index={}".format(i) for i in range(len(featurecounts_pre_sRNAbench))]
+    precursor_counts_srna = featurecounts_pre_sRNAbench.rename(columns=rename_dict_pre)
+    precursor_counts_srna = precursor_counts_srna.astype({k: 'int64' for k in libraries_pre})
+    precursor_counts_srna['sum_FC_pre'] = precursor_counts_srna[libraries_pre].sum(axis=1)
+    sRNAbench_blast_m_intersections_table = pd.merge(sRNAbench_blast_intersections_table, mature_counts, on='index', how='left')
+    sRNAbench_blast_ms_intersections_table = pd.merge(sRNAbench_blast_m_intersections_table, star_counts, on='index', how='left')
+    sRNAbench_blast_fc_intersections_table = pd.merge(sRNAbench_blast_ms_intersections_table, precursor_counts_srna, on='index', how='left')
+else:
+    sRNAbench_blast_m_intersections_table = pd.merge(sRNAbench_blast_intersections_table, mature_counts, on='index', how='left')
+    sRNAbench_blast_fc_intersections_table = pd.merge(sRNAbench_blast_m_intersections_table, star_counts, on='index', how='left')
+
 sRNAbench_blast_fc_intersections_table = sRNAbench_blast_fc_intersections_table.drop('index', axis=1)
 
 # filter by sum_fc_m < threshold
@@ -421,17 +490,43 @@ sRNAbench_blast_fc_intersections_table['Diff Sum_FC_s / RC_s sRNAbench'] = sRNAb
 for i in range(0, len(libraries)):
     library_m = libraries_mature[i]
     library_s = libraries_star[i]
-    total = sRNAbench_blast_fc_intersections_table[[library_m, library_s]].sum().sum()
-    sRNAbench_blast_fc_intersections_table[[mature_rpm[i], star_rpm[i]]] = round((sRNAbench_blast_fc_intersections_table[[library_m, library_s]] / total) * 1000000, 0)
+    if use_flanked_pre:
+        library_pre = libraries_pre[i]
+        total = sRNAbench_blast_fc_intersections_table[[library_m, library_s, library_pre]].sum().sum()
+        sRNAbench_blast_fc_intersections_table[[mature_rpm[i], star_rpm[i], pre_rpm[i]]] = round(
+            (sRNAbench_blast_fc_intersections_table[[library_m, library_s, library_pre]] / total) * 1000000, 0
+        )
+    else:
+        total = sRNAbench_blast_fc_intersections_table[[library_m, library_s]].sum().sum()
+        sRNAbench_blast_fc_intersections_table[[mature_rpm[i], star_rpm[i]]] = round(
+            (sRNAbench_blast_fc_intersections_table[[library_m, library_s]] / total) * 1000000, 0
+        )
 
-sRNAbench_blast_fc_intersections_table['sum_FC_m_rpm'] = np.zeros(len(sRNAbench_blast_fc_intersections_table))
-for library in mature_rpm:
-    sRNAbench_blast_fc_intersections_table['sum_FC_m_rpm'] += sRNAbench_blast_fc_intersections_table[library]
-sRNAbench_blast_fc_intersections_table['sum_FC_s_rpm'] = np.zeros(len(sRNAbench_blast_fc_intersections_table))
-for library in star_rpm:
-    sRNAbench_blast_fc_intersections_table['sum_FC_s_rpm'] += sRNAbench_blast_fc_intersections_table[library]
-sRNAbench_blast_fc_intersections_table['mean_m_rpm'] = round(sRNAbench_blast_fc_intersections_table[mature_rpm].mean(axis=1), 2)
-sRNAbench_blast_fc_intersections_table['mean_s_rpm'] = round(sRNAbench_blast_fc_intersections_table[star_rpm].mean(axis=1), 2)
+if use_flanked_pre:
+    sRNAbench_blast_fc_intersections_table['sum_FC_m_rpm'] = sRNAbench_blast_fc_intersections_table[mature_rpm].sum(axis=1)
+    sRNAbench_blast_fc_intersections_table['sum_FC_s_rpm'] = sRNAbench_blast_fc_intersections_table[star_rpm].sum(axis=1)
+    sRNAbench_blast_fc_intersections_table['sum_FC_pre_rpm'] = sRNAbench_blast_fc_intersections_table[pre_rpm].sum(axis=1)
+    sRNAbench_blast_fc_intersections_table['mean_m_rpm'] = round(sRNAbench_blast_fc_intersections_table[mature_rpm].mean(axis=1), 2)
+    sRNAbench_blast_fc_intersections_table['mean_s_rpm'] = round(sRNAbench_blast_fc_intersections_table[star_rpm].mean(axis=1), 2)
+    sRNAbench_blast_fc_intersections_table['mean_pre_rpm'] = round(sRNAbench_blast_fc_intersections_table[pre_rpm].mean(axis=1), 2)
+    for library in libraries:
+        mature_col = f'{library}_m'
+        pre_col = f'{library}_pre'
+        ratio_col = f'{library}_m/pre_ratio'
+        sRNAbench_blast_fc_intersections_table[ratio_col] = np.divide(
+            sRNAbench_blast_fc_intersections_table[mature_col],
+            sRNAbench_blast_fc_intersections_table[pre_col]
+        ).fillna(0)
+    sRNAbench_blast_fc_intersections_table.replace([np.inf, -np.inf], 0, inplace=True)
+else:
+    sRNAbench_blast_fc_intersections_table['sum_FC_m_rpm'] = np.zeros(len(sRNAbench_blast_fc_intersections_table))
+    for library in mature_rpm:
+        sRNAbench_blast_fc_intersections_table['sum_FC_m_rpm'] += sRNAbench_blast_fc_intersections_table[library]
+    sRNAbench_blast_fc_intersections_table['sum_FC_s_rpm'] = np.zeros(len(sRNAbench_blast_fc_intersections_table))
+    for library in star_rpm:
+        sRNAbench_blast_fc_intersections_table['sum_FC_s_rpm'] += sRNAbench_blast_fc_intersections_table[library]
+    sRNAbench_blast_fc_intersections_table['mean_m_rpm'] = round(sRNAbench_blast_fc_intersections_table[mature_rpm].mean(axis=1), 2)
+    sRNAbench_blast_fc_intersections_table['mean_s_rpm'] = round(sRNAbench_blast_fc_intersections_table[star_rpm].mean(axis=1), 2)
 
 if (species == 'Elegans') or (species == 'elegans'):
     # -----miRBase:

@@ -5,6 +5,8 @@ import sys
 import scipy.stats as stats
 from scipy.stats import ttest_ind
 
+from pipeline_config import build_description
+
 # ---Creating a families by type pivot table
 
 
@@ -320,14 +322,12 @@ if __name__ == '__main__':
     xls = pd.ExcelFile(all_path)
     sheet_dict = {sheet_name: xls.parse(sheet_name) for sheet_name in xls.sheet_names}
     # all = pd.read_excel(all_path, sheet_name="(D) Structural Features")
-    if species == "Hofstenia":
-        all = sheet_dict["(A) Unfiltered)"]
+    if species in ("Hofstenia", "Hofstenia_newGenome"):
+        all = sheet_dict["(A) Unfiltered"]
     else:
         all = sheet_dict["(D) Structural Features"]
-    if species == "elegans" or species == "Elegans":
-        all['Description'] = all[['Description_mirdeep', 'Description_sRNAbench', 'Description_mirbase']].astype(str).agg('. '.join, axis=1)
-    else:
-        all['Description'] = all[['Description_mirdeep', 'Description_sRNAbench']].astype(str).agg('. '.join, axis=1)
+    include_mirbase = species in ("elegans", "Elegans")
+    all["Description"] = build_description(all, include_mirbase=include_mirbase)
     families_by_type(all.copy())
     unknown_families_by_type(all.copy())
     boxplot_by_type(all.copy(), "all")

@@ -1,97 +1,123 @@
-import gffutils
-from Bio import SeqIO
-import os
-import pandas as pd
 import argparse
+import os
 
-# --- Argument Parsing ---
-# Set up a parser to read command-line arguments
-parser = argparse.ArgumentParser(
-    description=""
-)
-# Add a required positional argument for the base directory path
-parser.add_argument("--species", help="")
-parser.add_argument("--dir", help="")
-parser.add_argument("--genome_fasta", help="")
-parser.add_argument("--gff", help="")
-parser.add_argument("--premir", help="")
-parser.add_argument("--mature_star", help="")
-parser.add_argument("--output", help="")
-parser.add_argument("--db", help="")
-# Parse the arguments provided by the user
-args = parser.parse_args()
-SPECIES = args.species
-dir = args.dir
-genome_fasta = args.genome_fasta
-gff_file = args.gff
-pre_miRNA_fasta = args.premir
-mature_star = args.mature_star
-output = args.output
-db = args.db
+import gffutils
+import pandas as pd
+from Bio import SeqIO
 
-# File paths
-# oscar_dir = "/mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Hofstenia/miRge/"
-# genome_fasta = "/mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Hofstenia/Genome/refs/Hmia_ref/Hmia.030120.fasta"
-# gff_file = oscar_dir + "miRNA_250203_reformatted.gff3"
-# pre_miRNA_fasta = oscar_dir + "pre_miR_1050_no_pre_in_seqid.fa"
-# mature_star_fasta = oscar_dir + "combined_mature_star_1050.fa"
-# output_file = oscar_dir + "genome_to_fasta_comparison_new.csv"
-# db_file = oscar_dir + "miRNA_250203_reformatted.db"
 
-gff_file = os.path.join(dir, gff_file)
-pre_miRNA_fasta = os.path.join(dir, pre_miRNA_fasta)
-mature_star_fasta = os.path.join(dir, mature_star)
-output_file = os.path.join(dir, output)
-db_file = os.path.join(dir, output)
-
-# Load genome sequence
-genome = SeqIO.to_dict(SeqIO.parse(genome_fasta, "fasta"))
-
-# Load reference sequences
 def load_reference_sequences(fasta_file):
     return {record.id: str(record.seq) for record in SeqIO.parse(fasta_file, "fasta")}
 
-pre_miRNA_ref = load_reference_sequences(pre_miRNA_fasta)
-mature_star_ref = load_reference_sequences(mature_star_fasta)
 
-# Initialize result list
-results = []
+def extract_sequence(genome, seq_id, start, end, strand):
+    sequence = genome[seq_id].seq[start - 1 : end]
+    return str(sequence.reverse_complement()) if strand == "-" else str(sequence)
 
-# Function to extract sequence from genome
-def extract_sequence(seq_id, start, end, strand):
-    sequence = genome[seq_id].seq[start-1:end]
-    return str(sequence.reverse_complement()) if strand == '-' else str(sequence)
 
-# Compare sequences and save results
-def compare_sequences(feature_type, extracted_seq, ref_seq, feature_id, strand):
+def compare_sequences(results, feature_type, extracted_seq, ref_seq, feature_id, strand):
     match_status = "Match" if extracted_seq == ref_seq else "Mismatch"
     results.append([feature_id, feature_type, extracted_seq, ref_seq, strand, match_status])
 
-# Check if the database file exists; if not, create it
-if not os.path.exists(db_file):
-    print("Creating GFF database...")
-    db = gffutils.create_db(gff_file, db_file, force=True, keep_order=True, merge_strategy="merge", sort_attribute_values=True)
-else:
+
+def verify_mirge_gff(db, genome, pre_miRNA_ref, mature_star_ref, results):
+    for feature in db.all_features():
+        if feature.featuretype not in ["miRNA_primary_transcript", "miRNA"]:
+            continue
+        feature_id = feature.attributes.get("ID", ["Unknown"])[0]
+        extracted = extract_sequence(genome, feature.seqid, feature.start, feature.end, feature.strand)
+        if feature.featuretype == "miRNA_primary_transcript" and feature_id in pre_miRNA_ref:
+            compare_sequences(results, "miRNA_primary_transcript", extracted, pre_miRNA_ref[feature_id], feature_id, feature.strand)
+        elif feature.featuretype == "miRNA" and feature_id in mature_star_ref:
+            compare_sequences(results, "miRNA", extracted, mature_star_ref[feature_id], feature_id, feature.strand)
+
+
+def verify_discovery_gff(db, genome, hairpin_by_name, mature_star_ref, results):
+    for feature in db.all_features():
+        feature_id = feature.attributes.get("ID", ["Unknown"])[0]
+        extracted = extract_sequence(genome, feature.seqid, feature.start, feature.end, feature.strand)
+        if feature.featuretype == "pre_miRNA":
+            ref = hairpin_by_name.get(feature_id)
+            if ref is not None:
+                compare_sequences(results, "pre_miRNA", extracted, ref, feature_id, feature.strand)
+        elif feature.featuretype == "miRNA":
+            ref = mature_star_ref.get(feature_id)
+            if ref is not None:
+                compare_sequences(results, "miRNA", extracted, ref, feature_id, feature.strand)
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Compare genome coordinates to reference FASTA sequences.")
+    parser.add_argument("--species", required=True)
+    parser.add_argument("--dir", required=True, help="Working directory for GFF/FASTA/db files")
+    parser.add_argument("--genome_fasta", required=True)
+    parser.add_argument("--gff", required=True, help="GFF filename within --dir")
+    parser.add_argument("--premir", help="Hairpin/pre-miRNA FASTA filename within --dir")
+    parser.add_argument("--mature_star", help="Mature/star combined FASTA filename within --dir")
+    parser.add_argument("--hairpin", help="Discovery-mode hairpin FASTA (defaults to --premir)")
+    parser.add_argument("--mature", help="Discovery-mode mature FASTA filename within --dir")
+    parser.add_argument("--star", help="Discovery-mode star FASTA filename within --dir")
+    parser.add_argument("--output", required=True)
+    parser.add_argument("--db", help="gffutils DB filename within --dir (default: derived from GFF name)")
+    parser.add_argument(
+        "--hairpin-table",
+        help="TSV/CSV with name and hairpinSeq columns for pre_miRNA verification (discovery mode)",
+    )
+    parser.add_argument(
+        "--mode",
+        choices=["mirge", "discovery"],
+        default="mirge",
+        help="mirge: miRNA_primary_transcript/miRNA; discovery: pre_miRNA/miRNA from tool GFF",
+    )
+    args = parser.parse_args()
+
+    gff_file = os.path.join(args.dir, args.gff)
+    output_file = os.path.join(args.dir, args.output)
+    db_file = os.path.join(args.dir, args.db or (os.path.splitext(os.path.basename(args.gff))[0] + ".db"))
+
+    genome = SeqIO.to_dict(SeqIO.parse(args.genome_fasta, "fasta"))
+    results = []
+
+    if not os.path.exists(db_file):
+        print("Creating GFF database...")
+        gffutils.create_db(
+            gff_file,
+            db_file,
+            force=True,
+            keep_order=True,
+            merge_strategy="merge",
+            sort_attribute_values=True,
+        )
     db = gffutils.FeatureDB(db_file)
 
-# Parse GFF and compare sequences
-for feature in db.all_features():
-    if feature.featuretype in ["miRNA_primary_transcript", "miRNA"]:
-        feature_id = feature.attributes.get("ID", ["Unknown"])[0]
-        start, end, strand = feature.start, feature.end, feature.strand
-        seq_id = feature.seqid
+    if args.mode == "discovery":
+        mature_file = os.path.join(args.dir, args.mature or args.mature_star)
+        star_file = os.path.join(args.dir, args.star) if args.star else None
+        mature_ref = load_reference_sequences(mature_file)
+        star_ref = load_reference_sequences(star_file) if star_file and os.path.exists(star_file) else {}
+        mature_star_ref = {**mature_ref, **star_ref}
+        hairpin_by_name = {}
+        if args.hairpin_table:
+            hairpin_df = pd.read_csv(args.hairpin_table, sep="\t")
+            if "name" in hairpin_df.columns and "hairpinSeq" in hairpin_df.columns:
+                hairpin_by_name = dict(zip(hairpin_df["name"], hairpin_df["hairpinSeq"]))
+        verify_discovery_gff(db, genome, hairpin_by_name, mature_star_ref, results)
+    else:
+        pre_miRNA_fasta = os.path.join(args.dir, args.premir)
+        mature_star_fasta = os.path.join(args.dir, args.mature_star)
+        pre_miRNA_ref = load_reference_sequences(pre_miRNA_fasta)
+        mature_star_ref = load_reference_sequences(mature_star_fasta)
+        verify_mirge_gff(db, genome, pre_miRNA_ref, mature_star_ref, results)
 
-        extracted_seq = extract_sequence(seq_id, start, end, strand)
+    df = pd.DataFrame(
+        results,
+        columns=["Feature ID", "Feature Type", "Extracted Sequence", "Reference Sequence", "Strand", "Match Status"],
+    )
+    df.to_csv(output_file, index=False)
+    mismatches = (df["Match Status"] == "Mismatch").sum() if not df.empty else 0
+    print(f"Processing complete. {len(df)} features checked, {mismatches} mismatches.")
+    print("Results saved in:", output_file)
 
-        # Compare with corresponding reference sequence
-        if feature.featuretype == "miRNA_primary_transcript" and feature_id in pre_miRNA_ref:
-            compare_sequences("miRNA_primary_transcript", extracted_seq, pre_miRNA_ref[feature_id], feature_id, strand)
-        elif feature.featuretype == "miRNA" and feature_id in mature_star_ref:
-            compare_sequences("miRNA", extracted_seq, mature_star_ref[feature_id], feature_id, strand)
 
-# Convert results to DataFrame and save as CSV
-df = pd.DataFrame(results, columns=["Feature ID", "Feature Type", "Extracted Sequence", "Reference Sequence", "Strand", "Match Status"])
-df.to_csv(output_file, index=False)
-
-print("Processing complete. Results saved in:", output_file)
-
+if __name__ == "__main__":
+    main()

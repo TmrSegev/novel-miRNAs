@@ -1,0 +1,297 @@
+#!/usr/bin/python
+
+import argparse
+import os
+import sys
+
+import numpy as np
+import pandas as pd
+
+from pipeline_config import get_species_config, mirdeep_folder_name
+from pipeline_overlap import deduplicate_coordinate_overlaps
+
+
+def getSeqId(row):
+    try:
+        seq_id = row['provisional id']  # *
+
+    except:
+        # That's mean that belong to known microRNA
+        seq_id = row["mature miRBase miRNA"]
+        seq_id = seq_id.replace('-3p', '')
+        seq_id = seq_id.replace('-5p', '')
+
+    return seq_id
+
+
+def run(output, species_name, fasta_path=None, seed_path=None, good_candidates=False, base_path=None):
+    cfg = get_species_config(species_name, base_path)
+    output_dir = cfg["scripts_dir"]
+    mirdeep_out = cfg["mirdeep_out_dir"]
+    good_candidates_dir = cfg["good_candidates_dir"]
+    libraries = cfg["libraries"]
+    species = cfg["species"]
+
+    seed_file = None
+    version = "##gff-version 3\n"
+    gff3_columns = ['seqid', 'source', 'type', 'start', 'end', 'score', 'strand', 'phase', 'attributes']
+    gff3 = pd.DataFrame(columns=gff3_columns)
+    gff3_pre_only = pd.DataFrame(columns=gff3_columns)
+
+    output = os.path.join(output_dir, output)
+    output_pre_only = os.path.join(output_dir, f"{species}_mirdeep_pre_only.gff3")
+    
+    if fasta_path is not None:
+        fasta_path = os.path.join(output_dir, fasta_path)
+        fasta_prefix = fasta_path.split('.fasta')[0]
+        fasta_pre_only_path = fasta_prefix + "_pre_only.fasta"
+        fasta_star_path = fasta_prefix + "_star.fasta"
+    else:
+        fasta_pre_only_path = None
+        fasta_star_path = None
+
+    filtered_input = []
+    for file_num in range(1, 3):
+        table = None
+        for library in libraries:
+            folder = mirdeep_folder_name(cfg, library)
+            remaining_path = os.path.join(mirdeep_out, folder, f"remaining_file_{file_num}.csv")
+            if not os.path.exists(remaining_path):
+                print(f"Warning: missing {remaining_path}, skipping")
+                continue
+            to_add = pd.read_csv(remaining_path, sep="\t")
+            to_add["Library"] = folder
+            table = to_add if table is None else pd.concat([table, to_add], ignore_index=True)
+
+        if table is None or table.empty:
+            print(f"Table for iteration {file_num} is empty - skipping filtering.")
+            no_overlaps = pd.DataFrame()
+            no_overlaps.to_csv(os.path.join(output_dir, f"removed_mirdeep_{file_num}_no_overlaps.csv"), sep="\t")
+            continue
+
+        table = table.sort_values(["precursor coordinate"])
+        debug_path = os.path.join(output_dir, f"debugging_{species}_miRDeep_{file_num}.csv")
+        table.to_csv(debug_path, sep="\t", index=False)
+        print(f"Saved debugging CSV: {debug_path}")
+
+        table["chr"] = table["precursor coordinate"].str.split(":", expand=True)[0]
+        table["positions"] = table["precursor coordinate"].str.split(":", expand=True)[1].astype(str)
+        table["start"] = table["positions"].str.split(".", expand=True)[0].astype(int)
+        table["end"] = table["positions"].str.split(".", expand=True)[2].astype(int)
+
+        table, no_overlaps = deduplicate_coordinate_overlaps(table, "chr")
+        print(table["overlaps"].value_counts().sort_index(ascending=False))
+        filtered_input.append(table)
+        no_overlaps.to_csv(os.path.join(output_dir, f"removed_mirdeep_{file_num}_no_overlaps.csv"), sep="\t")
+        table = table.rename(
+            {
+                "tag id": "provisional id",
+                "estimated probability that the miRNA is a true positive":
+                    "estimated probability that the miRNA candidate is a true positive",
+            },
+            axis=1,
+        )
+
+    if good_candidates:
+        good_candidates_path = os.path.join(good_candidates_dir, "miRDeep_goodCandidates.csv")
+        try:
+            good_df = pd.read_csv(good_candidates_path, sep="\t")
+            if good_df.empty:
+                print(f"Warning: Good candidates file is empty: {good_candidates_path}")
+            good_df.to_csv(os.path.join(output_dir, "mirdeep_all_remaining_filtered.csv"), sep="\t", index=False)
+            filtered_input = [good_df]
+        except (FileNotFoundError, pd.errors.EmptyDataError) as e:
+            print(f"Warning: Could not read good candidates file: {good_candidates_path}")
+            print(f"Error: {e}")
+            print("Continuing with filtered inputs from coordinate overlap filtering...")
+
+
+    # Check if all filtered inputs are empty
+    if not filtered_input or all(df.empty for df in filtered_input):
+        print("Warning: No miRNA candidates remaining after filtering. Creating empty output files.")
+        # Create empty output files
+        with open(output, 'w') as file:
+            file.write(version)
+        with open(output_pre_only, 'w') as file:
+            file.write(version)
+        gff3.to_csv(output, index=False, header=False, mode="a", sep='\t')
+        gff3_pre_only.to_csv(output_pre_only, index=False, header=False, mode="a", sep='\t')
+        if fasta_path is not None:
+            open(fasta_path, 'w').close()
+            open(fasta_pre_only_path, 'w').close()
+            open(fasta_star_path, 'w').close()
+        print("Empty output files created successfully.")
+        return
+
+    if seed_path is not None:
+        seed_file = pd.read_csv(seed_path, encoding='latin-1')
+
+    if fasta_path is not None:
+        fasta_file = ''
+        fasta_pre_only_file = ''
+        fasta_star_file = ''
+        open(fasta_path, 'w').close()
+        open(fasta_pre_only_path, 'w').close()
+        open(fasta_star_path, 'w').close()
+
+    intersection_index = -1  # Used later to intersect the table with miRdeep, blast and featurecounts results.
+    for input in filtered_input:
+        print(input.columns)
+        print(input.shape)
+        for index, row in input.iterrows():
+            intersection_index += 1
+            details = row['precursor coordinate']
+            name = details.split(':')[0]
+            positions = details.split(':')[1]
+            strand = details.split(':')[2]
+            seq_id = getSeqId(row)
+            star_seq = row['consensus star sequence']
+            mature_seq = row['consensus mature sequence']
+            hairpin = row['consensus precursor sequence']
+            rc_mature = row['mature read count']
+            rc_star = row['star read count']
+            overlaps = int(row['overlaps'])
+
+            star_position = hairpin.index(star_seq)
+            mature_position = hairpin.index(mature_seq)
+
+            seq5p_id = seq_id + '|5p'
+            seq3p_id = seq_id + '|3p'
+
+            if star_position > mature_position:
+                seq5p = row['consensus mature sequence']  # *
+                seq3p = row['consensus star sequence']  # *
+                seq5p_freq = len(input[input['consensus mature sequence'] == seq5p])
+                seq3p_freq = len(input[input['consensus star sequence'] == seq3p])
+                seq5p_id += f'|m|{seq5p_freq}'
+                seq3p_id += f'|s|{seq3p_freq}'
+                mature_seq = 5
+
+            else:
+                seq5p = row['consensus star sequence']  # *
+                seq3p = row['consensus mature sequence']  # *
+                seq5p_freq = len(input[input['consensus star sequence'] == seq5p])
+                seq3p_freq = len(input[input['consensus mature sequence'] == seq3p])
+                seq5p_id += f'|s|{seq5p_freq}'
+                seq3p_id += f'|m|{seq3p_freq}'
+                mature_seq = 3
+
+            seq5p_id += f'|index={intersection_index}'
+            seq3p_id += f'|index={intersection_index}'
+
+            if seed_path:
+                if seq5p != '-':
+                    seq5p_seed = seq5p[1:8].upper()
+                    try:
+                        seq5p_id += '|' + seed_file[seed_file['Seed'] == seq5p_seed]["Family"].iloc[0]
+                    except:
+                        seq5p_id += '|' + seq5p_seed
+
+                if seq3p != '-':
+                    seq3p_seed = seq3p[1:8].upper()
+                    try:
+                        seq3p_id += '|' + seed_file[seed_file['Seed'] == seq3p_seed]["Family"].iloc[0]
+                    except:
+                        seq3p_id += '|' + seq3p_seed
+
+            if fasta_path is not None:
+                if (seq5p != '-') & (mature_seq == 5):
+                    fasta_file += f'>{seq5p_id}\n{seq5p}\n'
+                    fasta_pre_only_file += f'>{seq5p_id}\n{hairpin}\n'
+                    fasta_star_file += f'>{seq5p_id}\n{seq3p}\n'
+
+                if (seq3p != '-') & (mature_seq == 3):
+                    fasta_file += f'>{seq3p_id}\n{seq3p}\n'
+                    fasta_pre_only_file += f'>{seq3p_id}\n{hairpin}\n'
+                    fasta_star_file += f'>{seq3p_id}\n{seq5p}\n'
+
+                if len(fasta_file) > 100000:
+                    with open(fasta_path, 'a+') as f:
+                        f.write(fasta_file)
+                    fasta_file = ''
+
+                if len(fasta_pre_only_file) > 100000:
+                    with open(fasta_pre_only_path, 'a+') as f:
+                        f.write(fasta_pre_only_file)
+                    fasta_pre_only_file = ''
+
+                if len(fasta_star_file) > 100000:
+                    with open(fasta_star_path, 'a+') as f:
+                        f.write(fasta_star_file)
+                    fasta_star_file = ''
+
+            start = int(positions.split('..')[0]) + 1
+            end = int(positions.split('..')[1])
+            if mature_seq == 5:
+                seed = seq5p_id.split('|')[5]
+                gff_row = [[f'{name}', '.', 'pre_miRNA', str(start), str(end), '.', strand, '.', f'ID={seq_id};RC_m={rc_mature};RC_s={rc_star};index={intersection_index};{seed};{overlaps}']]
+            if mature_seq == 3:
+                seed = seq3p_id.split('|')[5]
+                gff_row = [[f'{name}', '.', 'pre_miRNA', str(start), str(end), '.', strand, '.', f'ID={seq_id};RC_m={rc_mature};RC_s={rc_star};index={intersection_index};{seed};{overlaps}']]
+            gff3_pre_only = pd.concat([gff3_pre_only, pd.DataFrame(gff_row, columns=gff3_columns)], ignore_index=True)
+
+            if strand == '+':
+                if seq5p != '-':
+                    offset5p = len(hairpin.split(seq5p)[0])
+                    start5p = start + offset5p
+                    end5p = start + offset5p + len(seq5p) - 1
+                    gff_row.append([name, '.', 'miRNA', start5p, end5p, '.', strand, '.', f'ID={seq5p_id}'])
+
+                if seq3p != '-':
+                    offset3p = len(hairpin.split(seq3p)[0])
+                    start3p = start + offset3p
+                    end3p = start + offset3p + len(seq3p) - 1
+                    gff_row.append([name, '.', 'miRNA', start3p, end3p, '.', strand, '.', f'ID={seq3p_id}'])
+
+            else:
+                if seq5p != '-':
+                    offset5p = len(hairpin.split(seq5p)[0])
+                    end5p = end - offset5p
+                    start5p = end - offset5p - len(seq5p) + 1
+                    gff_row.append([name, '.', 'miRNA', start5p, end5p, '.', strand, '.', f'ID={seq5p_id}'])
+
+                if seq3p != '-':
+                    offset3p = len(hairpin.split(seq3p)[0])
+                    end3p = end - offset3p
+                    start3p = end - offset3p - len(seq3p) + 1
+                    gff_row.append([name, '.', 'miRNA', start3p, end3p, '.', strand, '.', f'ID={seq3p_id}'])
+
+            miRNAs = pd.DataFrame(gff_row, columns=gff3_columns)
+
+            gff3 = pd.concat([gff3, miRNAs], ignore_index=True)
+
+    with open(output, 'w') as file:
+        file.write(version)
+
+    with open(output_pre_only, 'w') as file:
+        file.write(version)
+
+    if fasta_path is not None:
+        with open(fasta_path, 'a+') as f:
+            f.write(fasta_file)
+        with open(fasta_pre_only_path, 'a+') as f:
+            f.write(fasta_pre_only_file)
+        with open(fasta_star_path, 'a+') as f:
+            f.write(fasta_star_file)
+
+    gff3.to_csv(output, index=False, header=False, mode="a", sep='\t')
+    gff3_pre_only.to_csv(output_pre_only, index=False, header=False, mode="a", sep='\t')
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Unite per-library miRDeep results and write GFF3.")
+    parser.add_argument("-o", required=True, help="Output GFF3 filename")
+    parser.add_argument("-s", required=True, dest="species", help="Species name")
+    parser.add_argument("-seed", help="Seed family CSV path")
+    parser.add_argument("--create-fasta", dest="fasta_path", help="Output mature FASTA filename")
+    parser.add_argument("--goodcandidates", default="False", help="True to use good_candidates CSV")
+    parser.add_argument("--base-path", dest="base_path", help="Charles_seq base path")
+    args = parser.parse_args()
+    run(
+        args.o,
+        args.species,
+        fasta_path=args.fasta_path,
+        seed_path=args.seed,
+        good_candidates=args.goodcandidates == "True",
+        base_path=args.base_path,
+    )

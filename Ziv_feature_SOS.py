@@ -9,6 +9,8 @@ import sys
 import numpy as np
 import pprint
 
+from pipeline_config import build_description
+
 
 def get_seq_data(path, start_end_mark=False):
     seq = {}
@@ -385,6 +387,8 @@ if __name__ == '__main__':
         output = output.astype(
             {'Mature_BP_ratio_ziv': 'float', 'Mature_max_bulge_ziv': 'float', 'Star_BP_ratio_ziv': 'float',
              'Star_max_bulge_ziv': 'float'})
+        include_mirbase = species == "Elegans"
+        output['Description'] = build_description(output, include_mirbase=include_mirbase)
         writer = pd.ExcelWriter(output_dir + 'all_remaining_after_ziv_{}.xlsx'.format(species))
         output.to_excel(writer, sheet_name='(A) Unfiltered', index=False)
         sum_fc_thres_ok = output[output['sum_FC_m > thres'] == 1].copy()
@@ -407,6 +411,10 @@ if __name__ == '__main__':
         structural = structural[structural["Max_bulge_symmetry_ziv"] <= 3]
         structural = structural[structural["min_one_mer_hairpin_ziv"] >= 0.1]
         structural = structural[structural["max_one_mer_hairpin_ziv"] <= 0.45]
+        if "5p_overhang_ziv" in structural.columns:
+            structural = structural[(structural["5p_overhang_ziv"] >= 0) & (structural["5p_overhang_ziv"] <= 4)]
+        if "3p_overhang_ziv" in structural.columns:
+            structural = structural[(structural["3p_overhang_ziv"] >= 0) & (structural["3p_overhang_ziv"] <= 4)]
         structural.to_excel(writer, sheet_name='(D) Structural Features', index=False)
         writer.save()
 
