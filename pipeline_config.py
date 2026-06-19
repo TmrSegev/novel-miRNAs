@@ -5,13 +5,14 @@ import os
 DEFAULT_BASE_PATH = "/mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq"
 DEFAULT_NCRNA_DIR = "/mnt/new_groups/vaksler_group/Isana_Tzah/RNAcentral/ncRNAs_Caenorhabditis"
 
-# Global filter defaults (Hofstenia values; overridable via CLI).
-# Historical nematode values: filter_mc=100, exclude_c=1000, low_score_total=1000
+# Global filter defaults (all species; overridable via CLI).
 FILTER_MC_DEFAULT = 10
 EXCLUDE_C_DEFAULT = 100
 LOW_SCORE_TOTAL_DEFAULT = 100
 
+# miRBase-based nematode miRNA seeds (Elegans, Macrosperma, Sulstoni).
 SEED_FILE_NEMATODE = "mirbase_data/Seeds.txt"
+# General miRs of all species (mirGeneDB family table; Hofstenia).
 SEED_FILE_HOFSTENIA = "mirbase_data/ALL_seed_family_from_mirgendb.csv"
 
 DEFAULT_BLAST_DB = os.path.join(

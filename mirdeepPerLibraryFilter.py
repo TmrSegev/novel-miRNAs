@@ -277,8 +277,8 @@ if __name__ == '__main__':
                   f' --filter-tp <float> : threshold for the true positive estimate, any value between 0 - 100, '
                   f'default: None.\n '
                   f' --filter-s <float> : threshold for score, default: None.\n'
-                  f' --filter-mc <float> : threshold for max counts, default: {FILTER_MC_DEFAULT} (nematodes historically: 100).\n'
-                  f' --exclude-c <int> : ignore score filter when total counts exceed this, default: {EXCLUDE_C_DEFAULT} (nematodes historically: 1000).\n'
+                  f' --filter-mc <float> : threshold for max counts, default: {FILTER_MC_DEFAULT}.\n'
+                  f' --exclude-c <int> : ignore score filter when total counts exceed this, default: {EXCLUDE_C_DEFAULT}.\n'
                   f' --csv-save : will save the inner tables of miRDeep2 output results as csv.\n'
                   f' --create-fasta <path>: create fasta file from the gff3 table.\n')
             sys.exit()

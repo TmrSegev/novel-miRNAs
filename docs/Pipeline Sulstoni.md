@@ -1,6 +1,6 @@
 **Sulstoni**
 
-**Pipeline scripts:** Per-library filter with `--filter-mc 100`; unite + GFF in `{base}/Sulstoni/scripts/`. Libraries: SR0–SR7 (8 libraries). Legacy: `sRNAbenchResultsToGFF3.py`, `mirdeepResultsToGFF3.py`.
+**Pipeline scripts:** Per-library filter with `--filter-mc 10`; unite + GFF in `{base}/Sulstoni/scripts/`. Libraries: SR0–SR7 (8 libraries). Legacy: `sRNAbenchResultsToGFF3.py`, `mirdeepResultsToGFF3.py`.
 
 Check position in genome:  
 samtools faidx ../genome/CSULS.caenorhabditis\_sulstoni\_JU2788\_v1.scaffolds.fna CSULS.scaffold02010:60847-60868
@@ -96,7 +96,7 @@ Sulstoni:
 
 5) **mirDeep2.pl** — run **per library** in `{base}/Sulstoni/mirdeep_out/{SR0|…|SR7}/`. Filter each folder:
 
-   python mirdeepPerLibraryFilter.py -i result\_\*.csv --filter-s 10 --exclude-c 1000 --filter-mc 100
+   python mirdeepPerLibraryFilter.py -i result\_\*.csv --filter-s 10 --exclude-c 100 --filter-mc 10
 
    **Legacy combined run** (superseded):
 
@@ -150,7 +150,7 @@ path: \<basePath\>/Sulstoni/mirdeep\_out/\*
 
    Repeat for SR1–SR7. Filter in each folder:
 
-   python srnabenchPerLibraryFilter.py -i novel.txt -a novel451.txt --filter-mc 100
+   python srnabenchPerLibraryFilter.py -i novel.txt -a novel451.txt --filter-mc 10
 
    **Legacy combined run** (superseded):
 
@@ -186,7 +186,7 @@ python mirdeepUniteGFF.py -o Sulstoni\_mirdeep.gff3 --create-fasta Sulstoni\_mir
 python processGoodCandidates.py --tool miRDeep -s Sulstoni  
 python mirdeepUniteGFF.py -o Sulstoni\_mirdeep.gff3 --create-fasta Sulstoni\_mirdeep.fasta -seed ../../mirbase\_data/Seeds.txt -s Sulstoni --goodcandidates True  
 
-**Filtering (nematodes: --filter-mc 100):** same criteria as Elegans/Macrosperma; all novel451 discarded; good_candidates requires ≥2 libraries in cluster.
+**Filtering (--filter-mc 10):** same criteria as Elegans/Macrosperma; all novel451 discarded; good_candidates requires ≥2 libraries in cluster.
 
 paths: `{base}/Sulstoni/scripts/Sulstoni_*.gff3`, `sRNAbench_all_remaining_filtered.csv`, `mirdeep_all_remaining_filtered.csv`
 

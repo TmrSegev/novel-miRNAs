@@ -1,9 +1,8 @@
 Order of running the files (unified pipeline — all species):
 
 Per library (in each sRNAbench output folder and mirdeep_out/<library>/):
-  srnabenchPerLibraryFilter.py   (default --filter-mc 10; nematodes historically: 100)
-  mirdeepPerLibraryFilter.py     (default --filter-s 10 --exclude-c 100 --filter-mc 10;
-                                  nematodes historically: --filter-mc 100 --exclude-c 1000)
+  srnabenchPerLibraryFilter.py   (default --filter-mc 10)
+  mirdeepPerLibraryFilter.py     (default --filter-s 10 --exclude-c 100 --filter-mc 10)
 
 In <Species>/scripts/ (two-pass good_candidates):
   srnabenchUniteGFF.py           (--goodcandidates False, then True; -seed optional, defaults from species config)
@@ -27,8 +26,8 @@ After analyzing all species:
   expression_dynamics_all.py
 
 Seed file defaults (override with -seed):
-  Nematodes (Elegans, Macrosperma, Sulstoni): mirbase_data/Seeds.txt
-  Hofstenia: mirbase_data/ALL_seed_family_from_mirgendb.csv
+  Hofstenia: mirbase_data/ALL_seed_family_from_mirgendb.csv (general miRs of all species)
+  Nematodes (Elegans, Macrosperma, Sulstoni): mirbase_data/Seeds.txt (miRBase-based nematode miRNAs)
 
 Hofstenia notes:
   Use --variant new_genome for PacBio genome track

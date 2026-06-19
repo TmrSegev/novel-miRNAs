@@ -1,6 +1,6 @@
 **Macrosperma**
 
-**Pipeline scripts:** Per-library filter (`srnabenchPerLibraryFilter.py`, `mirdeepPerLibraryFilter.py`; default `--filter-mc 10`, nematodes historically `--filter-mc 100`); unite + GFF in `{base}/Macrosperma/scripts/` (`srnabenchUniteGFF.py`, `mirdeepUniteGFF.py`, `processGoodCandidates.py`). See Pipeline Hofstenia for the two-pass good_candidates workflow. Legacy: `sRNAbenchResultsToGFF3.py`, `mirdeepResultsToGFF3.py`.
+**Pipeline scripts:** Per-library filter (`srnabenchPerLibraryFilter.py`, `mirdeepPerLibraryFilter.py`; `--filter-mc 10`); unite + GFF in `{base}/Macrosperma/scripts/` (`srnabenchUniteGFF.py`, `mirdeepUniteGFF.py`, `processGoodCandidates.py`). See Pipeline Hofstenia for the two-pass good_candidates workflow. Legacy: `sRNAbenchResultsToGFF3.py`, `mirdeepResultsToGFF3.py`.
 
 Libraries: MR4, MR5, MR6, MR7, MR8 (5 libraries — run miRDeep and sRNAbench **separately per library**, do not combine FASTQs for discovery).
 
@@ -81,7 +81,7 @@ path: \<basePath\>/Macrosperma/bash/config.txt
 
 5) **mirDeep2.pl** — run **per library** in `{base}/Macrosperma/mirdeep_out/{MR4|MR5|…}/` (legacy: single combined run below). Filter each folder:
 
-   python mirdeepPerLibraryFilter.py -i result\_\*.csv --filter-s 10 --exclude-c 1000 --filter-mc 100
+   python mirdeepPerLibraryFilter.py -i result\_\*.csv --filter-s 10 --exclude-c 100 --filter-mc 10
 
    **Legacy combined run** (superseded):
 
@@ -141,7 +141,7 @@ path: \<basePath\>/Macrosperma/bash/config.txt
 
    Repeat for MR5–MR8. Filter in each folder:
 
-   python srnabenchPerLibraryFilter.py -i novel.txt -a novel451.txt --filter-mc 100
+   python srnabenchPerLibraryFilter.py -i novel.txt -a novel451.txt --filter-mc 10
 
    **Legacy combined run** (superseded):
 
@@ -187,9 +187,9 @@ paths (final outputs):
 /mnt/new_groups/vaksler_group/Isana\_Tzah/Charles\_seq/Macrosperma/scripts/sRNAbench\_all\_remaining\_filtered.csv  
 /mnt/new_groups/vaksler_group/Isana\_Tzah/Charles\_seq/Macrosperma/scripts/mirdeep\_all\_remaining\_filtered.csv  
 
-	**Filtering (nematodes: --filter-mc 100):**  
-	sRNAbench: max(5pRC,3pRC)\<100 or matureBindings\<14; all novel451 discarded; ncRNA filter; hairpin trim in filter script.  
-	miRDeep: `--filter-s 10 --exclude-c 1000 --filter-mc 100` per library.  
+	**Filtering (--filter-mc 10):**  
+	sRNAbench: max(5pRC,3pRC)\<10 or matureBindings\<14; all novel451 discarded; ncRNA filter; hairpin trim in filter script.  
+	miRDeep: `--filter-s 10 --exclude-c 100 --filter-mc 10` per library.  
 	Unite step: coordinate overlap dedup + good_candidates (≥2 libraries in 20 bp cluster for Macrosperma).
 
 **For the candidates that are left, we need to mark them as “sense”/”antisense” or “overlap”:**  

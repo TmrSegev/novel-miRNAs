@@ -101,6 +101,8 @@ cd /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia\_newGenome
 Filtering and creating remaining.csv files (Note: make sure conda activate is off\!):  
 sbatch filter\_hof\_sRNAbench.sbatch
 
+python srnabenchPerLibraryFilter.py -i novel.txt -a novel451.txt --filter-mc 10
+
 \#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#  
 Instructions: 
 

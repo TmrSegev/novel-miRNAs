@@ -133,7 +133,7 @@ if __name__ == "__main__":
     parser.add_argument("-a", help="novel451.txt path")
     parser.add_argument(
         "-t", "--filter-mc", type=int, default=FILTER_MC_DEFAULT,
-        help=f"Filter if max(5pRC,3pRC) < threshold (default {FILTER_MC_DEFAULT}; nematodes historically: 100)",
+        help=f"Filter if max(5pRC,3pRC) < threshold (default {FILTER_MC_DEFAULT})",
     )
     parser.add_argument("--ncrna-dir", default=DEFAULT_NCRNA_DIR)
     args = parser.parse_args()

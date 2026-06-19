@@ -89,7 +89,7 @@ path: \<basePath\>/bash/config.txt
    3. miRDeep2.pl — run in `{base}/Elegans/mirdeep_out/<library>/` (e.g. `mirdeep_out/CE57/`).  
    4. Filter in that folder (conda off):
 
-   python mirdeepPerLibraryFilter.py -i result\_\*.csv --filter-s 10 --exclude-c 1000 --filter-mc 100
+   python mirdeepPerLibraryFilter.py -i result\_\*.csv --filter-s 10 --exclude-c 100 --filter-mc 10
 
    Outputs per library: `remaining_file_1.csv`, `remaining_file_2.csv`, `removed.csv`.
 
@@ -163,7 +163,7 @@ With the miRDeep algorithm the following steps were taken to generate candidates
 
    Filter in each folder (conda off):
 
-   python srnabenchPerLibraryFilter.py -i novel.txt -a novel451.txt --filter-mc 100
+   python srnabenchPerLibraryFilter.py -i novel.txt -a novel451.txt --filter-mc 10
 
    **Legacy combined run** (superseded): `input=../TrimmedFastq/elegans_final.fastq`, `output=../../sRNAtoolboxDB/out/Elegans`
 
@@ -230,23 +230,23 @@ paths (final outputs in scripts/):
 	**Trimming sequences:**  
 	Hairpin trimming and coordinate updates are done in **srnabenchPerLibraryFilter.py** (per library, both strands). GFF scripts write trimmed coordinates from the remaining CSV.
 
-	**Filtering Criteria (nematodes use --filter-mc 100, not Hofstenia’s 10):**
+	**Filtering Criteria (--filter-mc 10, same as Hofstenia):**
 
-	sRNAbench (srnabenchPerLibraryFilter.py, run per library with `--filter-mc 100`):
+	sRNAbench (srnabenchPerLibraryFilter.py, run per library with `--filter-mc 10`):
 
-1. **Filter novel.** Remove if max(5pRC,3pRC)\<100 or matureBindings\<14.  
+1. **Filter novel.** Remove if max(5pRC,3pRC)\<10 or matureBindings\<14.  
 2. **Filter novel451.** All novel451 entries are discarded (Hofstenia workflow).  
 3. Discard if mature/star/hairpin matches ncRNA database (RNAcentral/ncRNAs\_Caenorhabditis/).  
 4. Trim hairpin; drop rows where mature/star cannot be aligned (`sRNAbench_removed_no_find.csv`).
 
 **Unite step (srnabenchUniteGFF.py):** concatenate all libraries → coordinate overlap dedup (≥60%, `overlaps` attribute) → good_candidates (≥2 distinct libraries within 20 bp cluster) → GFF/FASTA.
 
-mirDeep (mirdeepPerLibraryFilter.py, per library: `--filter-s 10 --exclude-c 1000 --filter-mc 100`):
+mirDeep (mirdeepPerLibraryFilter.py, per library: `--filter-s 10 --exclude-c 100 --filter-mc 10`):
 
 1. Discard “rfam alert” or ncRNA match.  
 2. Remove lower-scoring duplicate mature/star when score ≥10.  
-3. Keep if score≥10, OR score\<10 with total≥1000 and star\>0.  
-4. Filter if max(mature read count, star read count) \< 100.
+3. Keep if score≥10, OR score\<10 with total≥100 and star\>0.  
+4. Filter if max(mature read count, star read count) \< 10.
 
 **Unite step (mirdeepUniteGFF.py):** same overlap dedup + good_candidates workflow as sRNAbench.
 
@@ -268,7 +268,7 @@ Summary of Input File Number 2 (mature):
         Total Reads Left After all filters: 159 (61.15%)
 
 **Text for the paper:**  
-sRNAbench candidates were screened per library with `--filter-mc 100`. Sequences were discarded if max(5pRC,3pRC)\<100, matureBindings\<14, or they matched ncRNA databases; all novel451 entries were discarded. Per-library results were united, deduplicated for coordinate overlap, and filtered for multi-library support (good_candidates). miRDeep candidates were filtered per library with the same read-count threshold (100) and score rules as above, then united with the same overlap and support filtering.
+sRNAbench candidates were screened per library with `--filter-mc 10`. Sequences were discarded if max(5pRC,3pRC)\<10, matureBindings\<14, or they matched ncRNA databases; all novel451 entries were discarded. Per-library results were united, deduplicated for coordinate overlap, and filtered for multi-library support (good_candidates). miRDeep candidates were filtered per library with the same read-count threshold (10) and score rules as above, then united with the same overlap and support filtering.
 
 	**Output files (in Elegans/scripts/):**
 
