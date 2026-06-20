@@ -29,8 +29,23 @@ Seed file defaults (override with -seed):
   Hofstenia: mirbase_data/ALL_seed_family_from_mirgendb.csv (general miRs of all species)
   Nematodes (Elegans, Macrosperma, Sulstoni): mirbase_data/Seeds.txt (miRBase-based nematode miRNAs)
 
+Alternate genome assembly (any species):
+  Use --variant new_genome on config-aware scripts, or pass -s <Species>_newGenome as an alias.
+  Directory layout: Charles_seq/<Species>_newGenome/ (mirdeep_out, scripts, STAR, …)
+  GFF/fasta prefixes stay <Species>_* (same species label as the original assembly).
+  Sequencing reads are shared with the original assembly track.
+
+  Adding a new assembly later (e.g. Elegans, Sulstoni):
+    1. Place scaffolds under Charles_seq/<Species>_newGenome/
+    2. Add genome_fasta_subpath to NEW_GENOME_OVERRIDES in pipeline_config.py if not under genome/*.scaffolds.fna
+    3. Copy/adapt bash from the existing species track; build bowtie/STAR/sRNAbench indices
+    4. Run per-library discovery, then Python steps with --variant new_genome
+
 Hofstenia notes:
-  Use --variant new_genome for PacBio genome track
+  --variant new_genome selects the PacBio assembly (Hofstenia_newGenome/)
+
+Macrosperma notes:
+  --variant new_genome selects v2 scaffolds (Macrosperma_newGenome/); see docs/Pipeline Macrosperma.md
 
 Backward-compatible wrappers (deprecated): nematode*GFF.py, hofstenia*GFF.py, nematode*Filter.py,
   hofstenia*Filter.py, process_debugging*.py, intersectionsTableHofstenia.py

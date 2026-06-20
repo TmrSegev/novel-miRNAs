@@ -1,7 +1,7 @@
 import pandas as pd
 import sys
 
-from pipeline_config import SPECIES_CONFIG, get_species_config
+from pipeline_config import get_species_config
 
 
 def create_all_candidatess_fasta(df):
@@ -177,17 +177,19 @@ if __name__ == '__main__':
                   f' --sheetname <name>: name of the sheet in the excel file (default: all_candidates).\n'
                   f' --output <path>: path to the output directory (default: ./).\n'
                   f' --new-genome: use new genome folder structure for output (overrides default ./ if --output not specified).\n'
+                  f' --variant new_genome: alternate assembly track (Species_newGenome directories).\n'
                   )
             sys.exit()
         i += 2
 
-    if not output_explicitly_provided and species in SPECIES_CONFIG:
-        sp_key = "Hofstenia" if species == "Hofstenia_newGenome" else species
-        v = variant or ("new_genome" if species == "Hofstenia_newGenome" else None)
-        cfg = get_species_config(sp_key, base_path, variant=v)
-        output = cfg["output_dir"]
-        if not output.endswith("/"):
-            output += "/"
+    if not output_explicitly_provided and species:
+        try:
+            cfg = get_species_config(species, base_path, variant=variant)
+            output = cfg["output_dir"]
+            if not output.endswith("/"):
+                output += "/"
+        except ValueError:
+            pass
 
     if not all_path:
         print("Error: Missing required argument --all <path>")

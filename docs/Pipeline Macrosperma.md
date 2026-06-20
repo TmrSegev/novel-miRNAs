@@ -320,3 +320,63 @@ command:
 
 python statistics.py \--all /mnt/new_groups/vaksler_group/Isana\_Tzah/Charles\_seq/Ziv\_Features/all\_remaining\_after\_ziv\_Macrosperma.xlsx \-s Macrosperma
 
+---
+
+**New genome track (v2 scaffolds)**
+
+basePath = Macrosperma\_newGenome/  
+Genome: `CMACR.caenorhabditis_macrosperma_JU2083_v2.scaffolds.fna` under `genome/`  
+Sequencing reads: reuse `Macrosperma/TrimmedFastq/` (MR4–MR8; same libraries as v1)
+
+**Preparations (run once from `Macrosperma_newGenome/bash/`):**
+
+1. **Bowtie index** on v2 scaffolds:
+
+   sbatch bowtie\_index.sbatch
+
+   path: \<basePath\>/genome/index/macrospermaNewGenomeIndexed.\*
+
+2. **sRNAbench makeSeqObj** on v2:
+
+   sbatch makeseqobj.sbatch
+
+   Move resulting zip to `sRNAtoolboxDB/seqOBJ/macrospermaNewGenomeIndexed.zip` and copy bowtie index to `sRNAtoolboxDB/index/`.
+
+3. **STAR index** on v2:
+
+   sbatch star\_genome\_indexing.sbatch
+
+   path: \<basePath\>/STAR/genome\_index/
+
+4. **Per-library discovery** — run mapper/miRDeep per library in `mirdeep_out/{MR4|MR5|…}/` and sRNAbench per library:
+
+   sbatch srnabench.sbatch  
+   sbatch star\_align.sbatch
+
+   sRNAbench outputs: `sRNAtoolboxDB/out/Macrosperma_newGenome/Macrosperma_{library}/`
+
+**Uniting, good_candidates, and creating GFF3/FASTA (v2 track)**
+
+Working directory: `{base}/Macrosperma_newGenome/scripts/`  
+Use `--variant new_genome` (or `-s Macrosperma_newGenome` where supported):
+
+python srnabenchUniteGFF.py -o Macrosperma\_sRNAbench.gff3 -seed ../../mirbase\_data/Seeds.txt --create-fasta Macrosperma\_sRNAbench.fasta -s Macrosperma --variant new\_genome --goodcandidates False  
+python processGoodCandidates.py --tool sRNAbench -s Macrosperma --variant new\_genome  
+python srnabenchUniteGFF.py -o Macrosperma\_sRNAbench.gff3 -seed ../../mirbase\_data/Seeds.txt --create-fasta Macrosperma\_sRNAbench.fasta -s Macrosperma --variant new\_genome --goodcandidates True  
+
+python mirdeepUniteGFF.py -o Macrosperma\_mirdeep.gff3 --create-fasta Macrosperma\_mirdeep.fasta -seed ../../mirbase\_data/Seeds.txt -s Macrosperma --variant new\_genome --goodcandidates False  
+python processGoodCandidates.py --tool miRDeep -s Macrosperma --variant new\_genome  
+python mirdeepUniteGFF.py -o Macrosperma\_mirdeep.gff3 --create-fasta Macrosperma\_mirdeep.fasta -seed ../../mirbase\_data/Seeds.txt -s Macrosperma --variant new\_genome --goodcandidates True  
+
+python compare\_genome\_to\_fasta.py --mode discovery --species Macrosperma --variant new\_genome --dir /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Macrosperma\_newGenome/scripts --genome\_fasta /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Macrosperma\_newGenome/genome/CMACR.caenorhabditis\_macrosperma\_JU2083\_v2.scaffolds.fna ...
+
+**Downstream (v2 track)**
+
+python add\_flank\_to\_GFF.py -s Macrosperma --variant new\_genome  
+python intersectionsTable.py -s Macrosperma --variant new\_genome ...  
+python allCandidatesFasta.py -s Macrosperma --variant new\_genome --all .../RNAcentral/miRNAs/Macrosperma\_newGenome/intersections\_table\_Macrosperma.xlsx  
+python Ziv\_feature\_SOS.py --species Macrosperma\_newGenome ...  
+python statistics.py -s Macrosperma\_newGenome --all .../Ziv\_Features/all\_remaining\_after\_ziv\_Macrosperma\_newGenome.xlsx
+
+Output directory for intersections/FASTAs: `RNAcentral/miRNAs/Macrosperma_newGenome/`
+

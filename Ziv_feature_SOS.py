@@ -302,20 +302,23 @@ if __name__ == '__main__':
                   f' --mature <path> : fasta file path of mature sequences, with the same names as the precursors.\n'
                   f' --species <name>: name of the species.\n'
                   f' --all-remaining <path>: path to the all remaining filtered csv file.\n'
-                  f' --new-genome: use new genome folder structure for output files.\n')
+                  f' --new-genome: use new genome folder structure for output files.\n'
+                  f' --variant new_genome: alternate assembly track (Species_newGenome directories).\n')
             sys.exit()
         i += 2
 
     # Determine output directory
     output_dir = "./"
     cfg = None
+    output_track = species
     if species and species != "miRGeneDB":
-        sp_key = "Hofstenia" if species in ("Hofstenia", "Hofstenia_newGenome") else species
-        v = variant or ("new_genome" if species == "Hofstenia_newGenome" else None)
         try:
-            cfg = get_species_config(sp_key, base_path, variant=v)
-            if variant == "new_genome" or species == "Hofstenia_newGenome":
-                output_dir = "/mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Ziv_Features/"
+            cfg = get_species_config(species, base_path, variant=variant)
+            if cfg.get("variant") == "new_genome":
+                output_dir = cfg["ziv_output_dir"]
+                if not output_dir.endswith("/"):
+                    output_dir += "/"
+                output_track = cfg["variant_track"]
         except ValueError:
             cfg = None
 
@@ -399,8 +402,11 @@ if __name__ == '__main__':
              'Star_max_bulge_ziv': 'float'})
         if cfg and cfg.get("apply_manual_corrections"):
             output['Description'] = output[['Description_mirdeep', 'Description_sRNAbench']].astype(str).agg('__'.join, axis=1).str.replace(';', '|', regex=False).str.replace('ID=', '', regex=False).str.replace('.', '', regex=False)
-            output = manual_change(output, new_genome=(variant == "new_genome"))
-        writer = pd.ExcelWriter(output_dir + 'all_remaining_after_ziv_{}.xlsx'.format(species))
+            output = manual_change(
+                output,
+                new_genome=(cfg.get("species") == "Hofstenia" and cfg.get("variant") == "new_genome"),
+            )
+        writer = pd.ExcelWriter(output_dir + 'all_remaining_after_ziv_{}.xlsx'.format(output_track))
         output.to_excel(writer, sheet_name='(A) Unfiltered', index=False)
         writer.save()
     elif species != "miRGeneDB":
@@ -409,7 +415,7 @@ if __name__ == '__main__':
              'Star_max_bulge_ziv': 'float'})
         include_mirbase = cfg and cfg.get("use_mirbase_intersects", False)
         output['Description'] = build_description(output, include_mirbase=include_mirbase)
-        writer = pd.ExcelWriter(output_dir + 'all_remaining_after_ziv_{}.xlsx'.format(species))
+        writer = pd.ExcelWriter(output_dir + 'all_remaining_after_ziv_{}.xlsx'.format(output_track))
         output.to_excel(writer, sheet_name='(A) Unfiltered', index=False)
         sum_fc_thres_ok = output[output['sum_FC_m > thres'] == 1].copy()
         sum_fc_thres_ok.to_excel(writer, sheet_name='(B) sum_FC>100', index=False)

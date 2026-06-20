@@ -49,13 +49,18 @@ HOFSTENIA_PROFILE = {
     "output_subdir": "RNAcentral/miRNAs/{species}",
 }
 
-HOFSTENIA_NEW_GENOME_VARIANT = {
-    "mirdeep_out_subdir": "Hofstenia_newGenome/mirdeep_out",
-    "scripts_subdir": "Hofstenia_newGenome/scripts",
-    "good_candidates_subdir": "Hofstenia_newGenome/good_candidates",
-    "srnabench_out_subdir": "sRNAtoolboxDB/out/Hofstenia_newGenome",
-    "output_subdir": "RNAcentral/miRNAs/Hofstenia_newGenome",
-    "species_label": "Hofstenia",
+NEW_GENOME_SUFFIX = "_newGenome"
+
+NEW_GENOME_OVERRIDES = {
+    "Hofstenia": {
+        "genome_fasta_subpath": "Hofstenia_newGenome/sRNA_PBonly/hofPB_v6.FINAL.fa",
+    },
+    "Macrosperma": {
+        "genome_fasta_subpath": (
+            "Macrosperma_newGenome/genome/"
+            "CMACR.caenorhabditis_macrosperma_JU2083_v2.scaffolds.fna"
+        ),
+    },
 }
 
 SPECIES_CONFIG = {
@@ -112,20 +117,54 @@ SPECIES_CONFIG = {
 }
 
 
-def get_species_config(species, base_path=None, variant=None):
+def resolve_species_and_variant(species, variant=None):
+    """Resolve Species_newGenome alias to (base_species, new_genome)."""
+    if species.endswith(NEW_GENOME_SUFFIX):
+        base = species[: -len(NEW_GENOME_SUFFIX)]
+        if base in SPECIES_CONFIG:
+            if variant and variant != "new_genome":
+                raise ValueError(
+                    f"Species alias '{species}' implies variant new_genome; got '{variant}'"
+                )
+            return base, "new_genome"
     if species not in SPECIES_CONFIG:
+        valid = ", ".join(sorted(SPECIES_CONFIG.keys()))
         raise ValueError(
-            f"Unknown species '{species}'. "
-            f"Choose from: {', '.join(SPECIES_CONFIG.keys())}"
+            f"Unknown species '{species}'. Choose from: {valid} "
+            f"(or {{Species}}{NEW_GENOME_SUFFIX} for alternate assemblies)"
         )
+    return species, variant
+
+
+def build_new_genome_variant(species):
+    track = f"{species}{NEW_GENOME_SUFFIX}"
+    return {
+        "mirdeep_out_subdir": f"{track}/mirdeep_out",
+        "scripts_subdir": f"{track}/scripts",
+        "good_candidates_subdir": f"{track}/good_candidates",
+        "srnabench_out_subdir": f"sRNAtoolboxDB/out/{track}",
+        "output_subdir": f"RNAcentral/miRNAs/{track}",
+        "species_label": species,
+        "variant_track": track,
+        "variant_root_subdir": track,
+    }
+
+
+def get_species_config(species, base_path=None, variant=None):
+    species, variant = resolve_species_and_variant(species, variant)
     cfg = SPECIES_CONFIG[species].copy()
     cfg["species"] = species
     cfg["base_path"] = base_path or DEFAULT_BASE_PATH
+    cfg["variant"] = variant
 
     if variant == "new_genome":
-        if species != "Hofstenia":
-            raise ValueError("--variant new_genome is only supported for Hofstenia")
-        cfg.update(HOFSTENIA_NEW_GENOME_VARIANT)
+        cfg.update(build_new_genome_variant(species))
+        overrides = NEW_GENOME_OVERRIDES.get(species, {})
+        cfg.update(overrides)
+        if overrides.get("genome_fasta_subpath"):
+            cfg["genome_fasta"] = os.path.join(
+                cfg["base_path"], overrides["genome_fasta_subpath"]
+            )
 
     cfg["scripts_dir"] = os.path.join(cfg["base_path"], cfg["scripts_subdir"])
     cfg["good_candidates_dir"] = os.path.join(cfg["base_path"], cfg["good_candidates_subdir"])
@@ -136,6 +175,9 @@ def get_species_config(species, base_path=None, variant=None):
         cfg["base_path"],
         cfg["output_subdir"].format(species=cfg.get("species_label", species)),
     )
+    if variant == "new_genome":
+        cfg["variant_root_dir"] = os.path.join(cfg["base_path"], cfg["variant_root_subdir"])
+        cfg["ziv_output_dir"] = os.path.join(cfg["base_path"], "Ziv_Features")
     cfg["display_species"] = cfg.get("species_label", species)
     return cfg
 

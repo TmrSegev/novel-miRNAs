@@ -3,7 +3,7 @@ from pathlib import Path
 import os
 import argparse
 
-from pipeline_config import SPECIES_CONFIG, get_species_config
+from pipeline_config import get_species_config
 
 def locate_subseq(full_seq, sub_seq, strand, start_offset, end_offset): ## pass end_offset
     idx = full_seq.find(sub_seq)
@@ -78,25 +78,36 @@ parser = argparse.ArgumentParser(
 # Add a required positional argument for the base directory path
 parser.add_argument(
     "--species",
-    # required=True,
-    help="The path to the base directory containing the input FASTA files (all_candidates_mature.fasta and all_candidates_star.fasta)."
+    help="Species name (or Species_newGenome alias for alternate assembly).",
 )
+parser.add_argument("--variant", help='Genome variant, e.g. "new_genome"')
+parser.add_argument("--base-path", dest="base_path", help="Charles_seq base path")
 # Parse the arguments provided by the user
 args = parser.parse_args()
 SPECIES = args.species
-cfg = None
-if SPECIES in SPECIES_CONFIG:
-    cfg = get_species_config(SPECIES)
-elif SPECIES == "Hofstenia_newGenome":
-    cfg = get_species_config("Hofstenia", variant="new_genome")
+try:
+    cfg = get_species_config(SPECIES, args.base_path, variant=args.variant)
+except ValueError:
+    cfg = None
 
-input_excel = Path(f"/mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Ziv_Features/all_remaining_after_ziv_{SPECIES}.xlsx")
+output_track = cfg["variant_track"] if cfg and cfg.get("variant") == "new_genome" else SPECIES
+input_excel = Path(
+    f"/mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Ziv_Features/"
+    f"all_remaining_after_ziv_{output_track}.xlsx"
+)
 sheet_name = cfg["mirge_input_sheet"] if cfg else "(D) Structural Features"
 
-if cfg and cfg.get("ziv_profile") == "unfiltered_only":
-    output_gff = Path(f"/mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/{SPECIES}/miRge_after_Ziv/miRNA_candidates.gff3")
+if cfg and cfg.get("variant") == "new_genome":
+    mirge_root = Path(cfg["variant_root_dir"])
+elif cfg:
+    mirge_root = Path(cfg["base_path"], cfg["species"])
 else:
-    output_gff = Path(f"/mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/{SPECIES}/miRge/miRNA_candidates.gff3")
+    mirge_root = Path(f"/mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/{SPECIES}")
+
+if cfg and cfg.get("ziv_profile") == "unfiltered_only":
+    output_gff = mirge_root / "miRge_after_Ziv" / "miRNA_candidates.gff3"
+else:
+    output_gff = mirge_root / "miRge" / "miRNA_candidates.gff3"
 
 # Load Excel data
 df = pd.read_excel(input_excel, sheet_name=sheet_name, dtype=str)

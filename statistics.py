@@ -322,12 +322,11 @@ if __name__ == '__main__':
     xls = pd.ExcelFile(all_path)
     sheet_dict = {sheet_name: xls.parse(sheet_name) for sheet_name in xls.sheet_names}
     # all = pd.read_excel(all_path, sheet_name="(D) Structural Features")
-    cfg = get_species_config(species) if species in SPECIES_CONFIG else None
-    if species == "Hofstenia_newGenome":
-        cfg = get_species_config("Hofstenia", variant="new_genome")
+    try:
+        cfg = get_species_config(species) if species else None
+    except ValueError:
+        cfg = None
     sheet_key = cfg["mirge_input_sheet"] if cfg else "(D) Structural Features"
-    if species in ("Hofstenia", "Hofstenia_newGenome") and not cfg:
-        sheet_key = "(A) Unfiltered"
     all = sheet_dict[sheet_key]
     include_mirbase = cfg.get("use_mirbase_intersects", False) if cfg else species in ("elegans", "Elegans")
     all["Description"] = build_description(all, include_mirbase=include_mirbase)

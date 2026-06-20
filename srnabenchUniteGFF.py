@@ -255,7 +255,7 @@ if __name__ == "__main__":
     parser.add_argument("--create-fasta", dest="fasta_path", help="Output mature FASTA filename")
     parser.add_argument("--goodcandidates", default="False", help="True to use good_candidates CSV")
     parser.add_argument("--base-path", dest="base_path", help="Charles_seq base path")
-    parser.add_argument("--variant", help='Genome variant, e.g. "new_genome" for Hofstenia PacBio track')
+    parser.add_argument("--variant", help='Genome variant, e.g. "new_genome" for alternate assembly track')
     args = parser.parse_args()
     run(
         args.o,

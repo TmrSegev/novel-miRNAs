@@ -25,16 +25,18 @@ args = parser.parse_args()
 m18_suffix = "_m18" if args.m18 else ""
 dir = args.dir
 SPECIES = args.species
-cfg = None
-if SPECIES in SPECIES_CONFIG:
+try:
     cfg = get_species_config(SPECIES, args.base_path, variant=args.variant)
-elif SPECIES == "Hofstenia_newGenome":
-    cfg = get_species_config("Hofstenia", args.base_path, variant="new_genome")
+except ValueError:
+    cfg = None
 
+output_track = cfg["variant_track"] if cfg and cfg.get("variant") == "new_genome" else SPECIES
 sheet_name = cfg["mirge_input_sheet"] if cfg else "(D) Structural Features"
 
 input_excel = Path(
-    f"/mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Ziv_Features/all_remaining_after_ziv_{SPECIES}.xlsx")
+    f"/mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Ziv_Features/"
+    f"all_remaining_after_ziv_{output_track}.xlsx"
+)
 
 print(f"Loading maturity info from: {input_excel} | Sheet: {sheet_name}")
 # Load the maturity data from the specified sheet in the Excel file

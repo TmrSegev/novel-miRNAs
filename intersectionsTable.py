@@ -114,7 +114,7 @@ while i < len(sys.argv):
     elif arg == '--help' or arg == '-h':
         print(f'Manual:\n'
               f' -s <name>: name of species.\n'
-              f' --new-genome: use new genome folder structure (Hofstenia_newGenome).\n'
+              f' --new-genome: use new genome folder structure (Species_newGenome).\n'
               f' --mirdeep-inter-table <path>: path to bedtools -a mirdeep and -b sRNAbench intersection .bed file.\n'
               f' --sRNAbench-inter-table <path>: path to bedtools -a sRNAbench and -b mirdeep intersection .bed file.\n'
               f' --blast-mirdeep <path>: path to mirdeep blast results file.\n'

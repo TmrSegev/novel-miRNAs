@@ -125,7 +125,7 @@ if __name__ == "__main__":
     parser.add_argument("--tool", choices=["sRNAbench", "miRDeep"], required=True)
     parser.add_argument("-s", "--species", required=True, help="Species name")
     parser.add_argument("--base-path", dest="base_path", help="Charles_seq base path")
-    parser.add_argument("--variant", help='Genome variant, e.g. "new_genome" for Hofstenia PacBio track')
+    parser.add_argument("--variant", help='Genome variant, e.g. "new_genome" for alternate assembly track')
     args = parser.parse_args()
     cfg = get_species_config(args.species, args.base_path, variant=args.variant)
     run(cfg, args.tool)
