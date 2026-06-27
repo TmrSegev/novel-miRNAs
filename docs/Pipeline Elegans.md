@@ -1,10 +1,13 @@
 **C. Elegans**  
+
+**Scripts directory:** `/mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/`
+
 The aim of this test is to verify the credibility of the pipeline used on Sultoni and Macrosperma. It is done by using the same pipeline to catalog the MiRNA profile of C. Elegans, and compare it to the already known MiRNA profile.
 
 **General information:**  
 basePath \= /mnt/new_groups/vaksler_group/Isana\_Tzah/Charles\_seq/Elegans/
 
-Python scripts (novel-miRNAs repo):  
+Python scripts (novel-miRNAs repo; invoke by absolute path from `/mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/`):
 Per-library filter: srnabenchPerLibraryFilter.py, mirdeepPerLibraryFilter.py  
 Unite + GFF + good_candidates: srnabenchUniteGFF.py, mirdeepUniteGFF.py, processGoodCandidates.py  
 Coordinate QC: compare_genome_to_fasta.py (--mode discovery)  
@@ -89,7 +92,7 @@ path: \<basePath\>/bash/config.txt
    3. miRDeep2.pl — run in `{base}/Elegans/mirdeep_out/<library>/` (e.g. `mirdeep_out/CE57/`).  
    4. Filter in that folder (conda off):
 
-   python mirdeepPerLibraryFilter.py -i result\_\*.csv --filter-s 10 --exclude-c 100 --filter-mc 10
+   python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/mirdeepPerLibraryFilter.py -i result\_\*.csv --filter-s 10 --exclude-c 100 --filter-mc 10
 
    Outputs per library: `remaining_file_1.csv`, `remaining_file_2.csv`, `removed.csv`.
 
@@ -163,7 +166,7 @@ With the miRDeep algorithm the following steps were taken to generate candidates
 
    Filter in each folder (conda off):
 
-   python srnabenchPerLibraryFilter.py -i novel.txt -a novel451.txt --filter-mc 10
+   python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/srnabenchPerLibraryFilter.py -i novel.txt -a novel451.txt --filter-mc 10
 
    **Legacy combined run** (superseded): `input=../TrimmedFastq/elegans_final.fastq`, `output=../../sRNAtoolboxDB/out/Elegans`
 
@@ -173,8 +176,6 @@ With the sRNAbench algorithm the following steps were taken to generate candidat
 **Uniting per-library results, good_candidates, and creating GFF3/FASTA**
 
 Working directory: `{base}/Elegans/scripts/`  
-Scripts repo path: `/home/stome/novel-miRNAs/` (or copy scripts to `{base}/Elegans/scripts/`)
-
 Per-library filter outputs are read from:  
 - sRNAbench: `{base}/sRNAtoolboxDB/out/Elegans/Elegans_{library}/sRNAbench_remaining.csv`  
 - miRDeep: `{base}/Elegans/mirdeep_out/{library}/remaining_file_1.csv` and `remaining_file_2.csv`
@@ -190,33 +191,33 @@ Instructions (same two-pass workflow as Hofstenia):
 
 **sRNAbench — pass 1 (debugging):**
 
-python srnabenchUniteGFF.py -o Elegans\_sRNAbench.gff3 -seed /mnt/new_groups/vaksler_group/Isana\_Tzah/Charles\_seq/mirbase\_data/Seeds.txt --create-fasta Elegans\_sRNAbench.fasta -s Elegans --goodcandidates False
+python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/srnabenchUniteGFF.py -o Elegans\_sRNAbench.gff3 -seed /mnt/new_groups/vaksler_group/Isana\_Tzah/Charles\_seq/mirbase\_data/Seeds.txt --create-fasta Elegans\_sRNAbench.fasta -s Elegans --goodcandidates False
 
 **processGoodCandidates:**
 
-python processGoodCandidates.py --tool sRNAbench -s Elegans
+python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/processGoodCandidates.py --tool sRNAbench -s Elegans
 
 **sRNAbench — pass 2 (final):**
 
-python srnabenchUniteGFF.py -o Elegans\_sRNAbench.gff3 -seed /mnt/new_groups/vaksler_group/Isana\_Tzah/Charles\_seq/mirbase\_data/Seeds.txt --create-fasta Elegans\_sRNAbench.fasta -s Elegans --goodcandidates True
+python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/srnabenchUniteGFF.py -o Elegans\_sRNAbench.gff3 -seed /mnt/new_groups/vaksler_group/Isana\_Tzah/Charles\_seq/mirbase\_data/Seeds.txt --create-fasta Elegans\_sRNAbench.fasta -s Elegans --goodcandidates True
 
 **miRDeep — pass 1 (debugging):**
 
-python mirdeepUniteGFF.py -o Elegans\_mirdeep.gff3 --create-fasta Elegans\_mirdeep.fasta -seed /mnt/new_groups/vaksler_group/Isana\_Tzah/Charles\_seq/mirbase\_data/Seeds.txt -s Elegans --goodcandidates False
+python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/mirdeepUniteGFF.py -o Elegans\_mirdeep.gff3 --create-fasta Elegans\_mirdeep.fasta -seed /mnt/new_groups/vaksler_group/Isana\_Tzah/Charles\_seq/mirbase\_data/Seeds.txt -s Elegans --goodcandidates False
 
 **processGoodCandidates:**
 
-python processGoodCandidates.py --tool miRDeep -s Elegans
+python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/processGoodCandidates.py --tool miRDeep -s Elegans
 
 **miRDeep — pass 2 (final):**
 
-python mirdeepUniteGFF.py -o Elegans\_mirdeep.gff3 --create-fasta Elegans\_mirdeep.fasta -seed /mnt/new_groups/vaksler_group/Isana\_Tzah/Charles\_seq/mirbase\_data/Seeds.txt -s Elegans --goodcandidates True
+python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/mirdeepUniteGFF.py -o Elegans\_mirdeep.gff3 --create-fasta Elegans\_mirdeep.fasta -seed /mnt/new_groups/vaksler_group/Isana\_Tzah/Charles\_seq/mirbase\_data/Seeds.txt -s Elegans --goodcandidates True
 
 **Coordinate verification (after GFF pass 2):**
 
-python compare_genome_to_fasta.py --mode discovery --species Elegans --dir /mnt/new_groups/vaksler_group/Isana\_Tzah/Charles\_seq/Elegans/scripts --genome_fasta /mnt/new_groups/vaksler_group/Isana\_Tzah/Charles\_seq/Elegans/Genome/new\_caenorhabditis\_elegans.PRJNA13758.WBPS16.genomic.fa --gff Elegans\_sRNAbench.gff3 --mature Elegans\_sRNAbench.fasta --star Elegans\_sRNAbench\_star.fasta --hairpin-table sRNAbench\_all\_remaining\_filtered.csv --output sRNAbench\_coord\_check.csv
+python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/compare_genome_to_fasta.py --mode discovery --species Elegans --dir /mnt/new_groups/vaksler_group/Isana\_Tzah/Charles\_seq/Elegans/scripts --genome_fasta /mnt/new_groups/vaksler_group/Isana\_Tzah/Charles\_seq/Elegans/Genome/new\_caenorhabditis\_elegans.PRJNA13758.WBPS16.genomic.fa --gff Elegans\_sRNAbench.gff3 --mature Elegans\_sRNAbench.fasta --star Elegans\_sRNAbench\_star.fasta --hairpin-table sRNAbench\_all\_remaining\_filtered.csv --output sRNAbench\_coord\_check.csv
 
-python compare_genome_to_fasta.py --mode discovery --species Elegans --dir /mnt/new_groups/vaksler_group/Isana\_Tzah/Charles\_seq/Elegans/scripts --genome_fasta /mnt/new_groups/vaksler_group/Isana\_Tzah/Charles\_seq/Elegans/Genome/new\_caenorhabditis\_elegans.PRJNA13758.WBPS16.genomic.fa --gff Elegans\_mirdeep.gff3 --mature Elegans\_mirdeep.fasta --star Elegans\_mirdeep\_star.fasta --hairpin-table mirdeep\_all\_remaining\_filtered.csv --output mirdeep\_coord\_check.csv
+python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/compare_genome_to_fasta.py --mode discovery --species Elegans --dir /mnt/new_groups/vaksler_group/Isana\_Tzah/Charles\_seq/Elegans/scripts --genome_fasta /mnt/new_groups/vaksler_group/Isana\_Tzah/Charles\_seq/Elegans/Genome/new\_caenorhabditis\_elegans.PRJNA13758.WBPS16.genomic.fa --gff Elegans\_mirdeep.gff3 --mature Elegans\_mirdeep.fasta --star Elegans\_mirdeep\_star.fasta --hairpin-table mirdeep\_all\_remaining\_filtered.csv --output mirdeep\_coord\_check.csv
 
 paths (final outputs in scripts/):  
 /mnt/new_groups/vaksler_group/Isana\_Tzah/Charles\_seq/Elegans/scripts/Elegans\_sRNAbench.gff3  
@@ -295,10 +296,10 @@ Path: /mnt/new_groups/vaksler_group/Isana\_Tzah/RNAcentral/miRNAs/Elegans/
    bedtools intersect \-wao \-loj \-f 0.4 \-a /mnt/new_groups/vaksler_group/Isana\_Tzah/Charles\_seq/Elegans/scripts/Elegans\_sRNAbench\_pre\_only.gff3 \-b /mnt/new_groups/vaksler_group/Isana\_Tzah/Charles\_seq/Elegans/scripts/Elegans\_sRNAbench\_pre\_only.gff3 \> sRNAbench\_intersect.bed  
 3. Script commands for marking as overlaps or sense/antisense:  
    mirdeep:  
-   python overlapSenseAnti.py \--intersections-table /mnt/new_groups/vaksler_group/Isana\_Tzah/RNAcentral/miRNAs/Elegans/miRdeep\_intersect.bed \--gff /mnt/new_groups/vaksler_group/Isana\_Tzah/Charles\_seq/Elegans/scripts/Elegans\_mirdeep\_pre\_only.gff3  
+   python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/overlapSenseAnti.py \--intersections-table /mnt/new_groups/vaksler_group/Isana\_Tzah/RNAcentral/miRNAs/Elegans/miRdeep\_intersect.bed \--gff /mnt/new_groups/vaksler_group/Isana\_Tzah/Charles\_seq/Elegans/scripts/Elegans\_mirdeep\_pre\_only.gff3  
      
    sRNAbench:  
-   python overlapSenseAnti.py \--intersections-table /mnt/new_groups/vaksler_group/Isana\_Tzah/RNAcentral/miRNAs/Elegans/sRNAbench\_intersect.bed \--gff /mnt/new_groups/vaksler_group/Isana\_Tzah/Charles\_seq/Elegans/scripts/Elegans\_sRNAbench\_pre\_only.gff3  
+   python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/overlapSenseAnti.py \--intersections-table /mnt/new_groups/vaksler_group/Isana\_Tzah/RNAcentral/miRNAs/Elegans/sRNAbench\_intersect.bed \--gff /mnt/new_groups/vaksler_group/Isana\_Tzah/Charles\_seq/Elegans/scripts/Elegans\_sRNAbench\_pre\_only.gff3  
    
 
 The output changes the pre\_only gff files in the respective folders.  
@@ -347,7 +348,7 @@ miRBase:
 **Editing mirbase GFF**  
 Adding the sequences from the fasta files to the GFF file, in addition to trimming the sequences and marking as 5p/3p. Trimming the sequences means we cut the beginning and end of the hairpin sequence, so only the parts corresponding to the 5p, loop and 3p sequences are retained. The hairpin sequence and its coordinates are updated in the GFFs. The strand (+ or \-) of the candidate is taken into account. Candidates with only mature sequence and no star are not trimmed. The mature sequence is only marked as 5p/3p.  
 path: /mnt/new_groups/vaksler_group/Isana\_Tzah/Charles\_seq/mirbase\_data  
-command: python mirbaseToGFF3.py  
+command: python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/mirbaseToGFF3.py  
 output: cel\_mirbase\_seq.gff3
 
 **Text for the paper:**  
@@ -517,7 +518,7 @@ In order to generate the miRNA counts from our libraries using featurecounts \[r
 
 Add flanks of 10 bp to pre_miRNA features in the GFF (run in scripts/):
 
-python add_flank_to_GFF.py -s Elegans
+python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/add_flank_to_GFF.py -s Elegans
 
 miRdeep flanked pre_miRNA counts:
 
@@ -530,7 +531,7 @@ featureCounts \-F GFF \-t pre\_miRNA \-g ID \-O \-s 1 \-M \-a /mnt/new_groups/va
 **BLAST** 
 
 1. Remove spaces from the fasta file which will be the blast DB. Command:  
-   python filterSpacesBlastDB.py \> Caenorhabditis\_pre\_miRNA.fasta  
+   python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/filterSpacesBlastDB.py \> Caenorhabditis\_pre\_miRNA.fasta  
 2. Creating a DB of known miRNAs of nematodes only.  
    1. Create blast DB, command:  
       makeblastdb \-in ../BLAST\_DB/Caenorhabditis\_pre\_miRNA.fasta \-title miRNADB \-dbtype nucl \-out ../BLAST\_DB/Caenorhabditis\_pre\_miRNAsDB  
@@ -546,7 +547,7 @@ To figure out the closest known homolog miRNA, a BLAST query of the candidates w
 
 1. Path: /mnt/new_groups/vaksler_group/Isana\_Tzah/RNAcentral/miRNAs/Elegans/  
 2. Command for script:  
-   python ‏‏‏‏intersectionsTable.py \-s elegans \--mirdeep-inter-table /mnt/new_groups/vaksler_group/Isana\_Tzah/RNAcentral/miRNAs/Elegans/miRdeep\_sRNAbench\_intersect.bed \--mirdeep-mibrase-inter /mnt/new_groups/vaksler_group/Isana\_Tzah/RNAcentral/miRNAs/Elegans/miRdeep\_miRBase\_intersect.bed \--mirdeep-mirgenedb-inter /mnt/new_groups/vaksler_group/Isana\_Tzah/RNAcentral/miRNAs/Elegans/miRdeep\_miRGeneDB\_intersect.bed \--sRNAbench-inter-table /mnt/new_groups/vaksler_group/Isana\_Tzah/RNAcentral/miRNAs/Elegans/sRNAbench\_miRdeep\_intersect.bed \--sRNAbench-mibrase-inter /mnt/new_groups/vaksler_group/Isana\_Tzah/RNAcentral/miRNAs/Elegans/sRNAbench\_miRBase\_intersect.bed \--sRNAbench-mirgenedb-inter /mnt/new_groups/vaksler_group/Isana\_Tzah/RNAcentral/miRNAs/Elegans/sRNAbench\_miRGeneDB\_intersect.bed \--mirbase-mirgenedb-inter /mnt/new_groups/vaksler_group/Isana\_Tzah/RNAcentral/miRNAs/Elegans/miRBase\_miRGeneDB\_intersect.bed \--mirbase-mirdeep-inter /mnt/new_groups/vaksler_group/Isana\_Tzah/RNAcentral/miRNAs/Elegans/miRBase\_miRdeep\_intersect.bed \--mirbase-sRNAbench-inter /mnt/new_groups/vaksler_group/Isana\_Tzah/RNAcentral/miRNAs/Elegans/miRBase\_sRNAbench\_intersect.bed \--blast-mirdeep /mnt/new_groups/vaksler_group/Isana\_Tzah/RNAcentral/queries/Elegans/miRdeep\_blastn\_compact \--blast-sRNAbench /mnt/new_groups/vaksler_group/Isana\_Tzah/RNAcentral/queries/Elegans/sRNAbench\_blastn\_compact \--fc-mirdeep /mnt/new_groups/vaksler_group/Isana\_Tzah/Charles\_seq/Elegans/counts\_sep/miRNA\_miRdeep\_counts.txt \--fc-pre-mirdeep /mnt/new_groups/vaksler_group/Isana\_Tzah/Charles\_seq/Elegans/counts\_sep/miRNA\_miRdeep\_counts\_flanked.txt \--fc-sRNAbench /mnt/new_groups/vaksler_group/Isana\_Tzah/Charles\_seq/Elegans/counts\_sep/miRNA\_sRNAbench\_counts.txt \--fc-pre-sRNAbench /mnt/new_groups/vaksler_group/Isana\_Tzah/Charles\_seq/Elegans/counts\_sep/miRNA\_sRNAbench\_counts\_flanked.txt \--fc\_mirbase /mnt/new_groups/vaksler_group/Isana\_Tzah/Charles\_seq/Elegans/counts\_sep/miRNA\_mirbase\_counts.txt \-rm /mnt/new_groups/vaksler_group/Isana\_Tzah/Charles\_seq/Elegans/scripts/mirdeep\_all\_remaining\_filtered.csv \-rs /mnt/new_groups/vaksler_group/Isana\_Tzah/Charles\_seq/Elegans/scripts/sRNAbench\_all\_remaining\_filtered.csv \-mgff /mnt/new_groups/vaksler_group/Isana\_Tzah/Charles\_seq/mirbase\_data/cel\_mirbase\_seq.gff3 \-l CE81,CE80,CE69,CE63,CE62,CE61,CE60,CE59,CE58,CE57,CE79,CE78 \--sum-fc-thres 100  
+   python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/intersectionsTable.py \-s elegans \--mirdeep-inter-table /mnt/new_groups/vaksler_group/Isana\_Tzah/RNAcentral/miRNAs/Elegans/miRdeep\_sRNAbench\_intersect.bed \--mirdeep-mibrase-inter /mnt/new_groups/vaksler_group/Isana\_Tzah/RNAcentral/miRNAs/Elegans/miRdeep\_miRBase\_intersect.bed \--mirdeep-mirgenedb-inter /mnt/new_groups/vaksler_group/Isana\_Tzah/RNAcentral/miRNAs/Elegans/miRdeep\_miRGeneDB\_intersect.bed \--sRNAbench-inter-table /mnt/new_groups/vaksler_group/Isana\_Tzah/RNAcentral/miRNAs/Elegans/sRNAbench\_miRdeep\_intersect.bed \--sRNAbench-mibrase-inter /mnt/new_groups/vaksler_group/Isana\_Tzah/RNAcentral/miRNAs/Elegans/sRNAbench\_miRBase\_intersect.bed \--sRNAbench-mirgenedb-inter /mnt/new_groups/vaksler_group/Isana\_Tzah/RNAcentral/miRNAs/Elegans/sRNAbench\_miRGeneDB\_intersect.bed \--mirbase-mirgenedb-inter /mnt/new_groups/vaksler_group/Isana\_Tzah/RNAcentral/miRNAs/Elegans/miRBase\_miRGeneDB\_intersect.bed \--mirbase-mirdeep-inter /mnt/new_groups/vaksler_group/Isana\_Tzah/RNAcentral/miRNAs/Elegans/miRBase\_miRdeep\_intersect.bed \--mirbase-sRNAbench-inter /mnt/new_groups/vaksler_group/Isana\_Tzah/RNAcentral/miRNAs/Elegans/miRBase\_sRNAbench\_intersect.bed \--blast-mirdeep /mnt/new_groups/vaksler_group/Isana\_Tzah/RNAcentral/queries/Elegans/miRdeep\_blastn\_compact \--blast-sRNAbench /mnt/new_groups/vaksler_group/Isana\_Tzah/RNAcentral/queries/Elegans/sRNAbench\_blastn\_compact \--fc-mirdeep /mnt/new_groups/vaksler_group/Isana\_Tzah/Charles\_seq/Elegans/counts\_sep/miRNA\_miRdeep\_counts.txt \--fc-pre-mirdeep /mnt/new_groups/vaksler_group/Isana\_Tzah/Charles\_seq/Elegans/counts\_sep/miRNA\_miRdeep\_counts\_flanked.txt \--fc-sRNAbench /mnt/new_groups/vaksler_group/Isana\_Tzah/Charles\_seq/Elegans/counts\_sep/miRNA\_sRNAbench\_counts.txt \--fc-pre-sRNAbench /mnt/new_groups/vaksler_group/Isana\_Tzah/Charles\_seq/Elegans/counts\_sep/miRNA\_sRNAbench\_counts\_flanked.txt \--fc\_mirbase /mnt/new_groups/vaksler_group/Isana\_Tzah/Charles\_seq/Elegans/counts\_sep/miRNA\_mirbase\_counts.txt \-rm /mnt/new_groups/vaksler_group/Isana\_Tzah/Charles\_seq/Elegans/scripts/mirdeep\_all\_remaining\_filtered.csv \-rs /mnt/new_groups/vaksler_group/Isana\_Tzah/Charles\_seq/Elegans/scripts/sRNAbench\_all\_remaining\_filtered.csv \-mgff /mnt/new_groups/vaksler_group/Isana\_Tzah/Charles\_seq/mirbase\_data/cel\_mirbase\_seq.gff3 \-l CE81,CE80,CE69,CE63,CE62,CE61,CE60,CE59,CE58,CE57,CE79,CE78 \--sum-fc-thres 100  
    Output:  
    intersections\_table\_script.xlsx, which contains the following (each one in a different sheet):  
 * Merges miRDeep results with blast, featurecounts, sRNAbench, miRbase and miRGeneDB.  
@@ -659,13 +660,13 @@ path: /mnt/new_groups/vaksler_group/Isana\_Tzah/RNAcentral/miRNAs/Elegans/
 
 command:
 
-python allCandidatesFasta.py \--all /mnt/new_groups/vaksler_group/Isana\_Tzah/RNAcentral/miRNAs/Elegans/intersections\_table\_elegans.xlsx \-s elegans
+python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/allCandidatesFasta.py \--all /mnt/new_groups/vaksler_group/Isana\_Tzah/RNAcentral/miRNAs/Elegans/intersections\_table\_elegans.xlsx \-s elegans
 
 **Feature Engineering with Ziv’s code**
 
 path: /mnt/new_groups/vaksler_group/Isana\_Tzah/Charles\_seq/Ziv\_Features
 
-python Ziv\_feature\_SOS.py \--precursors /mnt/new_groups/vaksler_group/Isana\_Tzah/RNAcentral/miRNAs/Elegans/all\_candidates\_hairpin.fasta \--mature /mnt/new_groups/vaksler_group/Isana\_Tzah/RNAcentral/miRNAs/Elegans/all\_candidates\_mature.fasta \--star /mnt/new_groups/vaksler_group/Isana\_Tzah/RNAcentral/miRNAs/Elegans/all\_candidates\_star.fasta \--species Elegans \--all-remaining /mnt/new_groups/vaksler_group/Isana\_Tzah/RNAcentral/miRNAs/Elegans/intersections\_table\_elegans.xlsx
+python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/Ziv_feature_SOS.py \--precursors /mnt/new_groups/vaksler_group/Isana\_Tzah/RNAcentral/miRNAs/Elegans/all\_candidates\_hairpin.fasta \--mature /mnt/new_groups/vaksler_group/Isana\_Tzah/RNAcentral/miRNAs/Elegans/all\_candidates\_mature.fasta \--star /mnt/new_groups/vaksler_group/Isana\_Tzah/RNAcentral/miRNAs/Elegans/all\_candidates\_star.fasta \--species Elegans \--all-remaining /mnt/new_groups/vaksler_group/Isana\_Tzah/RNAcentral/miRNAs/Elegans/intersections\_table\_elegans.xlsx
 
 **Thresholds to filter nematodes**
 
@@ -677,7 +678,7 @@ path: /mnt/new_groups/vaksler_group/Isana\_Tzah/RNAcentral/miRNAs/Elegans/
 
 command:
 
-python statistics.py \--all /mnt/new_groups/vaksler_group/Isana\_Tzah/Charles\_seq/Ziv\_Features/all\_remaining\_after\_ziv\_Elegans.xlsx \-s elegans
+python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/statistics.py \--all /mnt/new_groups/vaksler_group/Isana\_Tzah/Charles\_seq/Ziv\_Features/all\_remaining\_after\_ziv\_Elegans.xlsx \-s elegans
 
 **After analyzing all species**
 
@@ -687,7 +688,7 @@ path: /mnt/new_groups/vaksler_group/Isana\_Tzah/Charles\_seq/All\_species
 
 command:
 
-python seed\_frequency.py
+python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/seed_frequency.py
 
 **Expression Dynamics**
 
@@ -701,7 +702,7 @@ run the sbatch file named: **expression\_dynamics.sbatch** (make sure conda is d
 
 command inside:
 
-xvfb-run \-a python expression\_dynamics.py \--all /mnt/new_groups/vaksler_group/Isana\_Tzah/Charles\_seq/Ziv\_Features/all\_remaining\_after\_ziv\_Elegans.xlsx \--libraries CE81,CE80,CE69,CE63,CE62,CE61,CE60,CE59,CE58,CE57,CE79,CE78 \--time 4,8,12,16,20,24,28,32,36,40,44,48 \-s Elegans
+xvfb-run \-a python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/expression_dynamics.py \--all /mnt/new_groups/vaksler_group/Isana\_Tzah/Charles\_seq/Ziv\_Features/all\_remaining\_after\_ziv\_Elegans.xlsx \--libraries CE81,CE80,CE69,CE63,CE62,CE61,CE60,CE59,CE58,CE57,CE79,CE78 \--time 4,8,12,16,20,24,28,32,36,40,44,48 \-s Elegans
 
 **For all species:**
 
@@ -711,7 +712,7 @@ run the sbatch file named: **expression\_dynamics\_all.sbatch** (make sure conda
 
 command inside:
 
-xvfb-run \-a python expression\_dynamics\_all.py \--all /mnt/new_groups/vaksler_group/Isana\_Tzah/Charles\_seq/All\_species/all\_species\_candidates.xlsx
+xvfb-run \-a python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/expression_dynamics_all.py \--all /mnt/new_groups/vaksler_group/Isana\_Tzah/Charles\_seq/All\_species/all\_species\_candidates.xlsx
 
 For details and citation purposes see paper "Clustal W and Clustal X
 
@@ -725,7 +726,7 @@ Calculating 5p heterogeneity.
 
 Generate new fasta for remaining candidates after Ziv:
 
-python /mnt/new_groups/vaksler_group/Isana\_Tzah/RNAcentral/miRNAs/Elegans/allCandidatesFasta.py \--all /mnt/new_groups/vaksler_group/Isana\_Tzah/Charles\_seq/Ziv\_Features/all\_remaining\_after\_ziv\_Elegans.xlsx \-s elegans \--sheetname "(D) Structural Features" \--output /mnt/new_groups/vaksler_group/Isana\_Tzah/Charles\_seq/Elegans/miRge/
+python /mnt/new_groups/vaksler_group/Isana\_Tzah/novel-miRNAs/allCandidatesFasta.py \--all /mnt/new_groups/vaksler_group/Isana\_Tzah/Charles\_seq/Ziv\_Features/all\_remaining\_after\_ziv\_Elegans.xlsx \-s elegans \--sheetname "(D) Structural Features" \--output /mnt/new_groups/vaksler_group/Isana\_Tzah/Charles\_seq/Elegans/miRge/
 
 Create files necessary for mirge:
 
@@ -759,3 +760,70 @@ conda activate my\_env
 
 python /mnt/new_groups/vaksler_group/Isana\_Tzah/Charles\_seq/Elegans/scripts/compare\_genome\_to\_fasta.py
 
+---
+
+**New genome track (WBPS19 / PRJNA13758)**
+
+basePath = Elegans\_newGenome/  
+Genome: `CELEG.caenorhabditis_elegans_PRJNA13758_WBPS19.scaffolds.fna` under `genome/`  
+Annotations: `CELEG.caenorhabditis_elegans_PRJNA13758_WBPS19.annotations.gff3` under `genome/`  
+Sequencing reads: reuse `Elegans/TrimmedFastq/` (CE57–CE81; same libraries as WBPS16 track)
+
+Download (WBPS19):
+
+wget https://ftp.ebi.ac.uk/pub/databases/wormbase/parasite/releases/WBPS19/species/caenorhabditis\_elegans/PRJNA13758/caenorhabditis\_elegans.PRJNA13758.WBPS19.genomic.fa.gz
+
+**Preparations (run once from `Elegans_newGenome/bash/`):**
+
+1. **Bowtie index** on WBPS19 scaffolds:
+
+   sbatch bowtie\_index.sbatch
+
+   path: \<basePath\>/genome/index/elegansNewGenomeIndexed.\*
+
+2. **sRNAbench makeSeqObj** on WBPS19:
+
+   sbatch makeseqobj.sbatch
+
+   Move resulting zip to `sRNAtoolboxDB/seqOBJ/elegansNewGenomeIndexed.zip` and copy bowtie index to `sRNAtoolboxDB/index/`.
+
+3. **STAR index** on WBPS19:
+
+   sbatch star\_genome\_indexing.sbatch
+
+   path: \<basePath\>/STAR/genome\_index/
+
+4. **Per-library discovery** — run mapper/miRDeep per library in `mirdeep_out/{CE57|CE58|…}/` and sRNAbench per library:
+
+   sbatch mapper.sbatch  
+   sbatch srnabench.sbatch  
+   sbatch star\_align.sbatch
+
+   sRNAbench outputs: `sRNAtoolboxDB/out/Elegans_newGenome/Elegans_{library}/`
+
+**Uniting, good_candidates, and creating GFF3/FASTA (WBPS19 track)**
+
+Working directory: `{base}/Elegans_newGenome/scripts/`  
+Use `--variant new_genome` (or `-s Elegans_newGenome` where supported; legacy Hofstenia scripts accept `--new-genome`):
+
+python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/srnabenchUniteGFF.py -o Elegans\_sRNAbench.gff3 -seed /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/mirbase\_data/Seeds.txt --create-fasta Elegans\_sRNAbench.fasta -s Elegans --variant new\_genome --goodcandidates False  
+python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/processGoodCandidates.py --tool sRNAbench -s Elegans --variant new\_genome  
+python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/srnabenchUniteGFF.py -o Elegans\_sRNAbench.gff3 -seed /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/mirbase\_data/Seeds.txt --create-fasta Elegans\_sRNAbench.fasta -s Elegans --variant new\_genome --goodcandidates True  
+
+python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/mirdeepUniteGFF.py -o Elegans\_mirdeep.gff3 --create-fasta Elegans\_mirdeep.fasta -seed /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/mirbase\_data/Seeds.txt -s Elegans --variant new\_genome --goodcandidates False  
+python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/processGoodCandidates.py --tool miRDeep -s Elegans --variant new\_genome  
+python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/mirdeepUniteGFF.py -o Elegans\_mirdeep.gff3 --create-fasta Elegans\_mirdeep.fasta -seed /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/mirbase\_data/Seeds.txt -s Elegans --variant new\_genome --goodcandidates True  
+
+python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/compare_genome_to_fasta.py --mode discovery --species Elegans --variant new\_genome --dir /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Elegans\_newGenome/scripts --genome\_fasta /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Elegans\_newGenome/genome/CELEG.caenorhabditis\_elegans\_PRJNA13758\_WBPS19.scaffolds.fna ...
+
+**Downstream (WBPS19 track)**
+
+python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/add_flank_to_GFF.py -s Elegans --variant new\_genome  
+python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/intersectionsTable.py -s Elegans --variant new\_genome ...  
+python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/allCandidatesFasta.py -s Elegans --variant new\_genome --all .../RNAcentral/miRNAs/Elegans\_newGenome/intersections\_table\_Elegans.xlsx  
+python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/Ziv_feature_SOS.py --species Elegans\_newGenome ...  
+python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/statistics.py -s Elegans\_newGenome --all .../Ziv\_Features/all\_remaining\_after\_ziv\_Elegans\_newGenome.xlsx
+
+Output directory for intersections/FASTAs: `RNAcentral/miRNAs/Elegans_newGenome/`
+
+**miRge (WBPS19 track):** use `Elegans_newGenome/genome/CELEG.caenorhabditis_elegans_PRJNA13758_WBPS19.scaffolds.fna` as `-g` in `miRge-build` instead of the WBPS16 path above.

@@ -1,5 +1,8 @@
 **Hofstenia**
 
+**Scripts directory:** `/mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/`
+
+
 **General information:**  
 basePath \=  Hofstenia/
 
@@ -101,7 +104,7 @@ cd /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia\_newGenome
 Filtering and creating remaining.csv files (Note: make sure conda activate is off\!):  
 sbatch filter\_hof\_sRNAbench.sbatch
 
-python srnabenchPerLibraryFilter.py -i novel.txt -a novel451.txt --filter-mc 10
+python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/srnabenchPerLibraryFilter.py -i novel.txt -a novel451.txt --filter-mc 10
 
 \#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#  
 Instructions: 
@@ -113,11 +116,11 @@ Instructions:
 \#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#
 
 **Uniting, removing overlaps and creating GFF:**  
-python srnabenchUniteGFF.py -o Hofstenia_sRNAbench.gff3 -s Hofstenia --base-path /mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq --create-fasta Hofstenia_sRNAbench.fasta --goodcandidates False
+python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/srnabenchUniteGFF.py -o Hofstenia_sRNAbench.gff3 -s Hofstenia --base-path /mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq --create-fasta Hofstenia_sRNAbench.fasta --goodcandidates False
 
 **process\_debugging\_Hofstenia command:**
 
-python processGoodCandidates.py --tool sRNAbench -s Hofstenia --base-path /mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq
+python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/processGoodCandidates.py --tool sRNAbench -s Hofstenia --base-path /mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq
 
 **New genome:** add boolean flag \--new-genome True
 
@@ -125,7 +128,7 @@ python processGoodCandidates.py --tool sRNAbench -s Hofstenia --base-path /mnt/n
 Filtering and creating remaining.csv files (Note: make sure conda activate is off\!):  
 sbatch filter\_hof\_mirdeep.sbatch
 
-python mirdeepPerLibraryFilter.py -i *.csv --filter-s 10 --filter-mc 10 --exclude-c 100 
+python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/mirdeepPerLibraryFilter.py -i *.csv --filter-s 10 --filter-mc 10 --exclude-c 100 
 
 \#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#  
 Instructions: 
@@ -136,7 +139,7 @@ Instructions:
 
 \#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#  
 **Uniting, removing overlaps and creating GFF:**  
-python mirdeepUniteGFF.py -o Hofstenia_mirdeep.gff3 --create-fasta Hofstenia_mirdeep.fasta -s Hofstenia --base-path /mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq --goodcandidates False --variant new_genome
+python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/mirdeepUniteGFF.py -o Hofstenia_mirdeep.gff3 --create-fasta Hofstenia_mirdeep.fasta -s Hofstenia --base-path /mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq --goodcandidates False --variant new_genome
 
 **process\_debugging\_Hofstenia command:**
 
@@ -196,17 +199,17 @@ The one that has higher counts will be marked as “sense” and the other as �
    bedtools intersect \-wao \-loj \-f 0.4 \-a /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/scripts/Hofstenia\_sRNAbench\_pre\_only.gff3 \-b /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/scripts/Hofstenia\_sRNAbench\_pre\_only.gff3 \> sRNAbench\_intersect.bed  
 2. Script commands for marking as overlaps or sense/antisense:  
    mirdeep:  
-   python overlapSenseAnti.py \--intersections-table /mnt/new\_groups/vaksler\_group/Isana\_Tzah/RNAcentral/miRNAs/Hofstenia/miRdeep\_intersect.bed \--gff /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/scripts/Hofstenia\_mirdeep\_pre\_only.gff3  
+   python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/overlapSenseAnti.py \--intersections-table /mnt/new\_groups/vaksler\_group/Isana\_Tzah/RNAcentral/miRNAs/Hofstenia/miRdeep\_intersect.bed \--gff /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/scripts/Hofstenia\_mirdeep\_pre\_only.gff3  
      
    sRNAbench:  
-   python overlapSenseAnti.py \--intersections-table /mnt/new\_groups/vaksler\_group/Isana\_Tzah/RNAcentral/miRNAs/Hofstenia/sRNAbench\_intersect.bed \--gff /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/scripts/Hofstenia\_sRNAbench\_pre\_only.gff3  
+   python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/overlapSenseAnti.py \--intersections-table /mnt/new\_groups/vaksler\_group/Isana\_Tzah/RNAcentral/miRNAs/Hofstenia/sRNAbench\_intersect.bed \--gff /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/scripts/Hofstenia\_sRNAbench\_pre\_only.gff3  
      
    **New genome:**  
    mirdeep:  
-   python overlapSenseAnti.py \--intersections-table /mnt/new\_groups/vaksler\_group/Isana\_Tzah/RNAcentral/miRNAs/Hofstenia\_newGenome/miRdeep\_intersect.bed \--gff /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia\_newGenome/scripts/Hofstenia\_mirdeep\_pre\_only.gff3  
+   python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/overlapSenseAnti.py \--intersections-table /mnt/new\_groups/vaksler\_group/Isana\_Tzah/RNAcentral/miRNAs/Hofstenia\_newGenome/miRdeep\_intersect.bed \--gff /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia\_newGenome/scripts/Hofstenia\_mirdeep\_pre\_only.gff3  
      
    sRNAbench:  
-   python overlapSenseAnti.py \--intersections-table /mnt/new\_groups/vaksler\_group/Isana\_Tzah/RNAcentral/miRNAs/Hofstenia\_newGenome/sRNAbench\_intersect.bed \--gff /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia\_newGenome/scripts/Hofstenia\_sRNAbench\_pre\_only.gff3  
+   python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/overlapSenseAnti.py \--intersections-table /mnt/new\_groups/vaksler\_group/Isana\_Tzah/RNAcentral/miRNAs/Hofstenia\_newGenome/sRNAbench\_intersect.bed \--gff /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia\_newGenome/scripts/Hofstenia\_sRNAbench\_pre\_only.gff3  
      
    
 
@@ -278,12 +281,12 @@ featureCounts \-F GFF \-t pre\_miRNA \-g ID \-O \-s 1 \-M \-a /mnt/new\_groups/v
 
 1. Path: /mnt/new\_groups/vaksler\_group/Isana\_Tzah/RNAcentral/miRNAs/Hofstenia  
 2. Command for script:  
-   python intersectionsTable.py \-s Hofstenia \--mirdeep-inter-table /mnt/new\_groups/vaksler\_group/Isana\_Tzah/RNAcentral/miRNAs/Hofstenia/miRdeep\_sRNAbench\_intersect.bed \--sRNAbench-inter-table /mnt/new\_groups/vaksler\_group/Isana\_Tzah/RNAcentral/miRNAs/Hofstenia/sRNAbench\_miRdeep\_intersect.bed \--fc-mirdeep /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/counts\_sep/miRNA\_miRdeep\_counts.txt \--fc-pre-mirdeep /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/counts\_sep/miRNA\_miRdeep\_counts\_flanked.txt \--fc-sRNAbench /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/counts\_sep/miRNA\_sRNAbench\_counts.txt \--fc-pre-sRNAbench /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/counts\_sep/miRNA\_sRNAbench\_counts\_flanked.txt \-rm /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/scripts/mirdeep\_all\_remaining\_filtered.csv \-rs /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/scripts/sRNAbench\_all\_remaining\_filtered.csv \-l EC1,EC2,EC3,GA1,GA2,GA3,DI1,DI2,DI3,PDi1,PDi2,PDi3,PDii1,PDii2,PDii3,PL1,PL2,PL3,PH1,PH2,PH3,HL1,HL2,HL3,IST1,IST2,IST3,AMP1,AMP2,AMP3,SMA1,SMA2,SMA3 \--sum-fc-thres 100  
+   python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/intersectionsTable.py \-s Hofstenia \--mirdeep-inter-table /mnt/new\_groups/vaksler\_group/Isana\_Tzah/RNAcentral/miRNAs/Hofstenia/miRdeep\_sRNAbench\_intersect.bed \--sRNAbench-inter-table /mnt/new\_groups/vaksler\_group/Isana\_Tzah/RNAcentral/miRNAs/Hofstenia/sRNAbench\_miRdeep\_intersect.bed \--fc-mirdeep /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/counts\_sep/miRNA\_miRdeep\_counts.txt \--fc-pre-mirdeep /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/counts\_sep/miRNA\_miRdeep\_counts\_flanked.txt \--fc-sRNAbench /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/counts\_sep/miRNA\_sRNAbench\_counts.txt \--fc-pre-sRNAbench /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/counts\_sep/miRNA\_sRNAbench\_counts\_flanked.txt \-rm /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/scripts/mirdeep\_all\_remaining\_filtered.csv \-rs /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/scripts/sRNAbench\_all\_remaining\_filtered.csv \-l EC1,EC2,EC3,GA1,GA2,GA3,DI1,DI2,DI3,PDi1,PDi2,PDi3,PDii1,PDii2,PDii3,PL1,PL2,PL3,PH1,PH2,PH3,HL1,HL2,HL3,IST1,IST2,IST3,AMP1,AMP2,AMP3,SMA1,SMA2,SMA3 \--sum-fc-thres 100  
    Output:  
    intersections\_table\_Hofstenia.xlsx  
      
    **New genome command:**  
-   python  /mnt/new\_groups/vaksler\_group/Isana\_TzahintersectionsTable.py \-s Hofstenia \--mirdeep-inter-table /mnt/new\_groups/vaksler\_group/Isana\_Tzah/RNAcentral/miRNAs/Hofstenia\_newGenome/miRdeep\_sRNAbench\_intersect.bed \--sRNAbench-inter-table /mnt/new\_groups/vaksler\_group/Isana\_Tzah/RNAcentral/miRNAs/Hofstenia\_newGenome/sRNAbench\_miRdeep\_intersect.bed \--fc-mirdeep /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia\_newGenome/counts\_sep/miRNA\_miRdeep\_counts.txt \--fc-pre-mirdeep /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia\_newGenome/counts\_sep/miRNA\_miRdeep\_counts\_flanked.txt \--fc-sRNAbench /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia\_newGenome/counts\_sep/miRNA\_sRNAbench\_counts.txt \--fc-pre-sRNAbench /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia\_newGenome/counts\_sep/miRNA\_sRNAbench\_counts\_flanked.txt \-rm /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia\_newGenome/scripts/mirdeep\_all\_remaining\_filtered.csv \-rs /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia\_newGenome/scripts/sRNAbench\_all\_remaining\_filtered.csv \-l EC1,EC2,EC3,GA1,GA2,GA3,DI1,DI2,DI3,PDi1,PDi2,PDi3,PDii1,PDii2,PDii3,PL1,PL2,PL3,PH1,PH2,PH3,HL1,HL2,HL3,IST1,IST2,IST3,AMP1,AMP2,AMP3,SMA1,SMA2,SMA3 \--sum-fc-thres 100 \--new-genome
+   python  /mnt/new\_groups/vaksler\_group/Isana\_Tzah/novel-miRNAs/intersectionsTable.py \-s Hofstenia \--mirdeep-inter-table /mnt/new\_groups/vaksler\_group/Isana\_Tzah/RNAcentral/miRNAs/Hofstenia\_newGenome/miRdeep\_sRNAbench\_intersect.bed \--sRNAbench-inter-table /mnt/new\_groups/vaksler\_group/Isana\_Tzah/RNAcentral/miRNAs/Hofstenia\_newGenome/sRNAbench\_miRdeep\_intersect.bed \--fc-mirdeep /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia\_newGenome/counts\_sep/miRNA\_miRdeep\_counts.txt \--fc-pre-mirdeep /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia\_newGenome/counts\_sep/miRNA\_miRdeep\_counts\_flanked.txt \--fc-sRNAbench /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia\_newGenome/counts\_sep/miRNA\_sRNAbench\_counts.txt \--fc-pre-sRNAbench /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia\_newGenome/counts\_sep/miRNA\_sRNAbench\_counts\_flanked.txt \-rm /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia\_newGenome/scripts/mirdeep\_all\_remaining\_filtered.csv \-rs /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia\_newGenome/scripts/sRNAbench\_all\_remaining\_filtered.csv \-l EC1,EC2,EC3,GA1,GA2,GA3,DI1,DI2,DI3,PDi1,PDi2,PDi3,PDii1,PDii2,PDii3,PL1,PL2,PL3,PH1,PH2,PH3,HL1,HL2,HL3,IST1,IST2,IST3,AMP1,AMP2,AMP3,SMA1,SMA2,SMA3 \--sum-fc-thres 100 \--new-genome
 
 **Generate all candidates fasta**
 
@@ -291,11 +294,11 @@ path:  /mnt/new\_groups/vaksler\_group/Isana\_Tzah/RNAcentral/miRNAs/Hofstenia/
 
 **command:**
 
-python /mnt/new\_groups/vaksler\_group/Isana\_Tzah/RNAcentral/miRNAs/Hofstenia/allCandidatesFasta.py \--all /mnt/new\_groups/vaksler\_group/Isana\_Tzah/RNAcentral/miRNAs/Hofstenia/intersections\_table\_Hofstenia.xlsx \-s Hofstenia
+python /mnt/new\_groups/vaksler\_group/Isana\_Tzah/novel-miRNAs/allCandidatesFasta.py \--all /mnt/new\_groups/vaksler\_group/Isana\_Tzah/RNAcentral/miRNAs/Hofstenia/intersections\_table\_Hofstenia.xlsx \-s Hofstenia
 
 **New genome command:**
 
-python /mnt/new\_groups/vaksler\_group/Isana\_Tzah/RNAcentral/miRNAs/Hofstenia/allCandidatesFasta.py \--all /mnt/new\_groups/vaksler\_group/Isana\_Tzah/RNAcentral/miRNAs/Hofstenia\_newGenome/intersections\_table\_Hofstenia.xlsx \-s Hofstenia \--new-genome
+python /mnt/new\_groups/vaksler\_group/Isana\_Tzah/novel-miRNAs/allCandidatesFasta.py \--all /mnt/new\_groups/vaksler\_group/Isana\_Tzah/RNAcentral/miRNAs/Hofstenia\_newGenome/intersections\_table\_Hofstenia.xlsx \-s Hofstenia \--new-genome
 
 **Feature Engineering with Ziv’s code**
 
@@ -315,7 +318,7 @@ Calculating the thresholds for filtering less likely candidates, according to th
 
 Create all fasta files for miRGeneDB
 
-python mirgenedbThresholds.py
+python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/mirgenedbThresholds.py
 
 path: /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/mirbase\_data/
 
@@ -327,7 +330,7 @@ Run the sbatch file “run.sbatch”.
 
 The command inside the file:
 
-python Ziv\_feature\_SOS.py \--precursors /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/mirgenedb\_data\_v3/ALL\_mirgenedb\_hairpin.fasta \--mature /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/mirgenedb\_data\_v3/ALL\_mirgenedb\_mature.fasta \--star /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/mirgenedb\_data\_v3/ALL\_mirgenedb\_star.fasta \--species miRGeneDB
+python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/Ziv_feature_SOS.py \--precursors /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/mirgenedb\_data\_v3/ALL\_mirgenedb\_hairpin.fasta \--mature /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/mirgenedb\_data\_v3/ALL\_mirgenedb\_mature.fasta \--star /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/mirgenedb\_data\_v3/ALL\_mirgenedb\_star.fasta \--species miRGeneDB
 
 This script will create temp.csv.
 
@@ -335,7 +338,7 @@ Plot figures
 
 After that run:
 
-python plot\_series.py
+python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/plot_series.py
 
 to plot the plots from temp.csv
 
@@ -373,7 +376,7 @@ path: /mnt/new\_groups/vaksler\_group/Isana\_Tzah/RNAcentral/miRNAs/Hofstenia/
 
 **command:**
 
-python statistics.py \--all /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Ziv\_Features/all\_remaining\_after\_ziv\_Hofstenia.xlsx \-s Hofstenia
+python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/statistics.py \--all /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Ziv\_Features/all\_remaining\_after\_ziv\_Hofstenia.xlsx \-s Hofstenia
 
 The statistics.py script also creates clusters of miRNAs that are within a distance of 10000 bases from each other, on the same strand.
 
@@ -391,7 +394,7 @@ path: /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/Express
 
 **command:** 
 
-python expression\_dynamics.py \--all /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Ziv\_Features/all\_remaining\_after\_ziv\_Hofstenia.xlsx \--seed GAGGUAG \--libraries EC1,EC2,EC3,GA1,GA2,GA3,DI1,DI2,DI3,PDi1,PDi2,PDi3,PDii1,PDii2,PDii3,PL1,PL2,PL3,PH1,PH2,PH3,HL1,HL2,HL3,IST1,IST2,IST3,AMP1,AMP2,AMP3,SMA1,SMA2,SMA3 \--time early\_cleavage,gastrula,dimple,pos\_dimple\_phase\_i,post\_dimple\_phase\_ii,pill\_&\_post\_pill,pigmented,pre\_hatchling,hatchling,"in\_situ"\_size\_juvenile,"amputation\_\&RNAi"\_size\_juvenile,sexually\_matured\_adult \-s Hofstenia
+python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/expression_dynamics.py \--all /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Ziv\_Features/all\_remaining\_after\_ziv\_Hofstenia.xlsx \--seed GAGGUAG \--libraries EC1,EC2,EC3,GA1,GA2,GA3,DI1,DI2,DI3,PDi1,PDi2,PDi3,PDii1,PDii2,PDii3,PL1,PL2,PL3,PH1,PH2,PH3,HL1,HL2,HL3,IST1,IST2,IST3,AMP1,AMP2,AMP3,SMA1,SMA2,SMA3 \--time early\_cleavage,gastrula,dimple,pos\_dimple\_phase\_i,post\_dimple\_phase\_ii,pill\_&\_post\_pill,pigmented,pre\_hatchling,hatchling,"in\_situ"\_size\_juvenile,"amputation\_\&RNAi"\_size\_juvenile,sexually\_matured\_adult \-s Hofstenia
 
 **miRge**
 
@@ -401,11 +404,11 @@ The commands below were used either for Oscar’s files, or for the generated fi
 
 **Generate new fasta for remaining candidates after Ziv:**
 
-python /mnt/new\_groups/vaksler\_group/Isana\_Tzah/RNAcentral/miRNAs/Hofstenia/allCandidatesFasta.py \--all /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Ziv\_Features/all\_remaining\_after\_ziv\_Hofstenia.xlsx \-s Hofstenia \--sheetname "(A) Unfiltered" \--output /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/miRge\_after\_Ziv/
+python /mnt/new\_groups/vaksler\_group/Isana\_Tzah/novel-miRNAs/allCandidatesFasta.py \--all /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Ziv\_Features/all\_remaining\_after\_ziv\_Hofstenia.xlsx \-s Hofstenia \--sheetname "(A) Unfiltered" \--output /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/miRge\_after\_Ziv/
 
 **New genome:**
 
-python /mnt/new\_groups/vaksler\_group/Isana\_Tzah/RNAcentral/miRNAs/Hofstenia/allCandidatesFasta.py \--all /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Ziv\_Features/all\_remaining\_after\_ziv\_Hofstenia\_newGenome.xlsx \-s Hofstenia \--sheetname "(A) Unfiltered" \--output /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia\_newGenome/miRge\_after\_Ziv/ 
+python /mnt/new\_groups/vaksler\_group/Isana\_Tzah/novel-miRNAs/allCandidatesFasta.py \--all /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Ziv\_Features/all\_remaining\_after\_ziv\_Hofstenia\_newGenome.xlsx \-s Hofstenia \--sheetname "(A) Unfiltered" \--output /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia\_newGenome/miRge\_after\_Ziv/ 
 
 **Create files necessary for mirge:**
 

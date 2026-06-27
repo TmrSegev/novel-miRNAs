@@ -2,8 +2,10 @@
 
 import os
 
-DEFAULT_BASE_PATH = "/mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq"
-DEFAULT_NCRNA_DIR = "/mnt/new_groups/vaksler_group/Isana_Tzah/RNAcentral/ncRNAs_Caenorhabditis"
+DEFAULT_WORKSPACE_ROOT = "/mnt/new_groups/vaksler_group/Isana_Tzah"
+DEFAULT_BASE_PATH = os.path.join(DEFAULT_WORKSPACE_ROOT, "Charles_seq")
+DEFAULT_REPO_DIR = os.path.join(DEFAULT_WORKSPACE_ROOT, "novel-miRNAs")
+DEFAULT_NCRNA_DIR = os.path.join(DEFAULT_WORKSPACE_ROOT, "RNAcentral/ncRNAs_Caenorhabditis")
 
 # Global filter defaults (all species; overridable via CLI).
 FILTER_MC_DEFAULT = 10
@@ -59,6 +61,18 @@ NEW_GENOME_OVERRIDES = {
         "genome_fasta_subpath": (
             "Macrosperma_newGenome/genome/"
             "CMACR.caenorhabditis_macrosperma_JU2083_v2.scaffolds.fna"
+        ),
+    },
+    "Sulstoni": {
+        "genome_fasta_subpath": (
+            "Sulstoni_newGenome/genome/"
+            "CSULS.caenorhabditis_sulstoni_PRJEB12601_WBPS19.scaffolds.fna"
+        ),
+    },
+    "Elegans": {
+        "genome_fasta_subpath": (
+            "Elegans_newGenome/genome/"
+            "CELEG.caenorhabditis_elegans_PRJNA13758_WBPS19.scaffolds.fna"
         ),
     },
 }
@@ -172,7 +186,7 @@ def get_species_config(species, base_path=None, variant=None):
     cfg["mirdeep_out_dir"] = os.path.join(cfg["base_path"], cfg["mirdeep_out_subdir"])
     cfg["seed_path"] = os.path.join(cfg["base_path"], cfg["seed_file"])
     cfg["output_dir"] = os.path.join(
-        cfg["base_path"],
+        DEFAULT_WORKSPACE_ROOT,
         cfg["output_subdir"].format(species=cfg.get("species_label", species)),
     )
     if variant == "new_genome":

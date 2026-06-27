@@ -1,3 +1,7 @@
+Scripts directory: /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/
+Invoke all pipeline scripts by absolute path from that directory (do not copy scripts into species folders).
+Legacy duplicate copies outside the repo were renamed to *_archived.py; see docs/archived_scripts_manifest.txt.
+
 Order of running the files (unified pipeline — all species):
 
 Per library (in each sRNAbench output folder and mirdeep_out/<library>/):
