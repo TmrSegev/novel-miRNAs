@@ -1,29 +1,38 @@
 Scripts directory: /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/
 Invoke all pipeline scripts by absolute path from that directory (do not copy scripts into species folders).
+Pipeline documentation:
+  docs/Pipeline_workflow.md  — proposed rationale-first workflow (PI review)
+  docs/Pipeline.md           — current command reference (unchanged)
 Legacy duplicate copies outside the repo were renamed to *_archived.py; see docs/archived_scripts_manifest.txt.
 
-Order of running the files (unified pipeline — all species):
+Order of running the files (see docs/Pipeline_workflow.md for rationale):
 
-Per library (in each sRNAbench output folder and mirdeep_out/<library>/):
+Phase 2 — per library:
   srnabenchPerLibraryFilter.py   (default --filter-mc 10)
   mirdeepPerLibraryFilter.py     (default --filter-s 10 --exclude-c 100 --filter-mc 10)
 
-In <Species>/scripts/ (two-pass good_candidates):
-  srnabenchUniteGFF.py           (--goodcandidates False, then True; -seed optional, defaults from species config)
-  processGoodCandidates.py       (--tool sRNAbench)
-  mirdeepUniteGFF.py             (--goodcandidates False, then True)
-  processGoodCandidates.py       (--tool miRDeep)
-  compare_genome_to_fasta.py     (--mode discovery, after GFF pass 2; nematodes)
-
+Phase 3 — curation in <Species>/scripts/ (good_candidates: steps A → B → C):
+  srnabenchUniteGFF.py           (step A: --goodcandidates False; step C: True)
+  processGoodCandidates.py       (step B; --tool sRNAbench or miRDeep)
+  mirdeepUniteGFF.py             (step A / step C)
+  compare_genome_to_fasta.py     (--mode discovery; nematodes)
   overlapSenseAnti.py
+
+Phase 4 — quantification:
+  add_flank_to_GFF.py            (-s <Species> [--variant new_genome])
+  filterSpacesBlastDB.py         (nematodes; once per DB)
+  STAR/featureCounts + blastn     (see Pipeline.md for commands)
+
+Phase 5 — integration:
   mirbaseToGFF3.py               (Elegans only)
-  filterSpacesBlastDB.py         (nematodes with BLAST; once per DB)
-  add_flank_to_GFF.py            (-s <Species> [--variant new_genome] [--base-path ...])
-  intersectionsTable.py          (BLAST optional: required for nematodes, skipped for Hofstenia)
+  bedtools cross-intersections + intersectionsTable.py
+
+Phase 6 — final filters:
   allCandidatesFasta.py
-  Ziv_feature_SOS.py
+  Ziv_feature_SOS.py             (structural filter; input = intersections table)
   statistics.py
-  expression_dynamics.py         (Elegans only)
+
+Optional: expression_dynamics.py (Elegans, Hofstenia)
 
 After analyzing all species:
   seed_frequency.py
@@ -49,7 +58,7 @@ Hofstenia notes:
   --variant new_genome selects the PacBio assembly (Hofstenia_newGenome/)
 
 Macrosperma notes:
-  --variant new_genome selects v2 scaffolds (Macrosperma_newGenome/); see docs/Pipeline Macrosperma.md
+  --variant new_genome selects v2 scaffolds (Macrosperma_newGenome/); see docs/Pipeline_workflow.md
 
 Backward-compatible wrappers (deprecated): nematode*GFF.py, hofstenia*GFF.py, nematode*Filter.py,
   hofstenia*Filter.py, process_debugging*.py, intersectionsTableHofstenia.py
