@@ -22,7 +22,10 @@ def handle_given_name(name, df, column):
 
 
 def run(output, species_name, fasta_path=None, seed_path=None, good_candidates=False,
-        base_path=None, variant=None):
+        debug_only=False, base_path=None, variant=None):
+    if debug_only and good_candidates:
+        raise ValueError("Cannot use --debug-only together with --goodcandidates True")
+
     cfg = get_species_config(species_name, base_path, variant=variant)
     output_dir = cfg["scripts_dir"]
     srnabench_out = cfg["srnabench_out_dir"]
@@ -32,8 +35,6 @@ def run(output, species_name, fasta_path=None, seed_path=None, good_candidates=F
 
     version = "##gff-version 3\n"
     gff3_columns = ["seqid", "source", "type", "start", "end", "score", "strand", "phase", "attributes"]
-    gff3 = pd.DataFrame(columns=gff3_columns)
-    gff3_pre_only = pd.DataFrame(columns=gff3_columns)
 
     output = os.path.join(output_dir, output)
     output_pre_only = os.path.join(output_dir, f"{species}_sRNAbench_pre_only.gff3")
@@ -46,6 +47,19 @@ def run(output, species_name, fasta_path=None, seed_path=None, good_candidates=F
     else:
         fasta_pre_only_path = None
         fasta_star_path = None
+
+    good_candidates_path = os.path.join(good_candidates_dir, "sRNAbench_goodCandidates.csv")
+    if good_candidates and not debug_only and os.path.exists(good_candidates_path):
+        table = pd.read_csv(good_candidates_path, sep="\t")
+        if table.empty:
+            print(f"Warning: Good candidates file is empty: {good_candidates_path}")
+        table.to_csv(os.path.join(output_dir, "sRNAbench_all_remaining_filtered.csv"), sep="\t", index=False)
+        print(f"Loaded good candidates from {good_candidates_path} (skipping per-library re-unite)")
+        _write_srnabench_outputs(
+            table, output, output_pre_only, fasta_path, fasta_pre_only_path, fasta_star_path,
+            version, gff3_columns, cfg, seed_path,
+        )
+        return
 
     table = None
     removed_no_find = None
@@ -80,12 +94,15 @@ def run(output, species_name, fasta_path=None, seed_path=None, good_candidates=F
     table.to_csv(debug_path, sep="\t", index=False)
     print(f"Saved debugging CSV: {debug_path}")
 
+    if debug_only:
+        print("Debug-only mode: stopping after debugging CSV (run processGoodCandidates.py next).")
+        return
+
     table, no_overlaps = deduplicate_coordinate_overlaps(table, "seqName")
     print(table["overlaps"].value_counts().sort_index(ascending=False))
     no_overlaps.to_csv(os.path.join(output_dir, "removed_sRNAbench_no_overlaps.csv"), sep="\t")
 
     if good_candidates:
-        good_candidates_path = os.path.join(good_candidates_dir, "sRNAbench_goodCandidates.csv")
         try:
             table = pd.read_csv(good_candidates_path, sep="\t")
             if table.empty:
@@ -94,6 +111,17 @@ def run(output, species_name, fasta_path=None, seed_path=None, good_candidates=F
         except (FileNotFoundError, pd.errors.EmptyDataError) as e:
             print(f"Warning: Could not read good candidates file: {good_candidates_path}")
             print(f"Error: {e}")
+
+    _write_srnabench_outputs(
+        table, output, output_pre_only, fasta_path, fasta_pre_only_path, fasta_star_path,
+        version, gff3_columns, cfg, seed_path,
+    )
+
+
+def _write_srnabench_outputs(table, output, output_pre_only, fasta_path, fasta_pre_only_path,
+                             fasta_star_path, version, gff3_columns, cfg, seed_path):
+    gff3 = pd.DataFrame(columns=gff3_columns)
+    gff3_pre_only = pd.DataFrame(columns=gff3_columns)
 
     if table.empty:
         print("Warning: No miRNA candidates remaining after filtering. Creating empty output files.")
@@ -254,6 +282,8 @@ if __name__ == "__main__":
     parser.add_argument("-seed", help="Seed family file (default from species config)")
     parser.add_argument("--create-fasta", dest="fasta_path", help="Output mature FASTA filename")
     parser.add_argument("--goodcandidates", default="False", help="True to use good_candidates CSV")
+    parser.add_argument("--debug-only", action="store_true",
+                        help="Write debugging CSV only; skip GFF/FASTA (Step A of good_candidates workflow)")
     parser.add_argument("--base-path", dest="base_path", help="Charles_seq base path")
     parser.add_argument("--variant", help='Genome variant, e.g. "new_genome" for alternate assembly track')
     args = parser.parse_args()
@@ -263,6 +293,7 @@ if __name__ == "__main__":
         fasta_path=args.fasta_path,
         seed_path=args.seed,
         good_candidates=args.goodcandidates == "True",
+        debug_only=args.debug_only,
         base_path=args.base_path,
         variant=args.variant,
     )

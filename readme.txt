@@ -1,11 +1,11 @@
 Scripts directory: /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/
 Invoke all pipeline scripts by absolute path from that directory (do not copy scripts into species folders).
 Pipeline documentation:
-  docs/Pipeline_workflow.md  — proposed rationale-first workflow (PI review)
-  docs/Pipeline.md           — current command reference (unchanged)
+  docs/pipeline_v3.md          — canonical workflow (template reference, Phases 1–13)
+  docs/Pipeline <Species>.md — species-specific notes and expanded examples
 Legacy duplicate copies outside the repo were renamed to *_archived.py; see docs/archived_scripts_manifest.txt.
 
-Order of running the files (see docs/Pipeline_workflow.md for rationale):
+Order of running the files (see docs/pipeline_v3.md):
 
 Phase 2 — per library:
   srnabenchPerLibraryFilter.py   (default --filter-mc 10)
@@ -21,7 +21,7 @@ Phase 3 — curation in <Species>/scripts/ (good_candidates: steps A → B → C
 Phase 4 — quantification:
   add_flank_to_GFF.py            (-s <Species> [--variant new_genome])
   filterSpacesBlastDB.py         (nematodes; once per DB)
-  STAR/featureCounts + blastn     (see Pipeline.md for commands)
+  STAR/featureCounts + blastn     (see docs/pipeline_v3.md Phases 7–8)
 
 Phase 5 — integration:
   mirbaseToGFF3.py               (Elegans only)
@@ -58,7 +58,7 @@ Hofstenia notes:
   --variant new_genome selects the PacBio assembly (Hofstenia_newGenome/)
 
 Macrosperma notes:
-  --variant new_genome selects v2 scaffolds (Macrosperma_newGenome/); see docs/Pipeline_workflow.md
+  --variant new_genome selects v2 scaffolds (Macrosperma_newGenome/); see docs/pipeline_v3.md
 
 Backward-compatible wrappers (deprecated): nematode*GFF.py, hofstenia*GFF.py, nematode*Filter.py,
   hofstenia*Filter.py, process_debugging*.py, intersectionsTableHofstenia.py

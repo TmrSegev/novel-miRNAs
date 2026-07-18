@@ -19,7 +19,10 @@ def get_seq_id(row):
 
 
 def run(output, species_name, fasta_path=None, seed_path=None, good_candidates=False,
-        base_path=None, variant=None):
+        debug_only=False, base_path=None, variant=None):
+    if debug_only and good_candidates:
+        raise ValueError("Cannot use --debug-only together with --goodcandidates True")
+
     cfg = get_species_config(species_name, base_path, variant=variant)
     output_dir = cfg["scripts_dir"]
     mirdeep_out = cfg["mirdeep_out_dir"]
@@ -29,8 +32,6 @@ def run(output, species_name, fasta_path=None, seed_path=None, good_candidates=F
 
     version = "##gff-version 3\n"
     gff3_columns = ["seqid", "source", "type", "start", "end", "score", "strand", "phase", "attributes"]
-    gff3 = pd.DataFrame(columns=gff3_columns)
-    gff3_pre_only = pd.DataFrame(columns=gff3_columns)
 
     output = os.path.join(output_dir, output)
     output_pre_only = os.path.join(output_dir, f"{species}_mirdeep_pre_only.gff3")
@@ -43,6 +44,19 @@ def run(output, species_name, fasta_path=None, seed_path=None, good_candidates=F
     else:
         fasta_pre_only_path = None
         fasta_star_path = None
+
+    good_candidates_path = os.path.join(good_candidates_dir, "miRDeep_goodCandidates.csv")
+    if good_candidates and not debug_only and os.path.exists(good_candidates_path):
+        good_df = pd.read_csv(good_candidates_path, sep="\t")
+        if good_df.empty:
+            print(f"Warning: Good candidates file is empty: {good_candidates_path}")
+        good_df.to_csv(os.path.join(output_dir, "mirdeep_all_remaining_filtered.csv"), sep="\t", index=False)
+        print(f"Loaded good candidates from {good_candidates_path} (skipping per-library re-unite)")
+        _write_mirdeep_outputs(
+            [good_df], output, output_pre_only, fasta_path, fasta_pre_only_path, fasta_star_path,
+            version, gff3_columns, cfg, seed_path,
+        )
+        return
 
     filtered_input = []
     for file_num in range(1, 3):
@@ -69,6 +83,9 @@ def run(output, species_name, fasta_path=None, seed_path=None, good_candidates=F
         table.to_csv(debug_path, sep="\t", index=False)
         print(f"Saved debugging CSV: {debug_path}")
 
+        if debug_only:
+            continue
+
         table["chr"] = table["precursor coordinate"].str.split(":", expand=True)[0]
         table["positions"] = table["precursor coordinate"].str.split(":", expand=True)[1].astype(str)
         table["start"] = table["positions"].str.split(".", expand=True)[0].astype(int)
@@ -87,8 +104,11 @@ def run(output, species_name, fasta_path=None, seed_path=None, good_candidates=F
             axis=1,
         )
 
+    if debug_only:
+        print("Debug-only mode: stopping after debugging CSV (run processGoodCandidates.py next).")
+        return
+
     if good_candidates:
-        good_candidates_path = os.path.join(good_candidates_dir, "miRDeep_goodCandidates.csv")
         try:
             good_df = pd.read_csv(good_candidates_path, sep="\t")
             if good_df.empty:
@@ -99,6 +119,17 @@ def run(output, species_name, fasta_path=None, seed_path=None, good_candidates=F
             print(f"Warning: Could not read good candidates file: {good_candidates_path}")
             print(f"Error: {e}")
             print("Continuing with filtered inputs from coordinate overlap filtering...")
+
+    _write_mirdeep_outputs(
+        filtered_input, output, output_pre_only, fasta_path, fasta_pre_only_path, fasta_star_path,
+        version, gff3_columns, cfg, seed_path,
+    )
+
+
+def _write_mirdeep_outputs(filtered_input, output, output_pre_only, fasta_path, fasta_pre_only_path,
+                           fasta_star_path, version, gff3_columns, cfg, seed_path):
+    gff3 = pd.DataFrame(columns=gff3_columns)
+    gff3_pre_only = pd.DataFrame(columns=gff3_columns)
 
     if not filtered_input or all(df.empty for df in filtered_input):
         print("Warning: No miRNA candidates remaining after filtering. Creating empty output files.")
@@ -259,6 +290,8 @@ if __name__ == "__main__":
     parser.add_argument("-seed", help="Seed family file (default from species config)")
     parser.add_argument("--create-fasta", dest="fasta_path", help="Output mature FASTA filename")
     parser.add_argument("--goodcandidates", default="False", help="True to use good_candidates CSV")
+    parser.add_argument("--debug-only", action="store_true",
+                        help="Write debugging CSV only; skip GFF/FASTA (Step A of good_candidates workflow)")
     parser.add_argument("--base-path", dest="base_path", help="Charles_seq base path")
     parser.add_argument("--variant", help='Genome variant, e.g. "new_genome" for alternate assembly track')
     args = parser.parse_args()
@@ -268,6 +301,7 @@ if __name__ == "__main__":
         fasta_path=args.fasta_path,
         seed_path=args.seed,
         good_candidates=args.goodcandidates == "True",
+        debug_only=args.debug_only,
         base_path=args.base_path,
         variant=args.variant,
     )

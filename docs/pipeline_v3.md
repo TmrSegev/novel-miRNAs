@@ -5,9 +5,7 @@ Generalized, agent-friendly pipeline documentation. Commands are **templates** w
 | Document | Use when |
 |----------|----------|
 | **This file** (`pipeline_v3.md`) | Understanding workflow order; assembling or automating commands |
-| [`Pipeline.md`](Pipeline.md) | Copy-paste **full** commands with all library paths expanded |
-| [`Pipeline_v2.md`](Pipeline_v2.md) | Same templates in the original section numbering (before reorder) |
-| `Pipeline <Species>.md` | Species-specific notes, paper text, validation results |
+| `Pipeline <Species>.md` | Species-specific notes, paper text, validation results, expanded command examples |
 
 **Paths (fixed):**
 
@@ -21,23 +19,23 @@ Invoke Python scripts by **absolute path**; do not copy scripts into species fol
 
 ## What changed in the reordering (v2 → v3)
 
-Stage **names** match [`Pipeline_v2.md`](Pipeline_v2.md) (Phases 1–11). Only the **run order** of Phases 7–9 changed, so each step runs only after its inputs exist.
+Stage **names** are unchanged for Phases 1–10 relative to the pre-v3 template ordering. v3 **splits old Phase 11 downstream** into three phases (11 Ziv, 12 final candidates, 13 statistics). Only the **run order** of Phases 7–9 changed relative to that earlier ordering.
 
 In v2, **cross-tool bedtools intersections** (old Phase 7) appeared *before* **STAR / featureCounts** (Phase 8) and **BLAST** (Phase 9). That order is fine for drawing overlap BEDs between GFF files, but **`intersectionsTable.py` (Phase 10) needs featureCounts and BLAST files**, so quantification must finish before the integration block. v3 therefore runs:
 
-**Phases 1–6 unchanged** → then **7 STAR/featureCounts** → **8 BLAST** → **9 cross-tool bedtools** → **10 intersectionsTable** → **11 downstream**.
+**Phases 1–6 unchanged** → **7 STAR/featureCounts** → **8 BLAST** → **9 cross-tool bedtools** → **10 intersectionsTable** → **11 Ziv** → **12 final candidates** → **13 statistics**.
 
 One prep addition: **`mirbaseToGFF3.py`** (Elegans) moved into Phase 1 so `cel_mirbase_seq.gff3` exists before Phase 7 miRBase featureCounts.
 
-Nothing else moved. Phase 5 still produces the united GFF/FASTA that Phases 7–8 count against; Phase 6 still labels strands before Phase 9 cross-tool intersects.
+Phase 5 now uses **`--debug-only`** on unite scripts (Step A) so you do not build GFF/FASTA twice; Step C with **`--goodcandidates True`** loads the good-candidates CSV directly without re-reading per-library files.
 
 | v2 section order | v3 run order | What runs |
 |------------------|--------------|-----------|
 | 7 — Cross-tool intersections | **9** | bedtools cross-intersect |
 | 8 — STAR / featureCounts | **7** | STAR, featureCounts, `add_flank_to_GFF.py` |
 | 9 — BLAST | **8** | blastn |
-| 10 — Intersections table | **10** | `intersectionsTable.py` (unchanged position relative to 9→10) |
-| 11 — Downstream | **11** | `allCandidatesFasta.py`, `Ziv_feature_SOS.py`, `statistics.py` |
+| 10 — Intersections table | **10** | `intersectionsTable.py` |
+| 11 — Downstream (all in one) | **11–13** | Ziv → final FASTAs → `statistics.py` |
 
 Phases 1–6 keep the same names and relative order as v2.
 
@@ -59,7 +57,9 @@ Each phase lists its main scripts. Run in this order:
 | 8 | BLAST homolog search | `filterSpacesBlastDB.py`, makeblastdb, blastn |
 | 9 | Cross-tool (and known-miRNA) intersections | bedtools (cross-intersect), `intersections.sbatch` |
 | 10 | Intersections table | `intersectionsTable.py` |
-| 11 | Downstream analysis | `allCandidatesFasta.py`, `Ziv_feature_SOS.py`, `statistics.py` |
+| 11 | Structural filtering (Ziv) | `allCandidatesFasta.py` → `Ziv_feature_SOS.py` |
+| 12 | Final candidates | `allCandidatesFasta.py` (from Ziv workbook) |
+| 13 | Statistics | `statistics.py` |
 
 ```mermaid
 flowchart TD
@@ -71,7 +71,9 @@ flowchart TD
   p7 --> p8[8_BLAST]
   p8 --> p9[9_bedtools_cross_intersect]
   p9 --> p10[10_intersectionsTable]
-  p10 --> p11[11_allCandidatesFasta_Ziv_stats]
+  p10 --> p11[11_Ziv]
+  p11 --> p12[12_final_candidates]
+  p12 --> p13[13_statistics]
 ```
 
 ### Quick execution order
@@ -80,13 +82,15 @@ flowchart TD
 1  cutadapt, bowtie-build, makeSeqObj  (+ mirbaseToGFF3 for Elegans)
 2  mapper.pl → miRDeep2.pl → mirdeepPerLibraryFilter.py   (each library)
 3  sRNAbench.jar → srnabenchPerLibraryFilter.py             (each library)
-5  srnabenchUniteGFF / mirdeepUniteGFF (×2) → processGoodCandidates → compare_genome_to_fasta
+5  unite --debug-only → processGoodCandidates → unite --goodcandidates True  (per tool)
 6  bedtools self-intersect → overlapSenseAnti.py
 7  STAR → featureCounts → add_flank_to_GFF → featureCounts (flanked)
 8  filterSpacesBlastDB → blastn                              (nematodes only)
 9  bedtools cross-intersect (sRNAbench ↔ miRDeep; Elegans ↔ miRBase/miRGeneDB)
 10 intersectionsTable.py
-11 allCandidatesFasta.py → Ziv_feature_SOS.py → statistics.py
+11 allCandidatesFasta (from intersections) → Ziv_feature_SOS.py
+12 allCandidatesFasta (from Ziv workbook, {ZIV_SHEET}) → final FASTAs
+13 statistics.py  (input: all_remaining_after_ziv_{SPECIES}.xlsx)
 Optional: mirTrace, expression_dynamics, miRge, seed_frequency, new_genome
 ```
 
@@ -94,16 +98,16 @@ Optional: mirTrace, expression_dynamics, miRge, seed_frequency, new_genome
 
 ### Filtering layers (which script, which phase)
 
+Only stages that **remove** miRNA candidates and keep a subset. Merge/unite, labeling, and export steps are omitted.
+
 | Layer | What it does | Script | Phase |
 |-------|--------------|--------|-------|
 | 1 | Per-library quality filter | `mirdeepPerLibraryFilter.py`, `srnabenchPerLibraryFilter.py` | 2, 3 |
-| 2 | Merge libraries; coordinate dedup | `*UniteGFF.py --goodcandidates False` | 5 |
-| 3 | Multi-library / multi-replicate support | `processGoodCandidates.py` | 5 |
-| 4 | Sense / antisense / overlap labels | `overlapSenseAnti.py` | 6 |
-| 5 | Drop low expression (sum FC &lt; 100) | `intersectionsTable.py --sum-fc-thres 100` | 10 |
-| 6 | Structural filter | `Ziv_feature_SOS.py` | 11 |
+| 2 | Multi-library / multi-replicate support | `processGoodCandidates.py` | 5 step B |
+| 3 | Drop low expression (sum FC &lt; 100) | `intersectionsTable.py --sum-fc-thres 100` | 10 |
+| 4 | Structural filter | `Ziv_feature_SOS.py` | 11 |
 
-`Ziv_feature_SOS.py` runs after `intersectionsTable.py` so each candidate row already has featureCounts, BLAST, and cross-tool types.
+`Ziv_feature_SOS.py` runs after `intersectionsTable.py` so each row already has featureCounts, BLAST, and cross-tool types. `statistics.py` runs on the Ziv-filtered workbook (Phase 13), not the raw intersections table.
 
 ---
 
@@ -137,6 +141,9 @@ Resolve these before running a step. An agent can load library lists and flags f
 | `{SEED}` | Seed file (nematodes; Hofstenia uses config default) | `{BASE}/mirbase_data/Seeds.txt` |
 | `{RNA_MI_DIR}` | Intersections / BED / tables | `{RNACENTRAL}/miRNAs/{SPECIES}` |
 | `{REPO}` | Script root | `/mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs` |
+| `{ZIV_XLSX}` | Ziv-filtered workbook | `{BASE}/Ziv_Features/all_remaining_after_ziv_{SPECIES}.xlsx` |
+| `{ZIV_SHEET}` | Sheet for final candidates / statistics | Nematodes: `(D) Structural Features`; Hofstenia: `(A) Unfiltered` — from `cfg["mirge_input_sheet"]` |
+| `{MIRGE_FASTA_DIR}` | Final candidate FASTAs (Phase 12) | `{SPECIES_DIR}/miRge/` (Hofstenia: `miRge_after_Ziv/`) |
 
 **Agent assembly rules:**
 
@@ -145,7 +152,12 @@ Resolve these before running a step. An agent can load library lists and flags f
 3. **`-l` argument** — comma-separated `{LIBRARIES}`, no spaces.
 4. **`{VARIANT}`** — append `--variant new_genome` on `{Species}_newGenome` tracks; reuse reads from original species folder.
 5. **`{STAR_SAMS}`** — from `{BASH_DIR}` use relative paths: `../STAR/align_to_genome/{LIBRARY}/{SPECIES}_Aligned.out.sam`.
-6. **Species forks** — see [Species-specific forks](#species-specific-forks).
+6. **Phase 5 good_candidates (per tool, in order)** — never skip a step; never run Step C before Step B:
+   - **Step A:** `*UniteGFF.py ... --debug-only` → writes `debugging_{SPECIES}_*.csv` only
+   - **Step B:** `processGoodCandidates.py --tool {TOOL}` → writes `good_candidates/{tool}_goodCandidates.csv`
+   - **Step C:** same unite command as Step A but **`--goodcandidates True`** (no `--debug-only`) → final GFF/FASTA; skips re-uniting libraries if good-candidates file exists
+7. **Phase 11 vs 12 `allCandidatesFasta.py`** — Phase 11 reads `intersections_table_*.xlsx`; Phase 12 reads `{ZIV_XLSX}` with `--sheetname {ZIV_SHEET}`.
+8. **Species forks** — see [Species-specific forks](#species-specific-forks).
 
 ---
 
@@ -201,7 +213,7 @@ Resolve these before running a step. An agent can load library lists and flags f
 |-------|--------|-----------|
 | 2, 3 | `srnabenchPerLibraryFilter.py` | `--filter-mc 10` |
 | 2, 3 | `mirdeepPerLibraryFilter.py` | `--filter-s 10 --exclude-c 100 --filter-mc 10` |
-| 5 | `srnabenchUniteGFF.py`, `mirdeepUniteGFF.py` | `--goodcandidates False/True` |
+| 5 | `srnabenchUniteGFF.py`, `mirdeepUniteGFF.py` | `--debug-only` (step A); `--goodcandidates True` (step C) |
 | 5 | `processGoodCandidates.py` | `--tool sRNAbench` or `miRDeep` |
 | 5 | `compare_genome_to_fasta.py` | `--mode discovery` (nematodes) |
 | 6 | `overlapSenseAnti.py` | after self-intersect BED |
@@ -209,9 +221,10 @@ Resolve these before running a step. An agent can load library lists and flags f
 | 7 | `add_flank_to_GFF.py` | `-s {SPECIES}` |
 | 8 | `filterSpacesBlastDB.py` | once for nematodes |
 | 10 | `intersectionsTable.py` | `--sum-fc-thres 100` |
-| 11 | `allCandidatesFasta.py` | |
-| 11 | `Ziv_feature_SOS.py` | |
-| 11 | `statistics.py` | Hofstenia: 10 kb clusters |
+| 11 | `allCandidatesFasta.py` | from intersections table (Ziv input FASTAs) |
+| 11 | `Ziv_feature_SOS.py` | → `{ZIV_XLSX}` |
+| 12 | `allCandidatesFasta.py` | `--sheetname {ZIV_SHEET}` from `{ZIV_XLSX}` |
+| 13 | `statistics.py` | `--all {ZIV_XLSX}`; Hofstenia: 10 kb clusters |
 
 ---
 
@@ -358,9 +371,22 @@ These filters run immediately after each discovery tool, inside each library fol
 **Inputs:** per-library `remaining*.csv` from Phases 2–3.  
 **Outputs:** united GFF/FASTA, `*_all_remaining_filtered.csv`, `*_pre_only.gff3`.
 
-Working directory: `{SCRIPTS_DIR}/`. Run **per tool** (sRNAbench, then miRDeep).
+Working directory: `{SCRIPTS_DIR}/`. Run **per tool** (sRNAbench, then miRDeep). Each tool uses the **three-step sequence below** — do not swap order, do not combine steps.
 
-### Step A — unite and export debugging table (layer 2: coordinate dedup)
+### Agent checklist (Phase 5, one tool at a time)
+
+```
+FOR tool IN (sRNAbench, miRDeep):
+  1. unite  --debug-only              → debugging_{SPECIES}_*.csv
+  2. processGoodCandidates --tool     → good_candidates/{tool}_goodCandidates.csv
+  3. unite  --goodcandidates True     → final GFF3, FASTA, *_all_remaining_filtered.csv
+```
+
+**Flags:** Step A uses `--debug-only` (not `--goodcandidates False`). Step C uses `--goodcandidates True` only. Step C reads the good-candidates CSV directly and **does not** re-read per-library folders when that file exists.
+
+### Step A — unite libraries, write debugging CSV only
+
+Produces `debugging_{SPECIES}_sRNAbench.csv` or `debugging_{SPECIES}_miRDeep_{1,2}.csv`. No GFF/FASTA yet.
 
 **sRNAbench** (nematodes — pass `-seed`; Hofstenia — `--base-path {BASE}`, no `-seed`):
 
@@ -368,14 +394,14 @@ Working directory: `{SCRIPTS_DIR}/`. Run **per tool** (sRNAbench, then miRDeep).
 cd {SCRIPTS_DIR}
 python {REPO}/srnabenchUniteGFF.py -o {SPECIES}_sRNAbench.gff3 \
   -seed {SEED} --create-fasta {SPECIES}_sRNAbench.fasta \
-  -s {SPECIES} {VARIANT} --goodcandidates False
+  -s {SPECIES} {VARIANT} --debug-only
 ```
 
 **Hofstenia sRNAbench:**
 
 ```bash
 python {REPO}/srnabenchUniteGFF.py -o Hofstenia_sRNAbench.gff3 -s Hofstenia \
-  --base-path {BASE} --create-fasta Hofstenia_sRNAbench.fasta --goodcandidates False
+  --base-path {BASE} --create-fasta Hofstenia_sRNAbench.fasta --debug-only
 ```
 
 **miRDeep** (nematodes):
@@ -383,7 +409,7 @@ python {REPO}/srnabenchUniteGFF.py -o Hofstenia_sRNAbench.gff3 -s Hofstenia \
 ```bash
 python {REPO}/mirdeepUniteGFF.py -o {SPECIES}_mirdeep.gff3 \
   --create-fasta {SPECIES}_mirdeep.fasta \
-  -seed {SEED} -s {SPECIES} {VARIANT} --goodcandidates False
+  -seed {SEED} -s {SPECIES} {VARIANT} --debug-only
 ```
 
 **Hofstenia miRDeep:**
@@ -391,23 +417,23 @@ python {REPO}/mirdeepUniteGFF.py -o {SPECIES}_mirdeep.gff3 \
 ```bash
 python {REPO}/mirdeepUniteGFF.py -o Hofstenia_mirdeep.gff3 \
   --create-fasta Hofstenia_mirdeep.fasta -s Hofstenia \
-  --base-path {BASE} --goodcandidates False
+  --base-path {BASE} --debug-only
 ```
 
-Output: `debugging_{SPECIES}_*.csv`.
+### Step B — good_candidates support filter
 
-### Step B — good_candidates support filter (layer 3)
+Requires Step A debugging CSV. Writes `{SPECIES_DIR}/good_candidates/{tool}_goodCandidates.csv`.
 
 ```bash
 python {REPO}/processGoodCandidates.py --tool sRNAbench -s {SPECIES} {VARIANT}
 python {REPO}/processGoodCandidates.py --tool miRDeep -s {SPECIES} {VARIANT}
 ```
 
-Hofstenia: add `--base-path {BASE}`. Output: `good_candidates/<tool>_goodCandidates.csv`.
+Hofstenia: add `--base-path {BASE}` on both commands.
 
-### Step C — final GFF and united CSV (layers 2–3)
+### Step C — final GFF and united CSV
 
-Repeat unite with `--goodcandidates True` (same flags as step A):
+Same flags as Step A, but replace `--debug-only` with **`--goodcandidates True`**:
 
 ```bash
 python {REPO}/srnabenchUniteGFF.py -o {SPECIES}_sRNAbench.gff3 \
@@ -418,6 +444,8 @@ python {REPO}/mirdeepUniteGFF.py -o {SPECIES}_mirdeep.gff3 \
   --create-fasta {SPECIES}_mirdeep.fasta \
   -seed {SEED} -s {SPECIES} {VARIANT} --goodcandidates True
 ```
+
+Hofstenia: add `--base-path {BASE}`; omit `-seed`.
 
 Outputs in `{SCRIPTS_DIR}/`: `{SPECIES}_sRNAbench.gff3`, `{SPECIES}_mirdeep.gff3`, `*_pre_only.gff3`, FASTAs, `*_all_remaining_filtered.csv`.
 
@@ -556,7 +584,7 @@ blastn -query {SCRIPTS_DIR}/{SPECIES}_sRNAbench.fasta \
   -outfmt 6 -evalue 10 -task blastn-short
 ```
 
-> **Worked example:** see [`Pipeline.md`](Pipeline.md) for expanded STAR SAM lists.
+> **Worked example:** see [`Pipeline Hofstenia.md`](Pipeline%20Hofstenia.md) for fully expanded STAR SAM lists (33 libraries). For other species, expand `{STAR_SAMS}` over `cfg["libraries"]` in `pipeline_config.py`.
 
 ---
 
@@ -634,14 +662,16 @@ Output: `intersections_table_{SPECIES}.xlsx` in `{RNA_MI_DIR}/`.
 
 ---
 
-## Phase 11 — Downstream analysis
+## Phase 11 — Structural filtering (Ziv)
 
-**Scripts:** `allCandidatesFasta.py`, `Ziv_feature_SOS.py`, `statistics.py`
+**Scripts:** `allCandidatesFasta.py` (prep), `Ziv_feature_SOS.py`
 
 **Inputs:** `intersections_table_{SPECIES}.xlsx` from Phase 10.  
-**Outputs:** candidate FASTAs, Ziv-filtered workbook, statistics plots/clusters.
+**Outputs:** precursor/mature/star FASTAs in `{RNA_MI_DIR}/`; `{ZIV_XLSX}`.
 
-### Extract candidate FASTAs
+Run from `{RNA_MI_DIR}/` or any cwd; paths below are absolute templates.
+
+### Step 11a — extract FASTAs for Ziv (from intersections table)
 
 ```bash
 python {REPO}/allCandidatesFasta.py \
@@ -649,7 +679,9 @@ python {REPO}/allCandidatesFasta.py \
   -s {SPECIES} {VARIANT}
 ```
 
-### Structural features (Ziv)
+Writes `{RNA_MI_DIR}/all_candidates_hairpin.fasta`, `all_candidates_mature.fasta`, `all_candidates_star.fasta`.
+
+### Step 11b — structural features and filter
 
 ```bash
 python {REPO}/Ziv_feature_SOS.py \
@@ -660,15 +692,55 @@ python {REPO}/Ziv_feature_SOS.py \
   --all-remaining {RNA_MI_DIR}/intersections_table_{SPECIES}.xlsx
 ```
 
-Output: `{BASE}/Ziv_Features/all_remaining_after_ziv_{SPECIES}.xlsx`.
+Output: `{ZIV_XLSX}`. Structural sheet name → `{ZIV_SHEET}` (nematodes: `(D) Structural Features`; Hofstenia: `(A) Unfiltered`).
 
-### Statistics
+---
+
+## Phase 12 — Final candidates
+
+**Script:** `allCandidatesFasta.py` (second pass — from Ziv workbook)
+
+**Inputs:** `{ZIV_XLSX}` from Phase 11.  
+**Outputs:** final candidate FASTAs in `{MIRGE_FASTA_DIR}/`.
+
+Extract sequences from the **Ziv-filtered sheet**, not the raw intersections table:
 
 ```bash
+python {REPO}/allCandidatesFasta.py \
+  --all {ZIV_XLSX} \
+  -s {SPECIES} {VARIANT} \
+  --sheetname "{ZIV_SHEET}" \
+  --output {MIRGE_FASTA_DIR}/
+```
+
+**Output directory by species:**
+
+| Species | `{MIRGE_FASTA_DIR}` |
+|---------|---------------------|
+| Elegans, Macrosperma, Sulstoni | `{SPECIES_DIR}/miRge/` |
+| Hofstenia | `{SPECIES_DIR}/miRge_after_Ziv/` |
+
+Phase 12 is required before the optional miRge branch; Phase 13 does not depend on it.
+
+---
+
+## Phase 13 — Statistics
+
+**Script:** `statistics.py`
+
+**Inputs:** `{ZIV_XLSX}` from Phase 11 (post-Ziv filtered candidates).  
+**Outputs:** plots in `./figures/`, cluster files, updated `{ZIV_XLSX}` with cluster columns.
+
+Run from `{RNA_MI_DIR}/` (statistics writes `./figures/` relative to cwd):
+
+```bash
+cd {RNA_MI_DIR}
 python {REPO}/statistics.py \
-  --all {BASE}/Ziv_Features/all_remaining_after_ziv_{SPECIES}.xlsx \
+  --all {ZIV_XLSX} \
   -s {SPECIES} {VARIANT}
 ```
+
+`statistics.py` reads sheet `{ZIV_SHEET}` automatically via `cfg["mirge_input_sheet"]`. Do **not** pass the intersections table here.
 
 ---
 
@@ -723,7 +795,7 @@ Nematodes additionally filter `5p_overhang_ziv` and `3p_overhang_ziv` to [0, 4] 
 
 ## Optional steps
 
-Run after Phase 11 unless noted.
+Run after Phase 13 unless noted.
 
 **mirTrace QC** (nematodes; can run after Phase 1):
 
@@ -800,13 +872,13 @@ Full SRR ↔ library tables: `Pipeline Elegans.md`, `pipeline_config.py`.
 1. Add entry to `SPECIES_CONFIG` in `pipeline_config.py`.
 2. Place data under `{BASE}/{Species}/` following the directory layout.
 3. Substitute template variables; loop over `cfg["libraries"]` for per-library steps.
-4. Run Phases 1–11; use Elegans as validation template if curated miRNAs exist.
+4. Run Phases 1–13; use Elegans as validation template if curated miRNAs exist.
 
 ---
 
 ## Legacy doc drift
 
-Some commands in `Pipeline <Species>.md` use lowercase `-s` (e.g. `-s elegans`). Current scripts require canonical `-s` (`Elegans`, etc.). Follow this file and `pipeline_config.py`. Full expanded commands: [`Pipeline.md`](Pipeline.md).
+Some commands in `Pipeline <Species>.md` use lowercase `-s` (e.g. `-s elegans`). Current scripts require canonical `-s` (`Elegans`, etc.). Follow this file and `pipeline_config.py`, not legacy casing in species docs.
 
 ---
 
