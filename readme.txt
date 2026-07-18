@@ -11,9 +11,9 @@ Phase 2 — per library:
   srnabenchPerLibraryFilter.py   (default --filter-mc 10)
   mirdeepPerLibraryFilter.py     (default --filter-s 10 --exclude-c 100 --filter-mc 10)
 
-Phase 3 — curation in <Species>/scripts/ (good_candidates: steps A → B → C):
-  srnabenchUniteGFF.py           (step A: --goodcandidates False; step C: True)
-  processGoodCandidates.py       (step B; --tool sRNAbench or miRDeep)
+Phase 3 — curation in <Species>/scripts/ (unique_candidates: steps A → B → C):
+  srnabenchUniteGFF.py           (step A: --debug-only; step C: --uniquecandidates True)
+  processGoodCandidates.py       (step B; writes unique_candidates/)
   mirdeepUniteGFF.py             (step A / step C)
   compare_genome_to_fasta.py     (--mode discovery; nematodes)
   overlapSenseAnti.py

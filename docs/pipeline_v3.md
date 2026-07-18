@@ -27,7 +27,7 @@ In v2, **cross-tool bedtools intersections** (old Phase 7) appeared *before* **S
 
 One prep addition: **`mirbaseToGFF3.py`** (Elegans) moved into Phase 1 so `cel_mirbase_seq.gff3` exists before Phase 7 miRBase featureCounts.
 
-Phase 5 now uses **`--debug-only`** on unite scripts (Step A) so you do not build GFF/FASTA twice; Step C with **`--goodcandidates True`** loads the good-candidates CSV directly without re-reading per-library files.
+Phase 5 now uses **`--debug-only`** on unite scripts (Step A) so you do not build GFF/FASTA twice; Step C with **`--uniquecandidates True`** loads the unique_candidates CSV directly without re-reading per-library files.
 
 | v2 section order | v3 run order | What runs |
 |------------------|--------------|-----------|
@@ -51,7 +51,7 @@ Each phase lists its main scripts. Run in this order:
 | 2 | miRDeep2 discovery (per library) | mapper.pl, miRDeep2.pl, `mirdeepPerLibraryFilter.py` |
 | 3 | sRNAbench discovery (per library) | sRNAbench.jar, `srnabenchPerLibraryFilter.py` |
 | 4 | Per-library filtering criteria | *(reference only — filters run in Phases 2–3)* |
-| 5 | Unite libraries, good_candidates, GFF3/FASTA | `srnabenchUniteGFF.py`, `mirdeepUniteGFF.py`, `processGoodCandidates.py`, `compare_genome_to_fasta.py` |
+| 5 | Unite libraries, unique_candidates, GFF3/FASTA | `srnabenchUniteGFF.py`, `mirdeepUniteGFF.py`, `processGoodCandidates.py`, `compare_genome_to_fasta.py` |
 | 6 | Sense / antisense / overlap labeling | bedtools (self-intersect), `overlapSenseAnti.py` |
 | 7 | STAR alignment and featureCounts | STAR, featureCounts, `add_flank_to_GFF.py` |
 | 8 | BLAST homolog search | `filterSpacesBlastDB.py`, makeblastdb, blastn |
@@ -65,7 +65,7 @@ Each phase lists its main scripts. Run in this order:
 flowchart TD
   p1[1_Prep_index] --> p2[2_miRDeep_per_library]
   p2 --> p3[3_sRNAbench_per_library]
-  p3 --> p5[5_Unite_good_candidates_GFF]
+  p3 --> p5[5_Unite_unique_candidates_GFF]
   p5 --> p6[6_overlapSenseAnti]
   p6 --> p7[7_STAR_featureCounts]
   p7 --> p8[8_BLAST]
@@ -82,7 +82,7 @@ flowchart TD
 1  cutadapt, bowtie-build, makeSeqObj  (+ mirbaseToGFF3 for Elegans)
 2  mapper.pl → miRDeep2.pl → mirdeepPerLibraryFilter.py   (each library)
 3  sRNAbench.jar → srnabenchPerLibraryFilter.py             (each library)
-5  unite --debug-only → processGoodCandidates → unite --goodcandidates True  (per tool)
+5  unite --debug-only → processGoodCandidates → unite --uniquecandidates True  (per tool)
 6  bedtools self-intersect → overlapSenseAnti.py
 7  STAR → featureCounts → add_flank_to_GFF → featureCounts (flanked)
 8  filterSpacesBlastDB → blastn                              (nematodes only)
@@ -103,7 +103,7 @@ Only stages that **remove** miRNA candidates and keep a subset. Merge/unite, lab
 | Layer | What it does | Script | Phase |
 |-------|--------------|--------|-------|
 | 1 | Per-library quality filter | `mirdeepPerLibraryFilter.py`, `srnabenchPerLibraryFilter.py` | 2, 3 |
-| 2 | Multi-library / multi-replicate support | `processGoodCandidates.py` | 5 step B |
+| 2 | unique_candidates (±20 bp collapse; Hofstenia multi-replicate support) | `processGoodCandidates.py` | 5 step B |
 | 3 | Drop low expression (sum FC &lt; 100) | `intersectionsTable.py --sum-fc-thres 100` | 10 |
 | 4 | Structural filter | `Ziv_feature_SOS.py` | 11 |
 
@@ -152,10 +152,10 @@ Resolve these before running a step. An agent can load library lists and flags f
 3. **`-l` argument** — comma-separated `{LIBRARIES}`, no spaces.
 4. **`{VARIANT}`** — append `--variant new_genome` on `{Species}_newGenome` tracks; reuse reads from original species folder.
 5. **`{STAR_SAMS}`** — from `{BASH_DIR}` use relative paths: `../STAR/align_to_genome/{LIBRARY}/{SPECIES}_Aligned.out.sam`.
-6. **Phase 5 good_candidates (per tool, in order)** — never skip a step; never run Step C before Step B:
+6. **Phase 5 unique_candidates (per tool, in order)** — never skip a step; never run Step C before Step B:
    - **Step A:** `*UniteGFF.py ... --debug-only` → writes `debugging_{SPECIES}_*.csv` only
-   - **Step B:** `processGoodCandidates.py --tool {TOOL}` → writes `good_candidates/{tool}_goodCandidates.csv`
-   - **Step C:** same unite command as Step A but **`--goodcandidates True`** (no `--debug-only`) → final GFF/FASTA; skips re-uniting libraries if good-candidates file exists
+   - **Step B:** `processGoodCandidates.py --tool {TOOL}` → writes `unique_candidates/{tool}_uniqueCandidates.csv`
+   - **Step C:** same unite command as Step A but **`--uniquecandidates True`** (no `--debug-only`) → final GFF/FASTA; skips re-uniting libraries if the unique_candidates file exists
 7. **Phase 11 vs 12 `allCandidatesFasta.py`** — Phase 11 reads `intersections_table_*.xlsx`; Phase 12 reads `{ZIV_XLSX}` with `--sheetname {ZIV_SHEET}`.
 8. **Species forks** — see [Species-specific forks](#species-specific-forks).
 
@@ -173,7 +173,7 @@ Resolve these before running a step. An agent can load library lists and flags f
 **Nematodes:** PRJNA678899; adapter `AACTGTAGGCACCATCAAT`; cutadapt  
 `-a AACTGTAGGCACCATCAAT --core 2 -e 0.25 --discard-untrimmed -m 17 -M 26`.
 
-**good_candidates:** nematodes = ≥2 distinct libraries in 20 bp cluster; Hofstenia = ≥2 condition replicates (strip trailing digit).
+**unique_candidates:** nematodes = one representative per ±20 bp cluster (single-library loci kept); Hofstenia = same ±20 bp collapse, plus ≥2 condition replicates (strip trailing digit).
 
 **Ziv sheets:** nematodes → `(D) Structural Features`; Hofstenia → `(A) Unfiltered`.
 
@@ -189,7 +189,7 @@ Resolve these before running a step. An agent can load library lists and flags f
     mapper_out/
     mirdeep_out/{library}/
     scripts/               # unite, GFF/FASTA/CSVs
-    good_candidates/
+    unique_candidates/
     STAR/genome_index/
     STAR/align_to_genome/{library}/
     counts_sep/
@@ -213,7 +213,7 @@ Resolve these before running a step. An agent can load library lists and flags f
 |-------|--------|-----------|
 | 2, 3 | `srnabenchPerLibraryFilter.py` | `--filter-mc 10` |
 | 2, 3 | `mirdeepPerLibraryFilter.py` | `--filter-s 10 --exclude-c 100 --filter-mc 10` |
-| 5 | `srnabenchUniteGFF.py`, `mirdeepUniteGFF.py` | `--debug-only` (step A); `--goodcandidates True` (step C) |
+| 5 | `srnabenchUniteGFF.py`, `mirdeepUniteGFF.py` | `--debug-only` (step A); `--uniquecandidates True` (step C) |
 | 5 | `processGoodCandidates.py` | `--tool sRNAbench` or `miRDeep` |
 | 5 | `compare_genome_to_fasta.py` | `--mode discovery` (nematodes) |
 | 6 | `overlapSenseAnti.py` | after self-intersect BED |
@@ -233,7 +233,7 @@ Resolve these before running a step. An agent can load library lists and flags f
 **Scripts/tools:** cutadapt, bowtie-build, makeSeqObj.jar, `mirbaseToGFF3.py` (Elegans only)
 
 **Inputs:** raw FASTQ (nematodes) or pre-trimmed reads (Hofstenia), reference genome FASTA.  
-**Outputs:** trimmed reads, bowtie index, sRNAbench seq object, `config.txt` (nematodes), optional Elegans miRBase GFF.
+**Outputs:** trimmed reads, bowtie index, sRNAbench seq object, optional Elegans miRBase GFF.
 
 **Nematodes — trim adapter** (per library; or `cutadapt.sbatch`):
 
@@ -248,14 +248,6 @@ cutadapt -a AACTGTAGGCACCATCAAT --core 2 -e 0.25 --discard-untrimmed -m 17 -M 26
 ```bash
 cd {GENOME_DIR}
 bowtie-build -f {GENOME_FA} index/{INDEX_BASENAME}GenomeIndexed
-```
-
-**config.txt** (nematodes only; one read per library for mapper.pl):
-
-```
-{READ_FASTQ_1} {LIBRARY_1}
-{READ_FASTQ_2} {LIBRARY_2}
-...
 ```
 
 **Genome whitespace fix** (before miRDeep2 if needed):
@@ -279,7 +271,7 @@ cd {BASE}/mirbase_data
 python {REPO}/mirbaseToGFF3.py   # → cel_mirbase_seq.gff3
 ```
 
-> **sbatch:** Hofstenia mapper (`mapper_test2.sbatch`, `mapper_test3.sbatch`); new-genome indexing (`bowtie_index.sbatch`, `makeseqobj.sbatch`, `star_genome_indexing.sbatch`).
+> **sbatch:** new-genome indexing (`bowtie_index.sbatch`, `makeseqobj.sbatch`, `star_genome_indexing.sbatch`). Mapper jobs are Phase 2.
 
 ---
 
@@ -290,36 +282,59 @@ python {REPO}/mirbaseToGFF3.py   # → cel_mirbase_seq.gff3
 **Inputs:** trimmed/pre-trimmed reads, indexed genome.  
 **Outputs:** per-library `{MIRDEEP_OUT}/` folders; `remaining_file_*.csv` per library.
 
-**mapper.pl** (nematodes — all libraries via config; from `{BASH_DIR}`):
+**mapper.pl** — submit via sbatch from `{BASH_DIR}`. Same model for all species: **one `mapper.pl` call per FASTQ** (no `config.txt`, no `-d`). One sbatch file may contain many sequential calls.
+
+| Species | sbatch | Scope |
+|---------|--------|--------|
+| Nematodes (Elegans, Macrosperma, Sulstoni) | **one** `mapper.sbatch` per species | Sequential `mapper.pl` per library FASTQ → per-library `.arf` / collapsed `.fasta` |
+| Hofstenia | `mapper_test2.sbatch` + `mapper_test3.sbatch` | Libraries split across **two** jobs (size); same per-FASTQ pattern |
+
+**Nematodes** (from `{BASH_DIR}`):
 
 ```bash
-mapper.pl config.txt -d -e -i -j -m -h \
+sbatch mapper.sbatch
+# each library inside mapper.sbatch (Hofstenia-style; repeat per {LIBRARY}):
+mapper.pl {READ_FASTQ} -e -i -j -m -h \
   -p ../genome/index/{INDEX_BASENAME}GenomeIndexed \
-  -t ../mapper_out/{species_tag}_Seq_vs_genome.arf \
-  -s ../mapper_out/{species_tag}_Seq_collapsed.fasta
+  -t ../mapper_out/{species_tag}_Seq_vs_genome_{LIBRARY}.arf \
+  -s ../mapper_out/{species_tag}_Seq_collapsed_{LIBRARY}.fasta
 ```
 
-**miRDeep2.pl** — run in each `{MIRDEEP_OUT}/` (often via `mirdeep_test.sbatch`).
-
-**Filter** (conda off; inside each library folder):
+**Hofstenia** (two batch files covering all libraries):
 
 ```bash
-python {REPO}/mirdeepPerLibraryFilter.py -i result_*.csv \
-  --filter-s 10 --exclude-c 100 --filter-mc 10
+sbatch mapper_test2.sbatch
+sbatch mapper_test3.sbatch
 ```
 
-Outputs: `remaining_file_1.csv`, `remaining_file_2.csv`, `removed.csv`.
-
-**Hofstenia batch submit:**
+**miRDeep2.pl** — one run per library in `{MIRDEEP_OUT}/`, using that library’s mapper outputs. Do **not** use unsuffixed combined `*_Seq_collapsed.fasta`.
 
 ```bash
+# Option A — parallel (Hofstenia-style; preferred):
 cd {SPECIES_DIR}/mirdeep_out
 for dir in {LIBRARY_1} {LIBRARY_2} ...; do
   (cd "$dir" && sbatch mirdeep_test.sbatch)
 done
+
+# Option B — sequential all libraries from {BASH_DIR}:
+sbatch mirdeep.sbatch
 ```
 
-> **sbatch:** `mirdeep_test.sbatch`, `filter_hof_mirdeep.sbatch`.
+**Filter** (conda off; or via sbatch):
+
+```bash
+# per folder:
+python {REPO}/mirdeepPerLibraryFilter.py -i result_*.csv \
+  --filter-s 10 --exclude-c 100 --filter-mc 10
+
+# or all libraries:
+sbatch {SPECIES_DIR}/scripts/filter_mirdeep.sbatch   # nematodes
+# Hofstenia: filter_hof_mirdeep.sbatch
+```
+
+Outputs: `remaining_file_1.csv`, `remaining_file_2.csv`, `removed.csv`.
+
+> **sbatch:** `mapper.sbatch` (or Hofstenia `mapper_test2/3.sbatch`); `mirdeep_test.sbatch` / `mirdeep.sbatch`; `filter_mirdeep.sbatch` (nematodes) or `filter_hof_mirdeep.sbatch`.
 
 ---
 
@@ -330,10 +345,12 @@ done
 **Inputs:** trimmed/pre-trimmed reads, sRNAbench genome index.  
 **Outputs:** per-library `{SRNABENCH_OUT}/` folders; filtered `remaining*.csv`.
 
-**Do not combine FASTQs.** Each library gets its own `{SRNABENCH_OUT}/`.
+**Do not combine FASTQs** (no `*_final.fastq`). Each library gets its own `{SRNABENCH_OUT}/`.
 
 ```bash
 cd {BASH_DIR}
+sbatch srnabench.sbatch
+# each library inside (Hofstenia may use one sbatch file per library instead):
 java -jar ../../sRNAtoolboxDB/exec/sRNAbench.jar \
   input={READ_FASTQ} \
   output=../../sRNAtoolboxDB/out/{SPECIES}/{SPECIES}_{LIBRARY} \
@@ -342,13 +359,15 @@ java -jar ../../sRNAtoolboxDB/exec/sRNAbench.jar \
   hairpin=animalsHairpin.fa mature=animalsMature.fa
 ```
 
-**Filter** (conda off; in each `{SRNABENCH_OUT}/`):
+**Filter** (conda off; or via sbatch):
 
 ```bash
 python {REPO}/srnabenchPerLibraryFilter.py -i novel.txt -a novel451.txt --filter-mc 10
+# or: sbatch {SPECIES_DIR}/scripts/filter_sRNAbench.sbatch
+# Hofstenia: filter_hof_sRNAbench.sbatch
 ```
 
-> **sbatch:** `filter_hof_sRNAbench.sbatch`, `srnabench.sbatch`.
+> **sbatch:** `srnabench.sbatch` (nematodes: sequential per-library; Hofstenia: `sRNAbench_{LIBRARY}.sbatch`); `filter_sRNAbench.sbatch` / `filter_hof_sRNAbench.sbatch`.
 
 ---
 
@@ -364,7 +383,7 @@ These filters run immediately after each discovery tool, inside each library fol
 
 ---
 
-## Phase 5 — Unite libraries, good_candidates, GFF3/FASTA
+## Phase 5 — Unite libraries, unique_candidates, GFF3/FASTA
 
 **Scripts:** `srnabenchUniteGFF.py`, `mirdeepUniteGFF.py`, `processGoodCandidates.py`, `compare_genome_to_fasta.py`
 
@@ -378,11 +397,11 @@ Working directory: `{SCRIPTS_DIR}/`. Run **per tool** (sRNAbench, then miRDeep).
 ```
 FOR tool IN (sRNAbench, miRDeep):
   1. unite  --debug-only              → debugging_{SPECIES}_*.csv
-  2. processGoodCandidates --tool     → good_candidates/{tool}_goodCandidates.csv
-  3. unite  --goodcandidates True     → final GFF3, FASTA, *_all_remaining_filtered.csv
+  2. processGoodCandidates --tool     → unique_candidates/{tool}_uniqueCandidates.csv
+  3. unite  --uniquecandidates True     → final GFF3, FASTA, *_all_remaining_filtered.csv
 ```
 
-**Flags:** Step A uses `--debug-only` (not `--goodcandidates False`). Step C uses `--goodcandidates True` only. Step C reads the good-candidates CSV directly and **does not** re-read per-library folders when that file exists.
+**Flags:** Step A uses `--debug-only` (not `--uniquecandidates False`). Step C uses `--uniquecandidates True` only. Step C reads the unique_candidates CSV directly and **does not** re-read per-library folders when that file exists.
 
 ### Step A — unite libraries, write debugging CSV only
 
@@ -420,9 +439,12 @@ python {REPO}/mirdeepUniteGFF.py -o Hofstenia_mirdeep.gff3 \
   --base-path {BASE} --debug-only
 ```
 
-### Step B — good_candidates support filter
+### Step B — unique_candidates (±20 bp collapse)
 
-Requires Step A debugging CSV. Writes `{SPECIES_DIR}/good_candidates/{tool}_goodCandidates.csv`.
+Requires Step A debugging CSV. Writes `{SPECIES_DIR}/unique_candidates/{tool}_uniqueCandidates.csv`.
+
+- **Nematodes:** collapses candidates within ±20 bp to the highest-read-count representative; **does not** require presence in multiple libraries/stages.
+- **Hofstenia:** same ±20 bp collapse, plus ≥2 condition replicates (strip trailing digit from library name).
 
 ```bash
 python {REPO}/processGoodCandidates.py --tool sRNAbench -s {SPECIES} {VARIANT}
@@ -433,16 +455,16 @@ Hofstenia: add `--base-path {BASE}` on both commands.
 
 ### Step C — final GFF and united CSV
 
-Same flags as Step A, but replace `--debug-only` with **`--goodcandidates True`**:
+Same flags as Step A, but replace `--debug-only` with **`--uniquecandidates True`**:
 
 ```bash
 python {REPO}/srnabenchUniteGFF.py -o {SPECIES}_sRNAbench.gff3 \
   -seed {SEED} --create-fasta {SPECIES}_sRNAbench.fasta \
-  -s {SPECIES} {VARIANT} --goodcandidates True
+  -s {SPECIES} {VARIANT} --uniquecandidates True
 
 python {REPO}/mirdeepUniteGFF.py -o {SPECIES}_mirdeep.gff3 \
   --create-fasta {SPECIES}_mirdeep.fasta \
-  -seed {SEED} -s {SPECIES} {VARIANT} --goodcandidates True
+  -seed {SEED} -s {SPECIES} {VARIANT} --uniquecandidates True
 ```
 
 Hofstenia: add `--base-path {BASE}`; omit `-seed`.
@@ -512,14 +534,19 @@ STAR --runMode genomeGenerate --runThreadN 16 \
   --genomeFastaFiles {GENOME_FA}
 ```
 
-**Align** (one command per `{LIBRARY}`; remaining libraries in `star_align*.sbatch`):
+**Align** — **one FASTQ / one output dir per `{LIBRARY}`** (never all libraries in one `--readFilesIn`):
 
 ```bash
+cd {BASH_DIR}
+sbatch star_align.sbatch
+# each library inside:
 STAR --genomeDir ../STAR/genome_index/ \
   --readFilesIn {READ_FASTQ} \
   --outFileNamePrefix ../STAR/align_to_genome/{LIBRARY}/{SPECIES}_ \
   --outFilterMultimapNmax 20 --runThreadN 16 --outSAMtype SAM
 ```
+
+> **Do not use** `star_align_all_libraries.sbatch` on nematode `*_newGenome` tracks — it is disabled (legacy combined). Use `star_align.sbatch`.
 
 ### featureCounts — mature miRNA
 
@@ -889,3 +916,4 @@ Some commands in `Pipeline <Species>.md` use lowercase `-s` (e.g. `-s elegans`).
 - sRNAbench: Aparicio-Puerta et al., NAR 2019 — https://doi.org/10.1093/nar/gkz415
 - bedtools: Quinlan & Hall, Bioinformatics 2010 — https://doi.org/10.1093/bioinformatics/btq033
 - Nematode sRNA-seq: Nelson & Ambros, G3 2021 — PRJNA678899
+021 — PRJNA678899

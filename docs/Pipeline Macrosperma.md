@@ -3,7 +3,7 @@
 **Scripts directory:** `/mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/`
 
 
-**Pipeline scripts:** Per-library filter (`srnabenchPerLibraryFilter.py`, `mirdeepPerLibraryFilter.py`; `--filter-mc 10`); unite + GFF in `{base}/Macrosperma/scripts/` (`srnabenchUniteGFF.py`, `mirdeepUniteGFF.py`, `processGoodCandidates.py`). See Pipeline Hofstenia for the two-pass good_candidates workflow. Legacy: `sRNAbenchResultsToGFF3.py`, `mirdeepResultsToGFF3.py`.
+**Pipeline scripts:** Per-library filter (`srnabenchPerLibraryFilter.py`, `mirdeepPerLibraryFilter.py`; `--filter-mc 10`); unite + GFF in `{base}/Macrosperma/scripts/` (`srnabenchUniteGFF.py`, `mirdeepUniteGFF.py`, `processGoodCandidates.py`). See Pipeline Hofstenia for the two-pass unique_candidates workflow. Legacy: `sRNAbenchResultsToGFF3.py`, `mirdeepResultsToGFF3.py`.
 
 Libraries: MR4, MR5, MR6, MR7, MR8 (5 libraries — run miRDeep and sRNAbench **separately per library**, do not combine FASTQs for discovery).
 
@@ -44,30 +44,24 @@ Libraries: MR4, MR5, MR6, MR7, MR8 (5 libraries — run miRDeep and sRNAbench **
 
    
 
-3) creating **config.txt**:  
-   /storage/users/IsanaRNA/Isana\_Tzah/Charles\_seq/Macrosperma/TrimmedFastq/SRR13072564.1\_trimmed.fastq MR4  
-   /storage/users/IsanaRNA/Isana\_Tzah/Charles\_seq/Macrosperma/TrimmedFastq/SRR13072565.1\_trimmed.fastq MR5  
-   /storage/users/IsanaRNA/Isana\_Tzah/Charles\_seq/Macrosperma/TrimmedFastq/SRR13072566.1\_trimmed.fastq MR6  
-   /storage/users/IsanaRNA/Isana\_Tzah/Charles\_seq/Macrosperma/TrimmedFastq/SRR13072567.1\_trimmed.fastq MR7  
-   /storage/users/IsanaRNA/Isana\_Tzah/Charles\_seq/Macrosperma/TrimmedFastq/SRR13072568.1\_trimmed.fastq MR8  
-   
+3) **mapper.pl** — Hofstenia-style: **one FASTQ per `mapper.pl` call** (no `config.txt`, no `-d`). Submit from `{base}/Macrosperma/bash/`:
 
-path: \<basePath\>/Macrosperma/bash/config.txt
+   sbatch mapper.sbatch
 
-4) **mapper.pl** \- command:
+   Example (one library):
 
-   mapper.pl config.txt \-d \-e \-i \-j \-m \-h \-p ../genome/index/macrospermaGenomeIndexed \-t ../mapper\_out/macrosperma\_Seq\_vs\_genome.arf \-s ../mapper\_out/macrosperma\_Seq\_collapsed.fasta
+   mapper.pl .../TrimmedFastq/SRR13072564.1\_trimmed.fastq \-e \-i \-j \-m \-h \-p ../genome/index/macrospermaGenomeIndexed \-t ../mapper\_out/macrosperma\_Seq\_vs\_genome\_MR4.arf \-s ../mapper\_out/macrosperma\_Seq\_collapsed\_MR4.fasta
 
-	  
-	parameters:  
-	\-e: input file in fastq format.  
-	\-d: input file is config.  
-	\-p: prefix name of the genome indexed by bowtie.  
-	\-i: convert rna to dna (for map againsts genome).  
-	\-j: remove sequences thats contain empty value like ‘n’.  
-	\-t: print mapping read to the file.  
-	\-s: print collapsed reads to the file.  
-		\-h: changing the output to fasta format (required).
+   Libraries MR4–MR8 → per-library `.arf` / collapsed `.fasta` under `mapper_out/`.
+
+   parameters:  
+   \-e: input file in fastq format.  
+   \-p: prefix name of the genome indexed by bowtie.  
+   \-i: convert rna to dna (for map againsts genome).  
+   \-j: remove sequences thats contain empty value like ‘n’.  
+   \-t: print mapping read to the file.  
+   \-s: print collapsed reads to the file.  
+   \-h: changing the output to fasta format (required).
 
 		Results:
 
@@ -82,11 +76,11 @@ path: \<basePath\>/Macrosperma/bash/config.txt
 
 		path: \<basePath\>/Macrosperma/mapper\_out/\*
 
-5) **mirDeep2.pl** — run **per library** in `{base}/Macrosperma/mirdeep_out/{MR4|MR5|…}/` (legacy: single combined run below). Filter each folder:
+5) **mirDeep2.pl** — run **per library** in `{base}/Macrosperma/mirdeep_out/{MR4|MR5|…}/` (`sbatch mirdeep_test.sbatch` in each folder, or `sbatch bash/mirdeep.sbatch`). Then:
 
-   python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/mirdeepPerLibraryFilter.py -i result\_\*.csv --filter-s 10 --exclude-c 100 --filter-mc 10
+   sbatch {base}/Macrosperma/scripts/filter_mirdeep.sbatch
 
-   **Legacy combined run** (superseded):
+   **Legacy combined run** (superseded; historical scores below):
 
    
 
@@ -166,21 +160,21 @@ path: \<basePath\>/Macrosperma/bash/config.txt
 
 9) Per-library sRNAbench outputs live under `{base}/sRNAtoolboxDB/out/Macrosperma/Macrosperma_{library}/` (no copy to `Macrosperma/sRNAbench_out/` needed).
 
-**Uniting, good_candidates, and creating GFF3/FASTA**
+**Uniting, unique_candidates, and creating GFF3/FASTA**
 
 Working directory: `{base}/Macrosperma/scripts/`
 
 \#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#  
-1. GFF with `--goodcandidates False` → 2. `processGoodCandidates.py` → 3. GFF with `--goodcandidates True` → 4. `compare_genome_to_fasta.py --mode discovery`  
+1. GFF with `--uniquecandidates False` → 2. `processGoodCandidates.py` → 3. GFF with `--uniquecandidates True` → 4. `compare_genome_to_fasta.py --mode discovery`  
 \#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#
 
-python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/srnabenchUniteGFF.py -o Macrosperma\_sRNAbench.gff3 -seed ../../mirbase\_data/Seeds.txt --create-fasta Macrosperma\_sRNAbench.fasta -s Macrosperma --goodcandidates False  
+python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/srnabenchUniteGFF.py -o Macrosperma\_sRNAbench.gff3 -seed ../../mirbase\_data/Seeds.txt --create-fasta Macrosperma\_sRNAbench.fasta -s Macrosperma --uniquecandidates False  
 python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/processGoodCandidates.py --tool sRNAbench -s Macrosperma  
-python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/srnabenchUniteGFF.py -o Macrosperma\_sRNAbench.gff3 -seed ../../mirbase\_data/Seeds.txt --create-fasta Macrosperma\_sRNAbench.fasta -s Macrosperma --goodcandidates True  
+python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/srnabenchUniteGFF.py -o Macrosperma\_sRNAbench.gff3 -seed ../../mirbase\_data/Seeds.txt --create-fasta Macrosperma\_sRNAbench.fasta -s Macrosperma --uniquecandidates True  
 
-python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/mirdeepUniteGFF.py -o Macrosperma\_mirdeep.gff3 --create-fasta Macrosperma\_mirdeep.fasta -seed ../../mirbase\_data/Seeds.txt -s Macrosperma --goodcandidates False  
+python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/mirdeepUniteGFF.py -o Macrosperma\_mirdeep.gff3 --create-fasta Macrosperma\_mirdeep.fasta -seed ../../mirbase\_data/Seeds.txt -s Macrosperma --uniquecandidates False  
 python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/processGoodCandidates.py --tool miRDeep -s Macrosperma  
-python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/mirdeepUniteGFF.py -o Macrosperma\_mirdeep.gff3 --create-fasta Macrosperma\_mirdeep.fasta -seed ../../mirbase\_data/Seeds.txt -s Macrosperma --goodcandidates True  
+python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/mirdeepUniteGFF.py -o Macrosperma\_mirdeep.gff3 --create-fasta Macrosperma\_mirdeep.fasta -seed ../../mirbase\_data/Seeds.txt -s Macrosperma --uniquecandidates True  
 
 python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/compare_genome_to_fasta.py --mode discovery --species Macrosperma --dir /mnt/new_groups/vaksler_group/Isana\_Tzah/Charles\_seq/Macrosperma/scripts --genome_fasta /mnt/new_groups/vaksler_group/Isana\_Tzah/Charles\_seq/Macrosperma/genome/CMACR.caenorhabditis\_macrosperma\_JU2083\_v1.scaffolds.fna --gff Macrosperma\_sRNAbench.gff3 --mature Macrosperma\_sRNAbench.fasta --star Macrosperma\_sRNAbench\_star.fasta --hairpin-table sRNAbench\_all\_remaining\_filtered.csv --output sRNAbench\_coord\_check.csv  
 
@@ -193,7 +187,7 @@ paths (final outputs):
 	**Filtering (--filter-mc 10):**  
 	sRNAbench: max(5pRC,3pRC)\<10 or matureBindings\<14; all novel451 discarded; ncRNA filter; hairpin trim in filter script.  
 	miRDeep: `--filter-s 10 --exclude-c 100 --filter-mc 10` per library.  
-	Unite step: coordinate overlap dedup + good_candidates (≥2 libraries in 20 bp cluster for Macrosperma).
+	Unite step: coordinate overlap dedup + unique_candidates (one representative per ±20 bp cluster; single-library loci kept).
 
 **For the candidates that are left, we need to mark them as “sense”/”antisense” or “overlap”:**  
 “Antisense” miRNAs overlap another miRNA/candidate on the **opposite** strand:   
@@ -253,7 +247,7 @@ All commands documented in \<path\>/Command.txt
 
    
 
-2)  **Align** the combined file (including all Macrosperma libraries) **to genome** by **STAR** \- command for the first library:
+2)  **Align** each library FASTQ **to genome** by **STAR** (per-library; `sbatch star_align.sbatch`). Command for the first library:
 
    STAR \--genomeDir ../STAR/genome\_index/ \--readFilesIn ../TrimmedFastq/SRR13072557.1\_trimmed.fastq \--outFileNamePrefix ../STAR/align\_to\_genome/CE57/Macrosperma\_ \--outFilterMultimapNmax 20 \--runThreadN 16 \--outSAMtype SAM
 
@@ -351,25 +345,31 @@ Sequencing reads: reuse `Macrosperma/TrimmedFastq/` (MR4–MR8; same libraries a
 
    path: \<basePath\>/STAR/genome\_index/
 
-4. **Per-library discovery** — run mapper/miRDeep per library in `mirdeep_out/{MR4|MR5|…}/` and sRNAbench per library:
+4. **Per-library discovery** (Hofstenia-style; no combined FASTQs):
 
+   sbatch mapper.sbatch  
+   # then either parallel mirdeep_test.sbatch in each mirdeep_out/{MR*}/, or:
+   sbatch mirdeep.sbatch  
    sbatch srnabench.sbatch  
-   sbatch star\_align.sbatch
+   sbatch star\_align.sbatch  
+   sbatch ../scripts/filter_mirdeep.sbatch  
+   sbatch ../scripts/filter_sRNAbench.sbatch
 
-   sRNAbench outputs: `sRNAtoolboxDB/out/Macrosperma_newGenome/Macrosperma_{library}/`
+   sRNAbench outputs: `sRNAtoolboxDB/out/Macrosperma_newGenome/Macrosperma_{library}/`  
+   Do **not** use `star_align_all_libraries.sbatch` (disabled combined legacy).
 
-**Uniting, good_candidates, and creating GFF3/FASTA (v2 track)**
+**Uniting, unique_candidates, and creating GFF3/FASTA (v2 track)**
 
 Working directory: `{base}/Macrosperma_newGenome/scripts/`  
 Use `--variant new_genome` (or `-s Macrosperma_newGenome` where supported):
 
-python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/srnabenchUniteGFF.py -o Macrosperma\_sRNAbench.gff3 -seed ../../mirbase\_data/Seeds.txt --create-fasta Macrosperma\_sRNAbench.fasta -s Macrosperma --variant new\_genome --goodcandidates False  
+python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/srnabenchUniteGFF.py -o Macrosperma\_sRNAbench.gff3 -seed ../../mirbase\_data/Seeds.txt --create-fasta Macrosperma\_sRNAbench.fasta -s Macrosperma --variant new\_genome --uniquecandidates False  
 python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/processGoodCandidates.py --tool sRNAbench -s Macrosperma --variant new\_genome  
-python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/srnabenchUniteGFF.py -o Macrosperma\_sRNAbench.gff3 -seed ../../mirbase\_data/Seeds.txt --create-fasta Macrosperma\_sRNAbench.fasta -s Macrosperma --variant new\_genome --goodcandidates True  
+python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/srnabenchUniteGFF.py -o Macrosperma\_sRNAbench.gff3 -seed ../../mirbase\_data/Seeds.txt --create-fasta Macrosperma\_sRNAbench.fasta -s Macrosperma --variant new\_genome --uniquecandidates True  
 
-python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/mirdeepUniteGFF.py -o Macrosperma\_mirdeep.gff3 --create-fasta Macrosperma\_mirdeep.fasta -seed ../../mirbase\_data/Seeds.txt -s Macrosperma --variant new\_genome --goodcandidates False  
+python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/mirdeepUniteGFF.py -o Macrosperma\_mirdeep.gff3 --create-fasta Macrosperma\_mirdeep.fasta -seed ../../mirbase\_data/Seeds.txt -s Macrosperma --variant new\_genome --uniquecandidates False  
 python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/processGoodCandidates.py --tool miRDeep -s Macrosperma --variant new\_genome  
-python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/mirdeepUniteGFF.py -o Macrosperma\_mirdeep.gff3 --create-fasta Macrosperma\_mirdeep.fasta -seed ../../mirbase\_data/Seeds.txt -s Macrosperma --variant new\_genome --goodcandidates True  
+python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/mirdeepUniteGFF.py -o Macrosperma\_mirdeep.gff3 --create-fasta Macrosperma\_mirdeep.fasta -seed ../../mirbase\_data/Seeds.txt -s Macrosperma --variant new\_genome --uniquecandidates True  
 
 python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/compare_genome_to_fasta.py --mode discovery --species Macrosperma --variant new\_genome --dir /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Macrosperma\_newGenome/scripts --genome\_fasta /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Macrosperma\_newGenome/genome/CMACR.caenorhabditis\_macrosperma\_JU2083\_v2.scaffolds.fna ...
 

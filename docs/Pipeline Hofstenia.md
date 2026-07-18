@@ -12,9 +12,7 @@ https://onedrive.live.com/?authkey=%21AKCytbQPG3KfYmM\&id=746671E5D2B00BDD%21140
 **Preparations:**
 
 1. **Adapter was cut ahead.**  
-2. **Combining the trimmed libraries** \- command (done in TrimmedFastq folder):  
-   	cat \*fastq \> hofstenia\_final.fastq  
-   
+2. **Do not combine libraries for discovery.** (Legacy only: `cat *fastq > hofstenia_final.fastq` — superseded; use per-library FASTQs.)
 
 **Generating miRNA Candidates Using Mirdeep2**
 
@@ -26,19 +24,16 @@ https://onedrive.live.com/?authkey=%21AKCytbQPG3KfYmM\&id=746671E5D2B00BDD%21140
 
    path: \<basePath\>/Hofstenia/genome/index/\*
 
-4. Since we use sequencing data from multiple files we need to **make a config.txt file:**
-
-path: \<basePath\>/bash/config.txt
-
-5. **mapper.pl** \- mapping of the preprocessed reads file to reference database, indexed by bowtie. Split into two parts because of the large size of the libraries. Commands:
+4. **mapper.pl** \- one FASTQ per `mapper.pl` call (no `config.txt` / `-d`). Split into two sbatch jobs because of library size:
 
 	sbatch mapper\_test2.sbatch  
 sbatch mapper\_test3.sbatch  
 	path: /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/bash/  
-output: /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/mapper\_out\_test/	  
+output: /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/mapper\_out\_test/  
+(per-library: `hofstenia_Seq_vs_genome_{LIBRARY}.arf`, `hofstenia_Seq_collapsed_{LIBRARY}.fasta`)  
 	
 
-6. **mirDeep2.pl** \- compared with Hairpin & Mature in all animals.  
+5. **mirDeep2.pl** \- compared with Hairpin & Mature in all animals.  
    1. Preprocessing command to avoid error of the genome file “has not allowed whitespaces”:  
       	perl \-plane 's/\\s+.+$//' \< caenorhabditis\_Hofstenia.PRJNA13758.WBPS16.genomic.fa \> new\_caenorhabditis\_Hofstenia.PRJNA13758.WBPS16.genomic.fa  
         
@@ -86,9 +81,11 @@ cp \-r /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia\_newGe
 **Command for new genome:**  
 mv /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia\_newGenome/sRNA\_PBonly/hofPB\_v6.zip /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/sRNAtoolboxDB/seqOBJ/
 
-8. **sRNAbench.jar** \- align to genome and prediction for each library \- command:
+8. **sRNAbench.jar** \- one FASTQ per library (submit `sRNAbench_{LIBRARY}.sbatch`). Example EC1:
 
-   java \-jar ../../sRNAtoolboxDB/exec/sRNAbench.jar input=/mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/Fastq/Hmia\_annotation/filtered/hofstenia\_final.fastq  output=../../sRNAtoolboxDB/out/Hofstenia predict=true species=hofsteniaGenomeIndexed dbPath=/storage/users/IsanaRNA/Isana\_Tzah/Charles\_seq/sRNAtoolboxDB hairpin=animalsHairpin.fa mature=animalsMature.fa
+   java \-jar ../../sRNAtoolboxDB/exec/sRNAbench.jar input=.../filtered/EC1.filtered.fastq output=../../sRNAtoolboxDB/out/Hofstenia\_EC1 predict=true species=hofsteniaGenomeIndexed dbPath=.../sRNAtoolboxDB hairpin=animalsHairpin.fa mature=animalsMature.fa
+
+   (Legacy combined `hofstenia_final.fastq` → `out/Hofstenia` superseded.)
 
    
 
@@ -109,14 +106,14 @@ python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/srnabenchPerLibrary
 \#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#  
 Instructions: 
 
-1. Run the GFF creation script below once with good\_candidates=False to create the debugging hofstenia file.  
+1. Run the GFF creation script below once with unique\_candidates=False to create the debugging hofstenia file.  
 2. Process it using `processGoodCandidates.py`.  
-3. Then run again the GFF script with good\_candidates=True
+3. Then run again the GFF script with unique\_candidates=True
 
 \#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#
 
 **Uniting, removing overlaps and creating GFF:**  
-python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/srnabenchUniteGFF.py -o Hofstenia_sRNAbench.gff3 -s Hofstenia --base-path /mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq --create-fasta Hofstenia_sRNAbench.fasta --goodcandidates False
+python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/srnabenchUniteGFF.py -o Hofstenia_sRNAbench.gff3 -s Hofstenia --base-path /mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq --create-fasta Hofstenia_sRNAbench.fasta --uniquecandidates False
 
 **process\_debugging\_Hofstenia command:**
 
@@ -133,13 +130,13 @@ python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/mirdeepPerLibraryFi
 \#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#  
 Instructions: 
 
-4. Run the GFF creation script below once with good\_candidates=False to create the debugging hofstenia file.  
+4. Run the GFF creation script below once with unique\_candidates=False to create the debugging hofstenia file.  
 5. Process it using `processGoodCandidates.py`.  
-6. Then run again the GFF script with good\_candidates=True
+6. Then run again the GFF script with unique\_candidates=True
 
 \#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#  
 **Uniting, removing overlaps and creating GFF:**  
-python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/mirdeepUniteGFF.py -o Hofstenia_mirdeep.gff3 --create-fasta Hofstenia_mirdeep.fasta -s Hofstenia --base-path /mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq --goodcandidates False --variant new_genome
+python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/mirdeepUniteGFF.py -o Hofstenia_mirdeep.gff3 --create-fasta Hofstenia_mirdeep.fasta -s Hofstenia --base-path /mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq --uniquecandidates False --variant new_genome
 
 **process\_debugging\_Hofstenia command:**
 
@@ -249,7 +246,7 @@ All commands documented in \<path\>/Command.txt
 
    
 
-2)  **Align** the combined file (including all Hofstenia libraries) **to genome** by **STAR** \- separate command for each library:
+2)  **Align** each library FASTQ **to genome** by **STAR** \- separate command for each library:
 
    STAR \--genomeDir ../STAR/genome\_index/ \--readFilesIn /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/Fastq/Hmia\_annotation/filtered/\<Library\>.filtered.fastq \--outFileNamePrefix ../STAR/align\_to\_genome/\<Library\>/Hofstenia\_ \--outFilterMultimapNmax 20 \--runThreadN 16 \--outSAMtype SAM
 
@@ -467,7 +464,7 @@ python /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/script
 
 python /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/scripts/mirge\_processing.py \--dir /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia\_newGenome/miRge\_after\_Ziv\_output/ \--species Hofstenia\_newGenome \--m18
 
-**Compare genome to fasta and create good candidates:**
+**Compare genome to fasta and create unique candidates:**
 
 conda activate my\_env
 

@@ -56,30 +56,24 @@ Sulstoni:
 
    
 
-3) creating **config.txt**:  
-   /storage/users/IsanaRNA/Isana\_Tzah/Charles\_seq/Sulstoni/TrimmedFastq/SRR13072570.1\_trimmed.fastq SR0  
-   /storage/users/IsanaRNA/Isana\_Tzah/Charles\_seq/Sulstoni/TrimmedFastq/SRR13072571.1\_trimmed.fastq SR1  
-   /storage/users/IsanaRNA/Isana\_Tzah/Charles\_seq/Sulstoni/TrimmedFastq/SRR13072572.1\_trimmed.fastq SR2  
-   /storage/users/IsanaRNA/Isana\_Tzah/Charles\_seq/Sulstoni/TrimmedFastq/SRR13072573.1\_trimmed.fastq SR3  
-   /storage/users/IsanaRNA/Isana\_Tzah/Charles\_seq/Sulstoni/TrimmedFastq/SRR13072574.1\_trimmed.fastq SR4  
-   /storage/users/IsanaRNA/Isana\_Tzah/Charles\_seq/Sulstoni/TrimmedFastq/SRR13072575.1\_trimmed.fastq SR5  
-   /storage/users/IsanaRNA/Isana\_Tzah/Charles\_seq/Sulstoni/TrimmedFastq/SRR13072576.1\_trimmed.fastq SR6  
-   /storage/users/IsanaRNA/Isana\_Tzah/Charles\_seq/Sulstoni/TrimmedFastq/SRR13072577.1\_trimmed.fastq SR7  
-     
-4) **mapper.pl** \- command:
+3) **mapper.pl** — Hofstenia-style: **one FASTQ per `mapper.pl` call** (no `config.txt`, no `-d`). Submit from `{base}/Sulstoni/bash/`:
 
-   mapper.pl config.txt \-d \-e \-i \-j \-m \-h \-p ../genome/index/sulstoniGenomeIndexed \-t ../mapper\_out/Sulstoni\_Seq\_vs\_genome.arf \-s ../mapper\_out/Sulstoni\_Seq\_collapsed.fasta
+   sbatch mapper.sbatch
 
-	  
-	parameters:  
-	\-e: input file in fastq format.  
-	\-d: input file is config.  
-	\-p: prefix name of the genome indexed by bowtie.  
-	\-i: convert rna to dna (for map againsts genome).  
-	\-j: remove sequences thats contain empty value like ‘n’.  
-	\-t: print mapping read to the file.  
-	\-s: print collapsed reads to the file.  
-		\-h: changing the output to fasta format (required).
+   Example (one library):
+
+   mapper.pl .../TrimmedFastq/SRR13072570.1\_trimmed.fastq \-e \-i \-j \-m \-h \-p ../genome/index/sulstoniGenomeIndexed \-t ../mapper\_out/sulstoni\_Seq\_vs\_genome\_SR0.arf \-s ../mapper\_out/sulstoni\_Seq\_collapsed\_SR0.fasta
+
+   Libraries SR0–SR7 → per-library `.arf` / collapsed `.fasta` under `mapper_out/`.
+
+   parameters:  
+   \-e: input file in fastq format.  
+   \-p: prefix name of the genome indexed by bowtie.  
+   \-i: convert rna to dna (for map againsts genome).  
+   \-j: remove sequences thats contain empty value like ‘n’.  
+   \-t: print mapping read to the file.  
+   \-s: print collapsed reads to the file.  
+   \-h: changing the output to fasta format (required).
 
 		Results:
 
@@ -97,11 +91,11 @@ Sulstoni:
 
 		path: \<basePath\>/Sulstoni/mapper\_out/\*
 
-5) **mirDeep2.pl** — run **per library** in `{base}/Sulstoni/mirdeep_out/{SR0|…|SR7}/`. Filter each folder:
+5) **mirDeep2.pl** — run **per library** in `{base}/Sulstoni/mirdeep_out/{SR0|…|SR7}/` (`sbatch mirdeep_test.sbatch` in each folder, or `sbatch bash/mirdeep.sbatch`). Then:
 
-   python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/mirdeepPerLibraryFilter.py -i result\_\*.csv --filter-s 10 --exclude-c 100 --filter-mc 10
+   sbatch {base}/Sulstoni/scripts/filter_mirdeep.sbatch
 
-   **Legacy combined run** (superseded):
+   **Legacy combined run** (superseded; historical scores below):
 
    
 
@@ -175,21 +169,21 @@ path: \<basePath\>/Sulstoni/mirdeep\_out/\*
 
 9) Per-library outputs: `{base}/sRNAtoolboxDB/out/Sulstoni/Sulstoni_{library}/`
 
-**Uniting, good_candidates, and creating GFF3/FASTA**
+**Uniting, unique_candidates, and creating GFF3/FASTA**
 
 Working directory: `{base}/Sulstoni/scripts/`
 
-Two-pass workflow (see Pipeline Hofstenia / Elegans): `--goodcandidates False` → `processGoodCandidates.py` → `--goodcandidates True` → `compare_genome_to_fasta.py --mode discovery`
+Two-pass workflow (see Pipeline Hofstenia / Elegans): `--uniquecandidates False` → `processGoodCandidates.py` → `--uniquecandidates True` → `compare_genome_to_fasta.py --mode discovery`
 
-python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/srnabenchUniteGFF.py -o Sulstoni\_sRNAbench.gff3 -seed ../../mirbase\_data/Seeds.txt --create-fasta Sulstoni\_sRNAbench.fasta -s Sulstoni --goodcandidates False  
+python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/srnabenchUniteGFF.py -o Sulstoni\_sRNAbench.gff3 -seed ../../mirbase\_data/Seeds.txt --create-fasta Sulstoni\_sRNAbench.fasta -s Sulstoni --uniquecandidates False  
 python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/processGoodCandidates.py --tool sRNAbench -s Sulstoni  
-python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/srnabenchUniteGFF.py -o Sulstoni\_sRNAbench.gff3 -seed ../../mirbase\_data/Seeds.txt --create-fasta Sulstoni\_sRNAbench.fasta -s Sulstoni --goodcandidates True  
+python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/srnabenchUniteGFF.py -o Sulstoni\_sRNAbench.gff3 -seed ../../mirbase\_data/Seeds.txt --create-fasta Sulstoni\_sRNAbench.fasta -s Sulstoni --uniquecandidates True  
 
-python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/mirdeepUniteGFF.py -o Sulstoni\_mirdeep.gff3 --create-fasta Sulstoni\_mirdeep.fasta -seed ../../mirbase\_data/Seeds.txt -s Sulstoni --goodcandidates False  
+python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/mirdeepUniteGFF.py -o Sulstoni\_mirdeep.gff3 --create-fasta Sulstoni\_mirdeep.fasta -seed ../../mirbase\_data/Seeds.txt -s Sulstoni --uniquecandidates False  
 python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/processGoodCandidates.py --tool miRDeep -s Sulstoni  
-python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/mirdeepUniteGFF.py -o Sulstoni\_mirdeep.gff3 --create-fasta Sulstoni\_mirdeep.fasta -seed ../../mirbase\_data/Seeds.txt -s Sulstoni --goodcandidates True  
+python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/mirdeepUniteGFF.py -o Sulstoni\_mirdeep.gff3 --create-fasta Sulstoni\_mirdeep.fasta -seed ../../mirbase\_data/Seeds.txt -s Sulstoni --uniquecandidates True  
 
-**Filtering (--filter-mc 10):** same criteria as Elegans/Macrosperma; all novel451 discarded; good_candidates requires ≥2 libraries in cluster.
+**Filtering (--filter-mc 10):** same criteria as Elegans/Macrosperma; all novel451 discarded; unique_candidates = one representative per ±20 bp cluster (single-library loci kept).
 
 paths: `{base}/Sulstoni/scripts/Sulstoni_*.gff3`, `sRNAbench_all_remaining_filtered.csv`, `mirdeep_all_remaining_filtered.csv`
 
@@ -250,7 +244,7 @@ All commands documented in \<path\>/Command.txt
 
    
 
-2)  **Align** the combined file (including all Elegans libraries) **to genome** by **STAR** \- command for the first library:
+2)  **Align** each library FASTQ **to genome** by **STAR** (per-library; `sbatch star_align.sbatch`). Command for the first library:
 
    STAR \--genomeDir ../STAR/genome\_index/ \--readFilesIn ../TrimmedFastq/SRR13072557.1\_trimmed.fastq \--outFileNamePrefix ../STAR/align\_to\_genome/CE57/Sulstoni\_ \--outFilterMultimapNmax 20 \--runThreadN 16 \--outSAMtype SAM
 
@@ -351,26 +345,30 @@ wget https://ftp.ebi.ac.uk/pub/databases/wormbase/parasite/releases/WBPS19/speci
 
    path: \<basePath\>/STAR/genome\_index/
 
-4. **Per-library discovery** — run mapper/miRDeep per library in `mirdeep_out/{SR0|SR1|…}/` and sRNAbench per library:
+4. **Per-library discovery** (Hofstenia-style; no combined FASTQs):
 
    sbatch mapper.sbatch  
+   sbatch mirdeep.sbatch  
    sbatch srnabench.sbatch  
-   sbatch star\_align.sbatch
+   sbatch star\_align.sbatch  
+   sbatch ../scripts/filter_mirdeep.sbatch  
+   sbatch ../scripts/filter_sRNAbench.sbatch
 
-   sRNAbench outputs: `sRNAtoolboxDB/out/Sulstoni_newGenome/Sulstoni_{library}/`
+   sRNAbench outputs: `sRNAtoolboxDB/out/Sulstoni_newGenome/Sulstoni_{library}/`  
+   Do **not** use `star_align_all_libraries.sbatch` (disabled combined legacy).
 
-**Uniting, good_candidates, and creating GFF3/FASTA (WBPS19 track)**
+**Uniting, unique_candidates, and creating GFF3/FASTA (WBPS19 track)**
 
 Working directory: `{base}/Sulstoni_newGenome/scripts/`  
 Use `--variant new_genome` (or `-s Sulstoni_newGenome` where supported; legacy Hofstenia scripts accept `--new-genome`):
 
-python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/srnabenchUniteGFF.py -o Sulstoni\_sRNAbench.gff3 -seed ../../mirbase\_data/Seeds.txt --create-fasta Sulstoni\_sRNAbench.fasta -s Sulstoni --variant new\_genome --goodcandidates False  
+python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/srnabenchUniteGFF.py -o Sulstoni\_sRNAbench.gff3 -seed ../../mirbase\_data/Seeds.txt --create-fasta Sulstoni\_sRNAbench.fasta -s Sulstoni --variant new\_genome --uniquecandidates False  
 python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/processGoodCandidates.py --tool sRNAbench -s Sulstoni --variant new\_genome  
-python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/srnabenchUniteGFF.py -o Sulstoni\_sRNAbench.gff3 -seed ../../mirbase\_data/Seeds.txt --create-fasta Sulstoni\_sRNAbench.fasta -s Sulstoni --variant new\_genome --goodcandidates True  
+python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/srnabenchUniteGFF.py -o Sulstoni\_sRNAbench.gff3 -seed ../../mirbase\_data/Seeds.txt --create-fasta Sulstoni\_sRNAbench.fasta -s Sulstoni --variant new\_genome --uniquecandidates True  
 
-python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/mirdeepUniteGFF.py -o Sulstoni\_mirdeep.gff3 --create-fasta Sulstoni\_mirdeep.fasta -seed ../../mirbase\_data/Seeds.txt -s Sulstoni --variant new\_genome --goodcandidates False  
+python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/mirdeepUniteGFF.py -o Sulstoni\_mirdeep.gff3 --create-fasta Sulstoni\_mirdeep.fasta -seed ../../mirbase\_data/Seeds.txt -s Sulstoni --variant new\_genome --uniquecandidates False  
 python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/processGoodCandidates.py --tool miRDeep -s Sulstoni --variant new\_genome  
-python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/mirdeepUniteGFF.py -o Sulstoni\_mirdeep.gff3 --create-fasta Sulstoni\_mirdeep.fasta -seed ../../mirbase\_data/Seeds.txt -s Sulstoni --variant new\_genome --goodcandidates True  
+python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/mirdeepUniteGFF.py -o Sulstoni\_mirdeep.gff3 --create-fasta Sulstoni\_mirdeep.fasta -seed ../../mirbase\_data/Seeds.txt -s Sulstoni --variant new\_genome --uniquecandidates True  
 
 python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/compare_genome_to_fasta.py --mode discovery --species Sulstoni --variant new\_genome --dir /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Sulstoni\_newGenome/scripts --genome\_fasta /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Sulstoni\_newGenome/genome/CSULS.caenorhabditis\_sulstoni\_PRJEB12601\_WBPS19.scaffolds.fna ...
 

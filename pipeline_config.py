@@ -34,6 +34,11 @@ NEMATODE_PROFILE = {
     "run_sensitivity_plots": False,
     "ncrna_dir": DEFAULT_NCRNA_DIR,
     "output_subdir": "RNAcentral/miRNAs/{species}",
+    # One representative per ±20 bp locus; single-library candidates allowed.
+    "support_mode": "unique_locus",
+    "candidates_dirname": "unique_candidates",
+    "candidates_csv_tag": "uniqueCandidates",
+    "candidates_label": "unique",
 }
 
 HOFSTENIA_PROFILE = {
@@ -49,6 +54,11 @@ HOFSTENIA_PROFILE = {
     "run_sensitivity_plots": False,
     "ncrna_dir": DEFAULT_NCRNA_DIR,
     "output_subdir": "RNAcentral/miRNAs/{species}",
+    # Require ≥2 condition replicates within a ±20 bp cluster.
+    "support_mode": "dev_condition_replicates",
+    "candidates_dirname": "unique_candidates",
+    "candidates_csv_tag": "uniqueCandidates",
+    "candidates_label": "unique",
 }
 
 NEW_GENOME_SUFFIX = "_newGenome"
@@ -86,9 +96,8 @@ SPECIES_CONFIG = {
         "srnabench_out_subdir": "sRNAtoolboxDB/out/Elegans",
         "mirdeep_out_subdir": "Elegans/mirdeep_out",
         "scripts_subdir": "Elegans/scripts",
-        "good_candidates_subdir": "Elegans/good_candidates",
+        "candidates_subdir": "Elegans/unique_candidates",
         "srnabench_folder_prefix": "Elegans_",
-        "support_mode": "distinct_libraries",
         **NEMATODE_PROFILE,
         "use_mirbase_intersects": True,
         "run_sensitivity_plots": True,
@@ -98,9 +107,8 @@ SPECIES_CONFIG = {
         "srnabench_out_subdir": "sRNAtoolboxDB/out/Macrosperma",
         "mirdeep_out_subdir": "Macrosperma/mirdeep_out",
         "scripts_subdir": "Macrosperma/scripts",
-        "good_candidates_subdir": "Macrosperma/good_candidates",
+        "candidates_subdir": "Macrosperma/unique_candidates",
         "srnabench_folder_prefix": "Macrosperma_",
-        "support_mode": "distinct_libraries",
         **NEMATODE_PROFILE,
     },
     "Sulstoni": {
@@ -108,9 +116,8 @@ SPECIES_CONFIG = {
         "srnabench_out_subdir": "sRNAtoolboxDB/out/Sulstoni",
         "mirdeep_out_subdir": "Sulstoni/mirdeep_out",
         "scripts_subdir": "Sulstoni/scripts",
-        "good_candidates_subdir": "Sulstoni/good_candidates",
+        "candidates_subdir": "Sulstoni/unique_candidates",
         "srnabench_folder_prefix": "Sulstoni_",
-        "support_mode": "distinct_libraries",
         **NEMATODE_PROFILE,
     },
     "Hofstenia": {
@@ -123,9 +130,8 @@ SPECIES_CONFIG = {
         "srnabench_out_subdir": "sRNAtoolboxDB/out",
         "mirdeep_out_subdir": "Hofstenia/mirdeep_out",
         "scripts_subdir": "Hofstenia/scripts",
-        "good_candidates_subdir": "Hofstenia/good_candidates",
+        "candidates_subdir": "Hofstenia/unique_candidates",
         "srnabench_folder_prefix": "Hofstenia_",
-        "support_mode": "dev_condition_replicates",
         **HOFSTENIA_PROFILE,
     },
 }
@@ -152,10 +158,11 @@ def resolve_species_and_variant(species, variant=None):
 
 def build_new_genome_variant(species):
     track = f"{species}{NEW_GENOME_SUFFIX}"
+    candidates_dirname = SPECIES_CONFIG[species]["candidates_dirname"]
     return {
         "mirdeep_out_subdir": f"{track}/mirdeep_out",
         "scripts_subdir": f"{track}/scripts",
-        "good_candidates_subdir": f"{track}/good_candidates",
+        "candidates_subdir": f"{track}/{candidates_dirname}",
         "srnabench_out_subdir": f"sRNAtoolboxDB/out/{track}",
         "output_subdir": f"RNAcentral/miRNAs/{track}",
         "species_label": species,
@@ -181,7 +188,7 @@ def get_species_config(species, base_path=None, variant=None):
             )
 
     cfg["scripts_dir"] = os.path.join(cfg["base_path"], cfg["scripts_subdir"])
-    cfg["good_candidates_dir"] = os.path.join(cfg["base_path"], cfg["good_candidates_subdir"])
+    cfg["candidates_dir"] = os.path.join(cfg["base_path"], cfg["candidates_subdir"])
     cfg["srnabench_out_dir"] = os.path.join(cfg["base_path"], cfg["srnabench_out_subdir"])
     cfg["mirdeep_out_dir"] = os.path.join(cfg["base_path"], cfg["mirdeep_out_subdir"])
     cfg["seed_path"] = os.path.join(cfg["base_path"], cfg["seed_file"])
@@ -230,8 +237,24 @@ def mirdeep_folder_name(cfg, library):
     return library
 
 
+def candidates_dir(cfg):
+    return cfg["candidates_dir"]
+
+
+def candidates_label(cfg):
+    return cfg["candidates_label"]
+
+
+def candidates_csv_filename(cfg, tool_name):
+    return f"{tool_name}_{cfg['candidates_csv_tag']}.csv"
+
+
+def candidates_csv_path(cfg, tool_name):
+    return os.path.join(candidates_dir(cfg), candidates_csv_filename(cfg, tool_name))
+
+
 def dev_condition(cfg, library_name, tool_name):
-    """Return grouping key for good_candidates support filtering."""
+    """Return grouping key for Hofstenia unique_candidates support filtering."""
     lib = library_name.split("_")[-1]
     if cfg["support_mode"] == "dev_condition_replicates":
         return lib[:-1] if len(lib) > 1 else lib
