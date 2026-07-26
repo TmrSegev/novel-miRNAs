@@ -19,11 +19,11 @@ Invoke Python scripts by **absolute path**; do not copy scripts into species fol
 
 ## What changed in the reordering (v2 → v3)
 
-Stage **names** are unchanged for Phases 1–10 relative to the pre-v3 template ordering. v3 **splits old Phase 11 downstream** into three phases (11 Ziv, 12 final candidates, 13 statistics). Only the **run order** of Phases 7–9 changed relative to that earlier ordering.
+Stage **names** are unchanged for Phases 1–10 relative to the pre-v3 template ordering. v3 **splits old Phase 11 downstream** into four phases (11 Ziv, 12 Oscar/5p-het filters, 13 final candidates, 14 statistics). Only the **run order** of Phases 7–9 changed relative to that earlier ordering.
 
 In v2, **cross-tool bedtools intersections** (old Phase 7) appeared *before* **STAR / featureCounts** (Phase 8) and **BLAST** (Phase 9). That order is fine for drawing overlap BEDs between GFF files, but **`intersectionsTable.py` (Phase 10) needs featureCounts and BLAST files**, so quantification must finish before the integration block. v3 therefore runs:
 
-**Phases 1–6 unchanged** → **7 STAR/featureCounts** → **8 BLAST** → **9 cross-tool bedtools** → **10 intersectionsTable** → **11 Ziv** → **12 final candidates** → **13 statistics**.
+**Phases 1–6 unchanged** → **7 STAR/featureCounts** → **8 BLAST** → **9 cross-tool bedtools** → **10 intersectionsTable** → **11 Ziv** → **12 Oscar/5p-het (placeholder)** → **13 final candidates** → **14 statistics**.
 
 One prep addition: **`mirbaseToGFF3.py`** (Elegans) moved into Phase 1 so `cel_mirbase_seq.gff3` exists before Phase 7 miRBase featureCounts.
 
@@ -35,7 +35,7 @@ Phase 5 now uses **`--debug-only`** on unite scripts (Step A) so you do not buil
 | 8 — STAR / featureCounts | **7** | STAR, featureCounts, `add_flank_to_GFF.py` |
 | 9 — BLAST | **8** | blastn |
 | 10 — Intersections table | **10** | `intersectionsTable.py` |
-| 11 — Downstream (all in one) | **11–13** | Ziv → final FASTAs → `statistics.py` |
+| 11 — Downstream (all in one) | **11–14** | Ziv → Oscar/5p-het → final FASTAs → `statistics.py` |
 
 Phases 1–6 keep the same names and relative order as v2.
 
@@ -58,8 +58,9 @@ Each phase lists its main scripts. Run in this order:
 | 9 | Cross-tool (and known-miRNA) intersections | bedtools (cross-intersect), `intersections.sbatch` |
 | 10 | Intersections table | `intersectionsTable.py` |
 | 11 | Structural filtering (Ziv) | `allCandidatesFasta.py` → `Ziv_feature_SOS.py` |
-| 12 | Final candidates | `allCandidatesFasta.py` (from Ziv workbook) |
-| 13 | Statistics | `statistics.py` |
+| 12 | 5p heterogeneity / Oscar filters | *(placeholder — not yet wired)* |
+| 13 | Final candidates | `allCandidatesFasta.py` (from post-filter workbook) |
+| 14 | Statistics | `statistics.py` |
 
 ```mermaid
 flowchart TD
@@ -72,8 +73,9 @@ flowchart TD
   p8 --> p9[9_bedtools_cross_intersect]
   p9 --> p10[10_intersectionsTable]
   p10 --> p11[11_Ziv]
-  p11 --> p12[12_final_candidates]
-  p12 --> p13[13_statistics]
+  p11 --> p12[12_5p_het_Oscar_filters]
+  p12 --> p13[13_final_candidates]
+  p13 --> p14[14_statistics]
 ```
 
 ### Quick execution order
@@ -89,8 +91,9 @@ flowchart TD
 9  bedtools cross-intersect (sRNAbench ↔ miRDeep; Elegans ↔ miRBase/miRGeneDB)
 10 intersectionsTable.py
 11 allCandidatesFasta (from intersections) → Ziv_feature_SOS.py
-12 allCandidatesFasta (from Ziv workbook, {ZIV_SHEET}) → final FASTAs
-13 statistics.py  (input: all_remaining_after_ziv_{SPECIES}.xlsx)
+12 5p heterogeneity + Oscar filters                         (placeholder)
+13 allCandidatesFasta (from post-filter workbook, {ZIV_SHEET}) → final FASTAs
+14 statistics.py  (input: all_remaining_after_ziv_{SPECIES}.xlsx)
 Optional: mirTrace, expression_dynamics, miRge, seed_frequency, new_genome
 ```
 
@@ -106,8 +109,9 @@ Only stages that **remove** miRNA candidates and keep a subset. Merge/unite, lab
 | 2 | unique_candidates (±20 bp collapse; Hofstenia multi-replicate support) | `processGoodCandidates.py` | 5 step B |
 | 3 | Drop low expression (sum FC &lt; 100) | `intersectionsTable.py --sum-fc-thres 100` | 10 |
 | 4 | Structural filter | `Ziv_feature_SOS.py` | 11 |
+| 5 | 5p heterogeneity / Oscar filters | *(TBD — placeholder)* | 12 |
 
-`Ziv_feature_SOS.py` runs after `intersectionsTable.py` so each row already has featureCounts, BLAST, and cross-tool types. `statistics.py` runs on the Ziv-filtered workbook (Phase 13), not the raw intersections table.
+`Ziv_feature_SOS.py` runs after `intersectionsTable.py` so each row already has featureCounts, BLAST, and cross-tool types. `statistics.py` runs on the filtered workbook (Phase 14), not the raw intersections table. Until Phase 12 is implemented, Phases 13–14 read `{ZIV_XLSX}` directly from Phase 11.
 
 ---
 
@@ -143,7 +147,7 @@ Resolve these before running a step. An agent can load library lists and flags f
 | `{REPO}` | Script root | `/mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs` |
 | `{ZIV_XLSX}` | Ziv-filtered workbook | `{BASE}/Ziv_Features/all_remaining_after_ziv_{SPECIES}.xlsx` |
 | `{ZIV_SHEET}` | Sheet for final candidates / statistics | Nematodes: `(D) Structural Features`; Hofstenia: `(A) Unfiltered` — from `cfg["mirge_input_sheet"]` |
-| `{MIRGE_FASTA_DIR}` | Final candidate FASTAs (Phase 12) | `{SPECIES_DIR}/miRge/` (Hofstenia: `miRge_after_Ziv/`) |
+| `{MIRGE_FASTA_DIR}` | Final candidate FASTAs (Phase 13) | `{SPECIES_DIR}/miRge/` (Hofstenia: `miRge_after_Ziv/`) |
 
 **Agent assembly rules:**
 
@@ -156,7 +160,7 @@ Resolve these before running a step. An agent can load library lists and flags f
    - **Step A:** `*UniteGFF.py ... --debug-only` → writes `debugging_{SPECIES}_*.csv` only
    - **Step B:** `processGoodCandidates.py --tool {TOOL}` → writes `unique_candidates/{tool}_uniqueCandidates.csv`
    - **Step C:** same unite command as Step A but **`--uniquecandidates True`** (no `--debug-only`) → final GFF/FASTA; skips re-uniting libraries if the unique_candidates file exists
-7. **Phase 11 vs 12 `allCandidatesFasta.py`** — Phase 11 reads `intersections_table_*.xlsx`; Phase 12 reads `{ZIV_XLSX}` with `--sheetname {ZIV_SHEET}`.
+7. **Phase 11 vs 13 `allCandidatesFasta.py`** — Phase 11 reads `intersections_table_*.xlsx`; Phase 13 reads `{ZIV_XLSX}` (or the Phase 12 post-Oscar workbook once that step exists) with `--sheetname {ZIV_SHEET}`.
 8. **Species forks** — see [Species-specific forks](#species-specific-forks).
 
 ---
@@ -223,8 +227,9 @@ Resolve these before running a step. An agent can load library lists and flags f
 | 10 | `intersectionsTable.py` | `--sum-fc-thres 100` |
 | 11 | `allCandidatesFasta.py` | from intersections table (Ziv input FASTAs) |
 | 11 | `Ziv_feature_SOS.py` | → `{ZIV_XLSX}` |
-| 12 | `allCandidatesFasta.py` | `--sheetname {ZIV_SHEET}` from `{ZIV_XLSX}` |
-| 13 | `statistics.py` | `--all {ZIV_XLSX}`; Hofstenia: 10 kb clusters |
+| 12 | *(placeholder)* | 5p heterogeneity / Oscar filters — not yet wired |
+| 13 | `allCandidatesFasta.py` | `--sheetname {ZIV_SHEET}` from `{ZIV_XLSX}` |
+| 14 | `statistics.py` | `--all {ZIV_XLSX}`; Hofstenia: 10 kb clusters |
 
 ---
 
@@ -550,6 +555,8 @@ STAR --genomeDir ../STAR/genome_index/ \
 
 ### featureCounts — mature miRNA
 
+Same for nematodes and Hofstenia: **one** `featureCounts` call listing **all** library SAMs (`{STAR_SAMS}`). Output is one matrix with a column per library (not separate per-library runs; not a single combined BAM).
+
 ```bash
 cd {BASH_DIR}
 featureCounts -t miRNA -g ID -O -s 1 -M \
@@ -723,11 +730,24 @@ Output: `{ZIV_XLSX}`. Structural sheet name → `{ZIV_SHEET}` (nematodes: `(D) S
 
 ---
 
-## Phase 12 — Final candidates
+## Phase 12 — 5p heterogeneity / Oscar filters *(placeholder)*
 
-**Script:** `allCandidatesFasta.py` (second pass — from Ziv workbook)
+**Status:** not yet implemented in this template. Slot reserved after Ziv and before final-candidate FASTA export.
 
-**Inputs:** `{ZIV_XLSX}` from Phase 11.  
+**Intended role:** apply 5p heterogeneity scoring and any additional filters Oscar used (isomiR / miRge-derived thresholds and related QC), further reducing the Ziv-passing set before Phase 13.
+
+**Inputs (planned):** `{ZIV_XLSX}` from Phase 11; likely miRge / isomiR reports (see species docs under “Calculating 5p heterogeneity”).  
+**Outputs (planned):** filtered workbook or candidate list consumed by Phase 13.
+
+Until this phase is wired, skip it and pass `{ZIV_XLSX}` straight into Phases 13–14.
+
+---
+
+## Phase 13 — Final candidates
+
+**Script:** `allCandidatesFasta.py` (second pass — from Ziv workbook, or post-Phase-12 workbook once available)
+
+**Inputs:** `{ZIV_XLSX}` from Phase 11 (or Phase 12 output when implemented).  
 **Outputs:** final candidate FASTAs in `{MIRGE_FASTA_DIR}/`.
 
 Extract sequences from the **Ziv-filtered sheet**, not the raw intersections table:
@@ -747,15 +767,15 @@ python {REPO}/allCandidatesFasta.py \
 | Elegans, Macrosperma, Sulstoni | `{SPECIES_DIR}/miRge/` |
 | Hofstenia | `{SPECIES_DIR}/miRge_after_Ziv/` |
 
-Phase 12 is required before the optional miRge branch; Phase 13 does not depend on it.
+Phase 13 is required before the optional miRge branch; Phase 14 does not depend on it.
 
 ---
 
-## Phase 13 — Statistics
+## Phase 14 — Statistics
 
 **Script:** `statistics.py`
 
-**Inputs:** `{ZIV_XLSX}` from Phase 11 (post-Ziv filtered candidates).  
+**Inputs:** `{ZIV_XLSX}` from Phase 11 (post-Ziv filtered candidates; or Phase 12 output when implemented).  
 **Outputs:** plots in `./figures/`, cluster files, updated `{ZIV_XLSX}` with cluster columns.
 
 Run from `{RNA_MI_DIR}/` (statistics writes `./figures/` relative to cwd):
@@ -822,7 +842,7 @@ Nematodes additionally filter `5p_overhang_ziv` and `3p_overhang_ziv` to [0, 4] 
 
 ## Optional steps
 
-Run after Phase 13 unless noted.
+Run after Phase 14 unless noted.
 
 **mirTrace QC** (nematodes; can run after Phase 1):
 
