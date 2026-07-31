@@ -19,7 +19,31 @@ Invoke Python scripts by **absolute path** (`$REPO/...`); do not copy scripts in
 
 ## Manual run — shell setup
 
-**Copy one of the blocks below into your SSH session before running phase commands.** All later command blocks assume these variables exist.
+**Preferred:** source the repo env loader (lives in git; updates with `git pull`). All later command blocks assume these variables exist.
+
+```bash
+# one-shot (any species / track)
+source /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/env/load_pipeline_env.sh Macrosperma
+# source .../env/load_pipeline_env.sh Macrosperma new_genome
+# source .../env/load_pipeline_env.sh Hofstenia_newGenome
+```
+
+**MobaXterm / every new SSH session** — add once to cluster `~/.bashrc`:
+
+```bash
+source /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/env/moba_aliases.sh
+```
+
+Then after connect:
+
+```bash
+nm Macrosperma          # loads TRACK + verify helpers + nm_snapshot
+nm-list                 # show all tracks
+```
+
+Exports are **not** persisted across reconnects; `nm …` (or `source load_pipeline_env.sh …`) must run again each session. Details: `env/load_pipeline_env.sh`, `env/moba_aliases.sh`.
+
+Expanded copy-paste blocks below are fallbacks if you cannot source the loader.
 
 Conventions:
 
@@ -469,11 +493,12 @@ bowtie-build -f "$GENOME_FA" "index/${INDEX_BASENAME}GenomeIndexed"
 perl -lane 's/\s+.+$//' < "$GENOME_FA" > "$GENOME_FA_NO_WS"
 ```
 
-**sRNAbench genome object:**
+**sRNAbench genome object** (`makeSeqObj.jar` writes a **seq-object zip** next to the input FASTA; input stays plain `.fa`/`.fna`/`.fasta`. The jar names the zip from the basename prefix before the first dot — e.g. `CMACR....fna` → `CMACR.zip`, `caenorhabditis_elegans....fa` → `caenorhabditis_elegans.zip`, `Hmia.030120.fasta` → `Hmia.zip`):
 
 ```bash
 java -jar "$BASE/sRNAtoolboxDB/exec/makeSeqObj.jar" "$GENOME_FA"
-mv "${GENOME_DIR}/$(basename "${GENOME_FA}" .fasta).zip" "$BASE/sRNAtoolboxDB/seqOBJ/${SRNABENCH_INDEX}.zip"
+SEQOBJ_ZIP="$(dirname "$GENOME_FA")/$(basename "$GENOME_FA" | cut -d. -f1).zip"
+mv "$SEQOBJ_ZIP" "$BASE/sRNAtoolboxDB/seqOBJ/${SRNABENCH_INDEX}.zip"
 cp -r "$GENOME_DIR/index/." "$BASE/sRNAtoolboxDB/index/"
 ```
 
@@ -522,12 +547,13 @@ fi
 
 **Nematodes** (from `$BASH_DIR`):
 
+Run:
 ```bash
 cd "$BASH_DIR"
 sbatch mapper.sbatch
 ```
 
-Example single-library `mapper.pl` (paths relative to `$BASH_DIR`; repeat per library):
+Example of what's inside, single-library `mapper.pl` (paths relative to `$BASH_DIR`; repeat per library):
 
 ```bash
 cd "$BASH_DIR"

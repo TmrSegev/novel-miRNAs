@@ -10,6 +10,7 @@
 ## Pipeline run / overwrite notes
 
 - Use `$TRACK` (`{Species}` vs `{Species}_newGenome`) so RNA-mi / Ziv / BLAST query paths stay separated. See overwrite + Verify sections in `docs/pipeline_v3.md`.
+- Cluster env loader (source, do not execute): `env/load_pipeline_env.sh` — or `env/moba_aliases.sh` → `nm Macrosperma`. Libraries come from `pipeline_config.py`.
 - **Hofstenia_newGenome** already has prior outputs; nematode `_newGenome` tracks have not been run yet.
 - Stop after Phase 11 (Ziv) until Phase 12 (Oscar / 5p-het) is implemented; do not run 13–14 early.
 - Snapshot existing tracks before re-running in-place phases (esp. old genomes and Hofstenia_newGenome).
