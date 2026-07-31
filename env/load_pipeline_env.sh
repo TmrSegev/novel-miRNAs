@@ -7,7 +7,7 @@
 #   source .../env/load_pipeline_env.sh Hofstenia_newGenome
 #
 # After sourcing: SPECIES, TRACK, SPECIES_DIR, LIBRARIES, verify helpers, etc.
-# Keep species path tables in sync with docs/pipeline_v3.md + pipeline_config.py.
+# Keep species path tables in sync with docs/pipeline_v4.md + pipeline_config.py.
 
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
   echo "ERROR: source this file, do not execute it:" >&2
@@ -163,7 +163,7 @@ esac
 
 export STAR_SAMS="$(for lib in ${LIBRARIES//,/ }; do echo ../STAR/align_to_genome/$lib/${SPECIES}_Aligned.out.sam; done)"
 
-# Verify helpers (same as docs/pipeline_v3.md)
+# Verify helpers (same as docs/pipeline_v4.md)
 FAIL=0
 ok()   { echo "OK: $*"; }
 fail() { echo "FAIL: $*"; FAIL=1; }

@@ -5,11 +5,11 @@
 - **Edit locally** on the laptop, **push to git**, then **pull on the cluster**.
 - Cluster path for scripts: `/mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs`
 - Data and job submission live on the cluster; coding agents do not run the pipeline there.
-- Every command in `docs/pipeline_v3.md` must be **copy-paste ready** for a human SSH session (exported vars + absolute `$REPO/...` invocations). Do not assume an agent will execute those phases.
+- Every command in `docs/pipeline_v4.md` must be **copy-paste ready** for a human SSH session (exported vars + absolute `$REPO/...` invocations). Do not assume an agent will execute those phases.
 
 ## Pipeline run / overwrite notes
 
-- Use `$TRACK` (`{Species}` vs `{Species}_newGenome`) so RNA-mi / Ziv / BLAST query paths stay separated. See overwrite + Verify sections in `docs/pipeline_v3.md`.
+- Use `$TRACK` (`{Species}` vs `{Species}_newGenome`) so RNA-mi / Ziv / BLAST query paths stay separated. See overwrite + Verify sections in `docs/pipeline_v4.md`.
 - Cluster env loader (source, do not execute): `env/load_pipeline_env.sh` — or `env/moba_aliases.sh` → `nm Macrosperma`. Libraries come from `pipeline_config.py`.
 - **Hofstenia_newGenome** already has prior outputs; nematode `_newGenome` tracks have not been run yet.
 - Stop after Phase 11 (Ziv) until Phase 12 (Oscar / 5p-het) is implemented; do not run 13–14 early.
