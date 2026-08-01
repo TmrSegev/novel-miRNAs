@@ -13,6 +13,19 @@ pd.options.mode.chained_assignment = None
 NCRNA_DIR = DEFAULT_NCRNA_DIR
 
 
+def _concat_rows(df, rows):
+    """Append rows to a DataFrame (pandas 2+ compatible; replaces DataFrame.append)."""
+    if rows is None:
+        return df
+    if isinstance(rows, pd.Series):
+        rows = rows.to_frame().T
+    if isinstance(rows, pd.DataFrame) and rows.empty:
+        return df
+    if df is None or (isinstance(df, pd.DataFrame) and df.empty):
+        return rows.copy()
+    return pd.concat([df, rows], ignore_index=True)
+
+
 def filterInputs(inputs_arr, score_threshold, true_positive_threshold, mc_threshold, exclude_counts, ncrna_dir=NCRNA_DIR):
     """
     This Function filtering the inputs Dataframe by threshold
@@ -53,7 +66,7 @@ def filterInputs(inputs_arr, score_threshold, true_positive_threshold, mc_thresh
                 with open(path) as f:
                     if row["consensus mature sequence"].upper() in f.read():
                         row["Removal Reason"] = label
-                        deleted_input = deleted_input.append(row)
+                        deleted_input = _concat_rows(deleted_input, row)
                         input.drop(index=index, inplace=True)
                         break
         total_reads_left = len(input.index)
@@ -70,12 +83,12 @@ def filterInputs(inputs_arr, score_threshold, true_positive_threshold, mc_thresh
             if row['consensus mature sequence'] in above_df['consensus mature sequence'].values:
                 if row['miRDeep2 score'] < score_threshold:  # if smaller than score threshold, remove the smaller one
                     row['Removal Reason'] = 'Has duplicate mature with higher score'
-                    deleted_input = deleted_input.append(row)
+                    deleted_input = _concat_rows(deleted_input, row)
                     input.drop(index=index, inplace=True)
             elif row['consensus mature sequence'] in above_df['consensus star sequence'].values:
                 if row['miRDeep2 score'] < score_threshold:  # if smaller than score threshold, remove the smaller one
                     row['Removal Reason'] = 'Has duplicate star with higher score'
-                    deleted_input = deleted_input.append(row)
+                    deleted_input = _concat_rows(deleted_input, row)
                     input.drop(index=index, inplace=True)
         total_reads_left_after_duplicate_filtering = len(input.index)
         if total_reads_left == 0:
@@ -93,7 +106,7 @@ def filterInputs(inputs_arr, score_threshold, true_positive_threshold, mc_thresh
             input['miRDeep2 score'] = pd.to_numeric(input['miRDeep2 score'])
             to_delete = input[((input['total read count'] < exclude_counts) | (input['star read count'] == 0)) & (input['miRDeep2 score'] < score_threshold)]
             to_delete['Removal Reason'] = 'Score < Threshold'
-            deleted_input = deleted_input.append(to_delete)
+            deleted_input = _concat_rows(deleted_input, to_delete)
             input = input[((input['total read count'] >= exclude_counts) & (input['star read count'] > 0)) | (input['miRDeep2 score'] >= score_threshold)]
             total_reads_left_after_score_filtering = len(input.index)
             if total_reads_left == 0:
@@ -123,7 +136,8 @@ def filterInputs(inputs_arr, score_threshold, true_positive_threshold, mc_thresh
                     axis=1))
 
             if deleted_input is not None:
-                deleted_input = deleted_input.append(
+                deleted_input = _concat_rows(
+                    deleted_input,
                     input[(input['true positive probability'] < true_positive_threshold)])
             else:
                 deleted_input = input[~(input['true positive probability'] >= true_positive_threshold)]
@@ -143,7 +157,7 @@ def filterInputs(inputs_arr, score_threshold, true_positive_threshold, mc_thresh
         # filter mature / star
         to_delete = input[(input['mature read count'] < mc_threshold) & (input['star read count'] < mc_threshold)]
         to_delete['Removal Reason'] = 'max(mature read count, star read count) < {}'.format(mc_threshold)
-        deleted_input = deleted_input.append(to_delete)
+        deleted_input = _concat_rows(deleted_input, to_delete)
         input = input[(input['mature read count'] >= mc_threshold) | (input['star read count'] >= mc_threshold)]
 
         total_reads_left_after_mature_star_filtering = len(input.index)

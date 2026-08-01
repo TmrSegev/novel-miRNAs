@@ -15,6 +15,19 @@ from pipeline_config import DEFAULT_NCRNA_DIR, FILTER_MC_DEFAULT
 threshold = 10
 
 
+def _concat_rows(df, rows):
+    """Append rows to a DataFrame (pandas 2+ compatible; replaces DataFrame.append)."""
+    if rows is None:
+        return df
+    if isinstance(rows, pd.Series):
+        rows = rows.to_frame().T
+    if isinstance(rows, pd.DataFrame) and rows.empty:
+        return df
+    if df is None or (isinstance(df, pd.DataFrame) and df.empty):
+        return rows.copy()
+    return pd.concat([df, rows], ignore_index=True)
+
+
 def filterNovel451(novel451):
     novel451 = novel451.copy()
     novel451["Removal Reason"] = "novel451"
@@ -28,13 +41,13 @@ def filterNovel(novel):
         if max(row["3pRC"], row["5pRC"]) < threshold:
             row = row.copy()
             row["Removal Reason"] = "Weak mature signal"
-            deleted_input = deleted_input.append(row)
+            deleted_input = _concat_rows(deleted_input, row)
             novel.drop(index=index, inplace=True)
             continue
         if row["matureBindings"] < 14:
             row = row.copy()
             row["Removal Reason"] = "Hairpin does not have enough pairings"
-            deleted_input = deleted_input.append(row)
+            deleted_input = _concat_rows(deleted_input, row)
             novel.drop(index=index, inplace=True)
     return novel, deleted_input
 
@@ -81,7 +94,7 @@ def filter_ncrna(table, deleted_input, ncrna_dir):
             if (row["5pseq"] in content) or (row["3pseq"] in content):
                 row = row.copy()
                 row["Removal Reason"] = label
-                deleted_input = deleted_input.append(row)
+                deleted_input = _concat_rows(deleted_input, row)
                 table.drop(index=index, inplace=True)
                 break
     return table, deleted_input
@@ -103,8 +116,8 @@ def run(input_path, additional=None, ncrna_dir=DEFAULT_NCRNA_DIR):
         table_to_add = pd.read_csv(additional, sep="\t")
         table_to_add["origin"] = "novel451"
         table_to_add, table_to_delete = filterNovel451(table_to_add)
-        deleted_input = deleted_input.append(table_to_delete)
-        table = table.append(table_to_add)
+        deleted_input = _concat_rows(deleted_input, table_to_delete)
+        table = _concat_rows(table, table_to_add)
     elif additional:
         print(f"Warning: Additional file not found: {additional}. Skipping novel451.")
 
