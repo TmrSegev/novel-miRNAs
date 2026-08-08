@@ -475,6 +475,8 @@ fi
 
 Same for nematodes and Hofstenia. Edits `*_pre_only.gff3` **in place** — snapshot `$SCRIPTS_DIR` first if you need the unlabeled GFF.
 
+Labels appear only when distinct precursors overlap at `-f 0.4`. Self-hits from the self-intersect are ignored. **No labels is a valid outcome** (documented for Elegans sRNAbench historically).
+
 ```bash
 cd "$SCRIPTS_DIR"
 sed -i 's/\t*$//' "${SPECIES}_mirdeep_pre_only.gff3"
@@ -509,10 +511,21 @@ need_file "$RNA_MI_DIR/sRNAbench_intersect.bed"
 for tag in mirdeep sRNAbench; do
   gff="$SCRIPTS_DIR/${SPECIES}_${tag}_pre_only.gff3"
   need_file "$gff"
-  if grep -qE 'sense|antisense|overlap' "$gff"; then
+  if [[ "$tag" == mirdeep ]]; then
+    bed="$RNA_MI_DIR/miRdeep_intersect.bed"
+  else
+    bed="$RNA_MI_DIR/sRNAbench_intersect.bed"
+  fi
+  if grep -qE ';sense|;antisense|;overlap' "$gff"; then
     ok "overlap labels present in $gff"
   else
-    fail "no sense/antisense/overlap labels in $gff (did overlapSenseAnti run?)"
+    # -wao: cols 1-9 = A, 10-18 = B, 19 = overlap bp. Self-hits have $9==$18.
+    nonself=$(awk -F'\t' 'NF>=18 && $9 != $18 && $10 != "." {c++} END {print c+0}' "$bed")
+    if [[ "$nonself" -eq 0 ]]; then
+      ok "no non-self overlaps for $tag (labels not required)"
+    else
+      fail "no sense/antisense/overlap labels in $gff but $nonself non-self intersect rows (did overlapSenseAnti run?)"
+    fi
   fi
 done
 [[ $FAIL -eq 0 ]] && echo "Phase 6 VERIFY PASSED" || echo "Phase 6 VERIFY FAILED"

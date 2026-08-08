@@ -18,7 +18,17 @@ for i in range(1, len(sys.argv), 2):
               )
         sys.exit()
 
-intersections = pd.read_csv(intersections_table_path, sep='\t', names=['Chr_a', '.1', 'pre_miRNA_a', 'Start_a', 'End_a', '.2', 'Strand_a', '.3', 'Description_a', 'Chr_b', '.4', 'pre_miRNA_b', 'Start_b', 'End_b', '.5', 'Strand_b', '.6', 'Description_b'])
+# bedtools -wao emits 9 (A) + 9 (B) + 1 (overlap bp). Extra cols are tolerated.
+intersections = pd.read_csv(
+    intersections_table_path,
+    sep='\t',
+    header=None,
+    usecols=range(18),
+    names=[
+        'Chr_a', '.1', 'pre_miRNA_a', 'Start_a', 'End_a', '.2', 'Strand_a', '.3', 'Description_a',
+        'Chr_b', '.4', 'pre_miRNA_b', 'Start_b', 'End_b', '.5', 'Strand_b', '.6', 'Description_b',
+    ],
+)
 annotation = gffpd.read_gff3(gff_path)
 gff = annotation.df
 
@@ -26,7 +36,19 @@ gff = annotation.df
 if intersections.empty:
     print("Warning: Intersections table is empty. No overlaps to process.")
     print("GFF file will remain unchanged.")
-    # Exit without modifying the GFF
+    sys.exit(0)
+
+# Drop self-hits and non-overlaps (B filled with '.' / -1 under -wao/-loj).
+intersections = intersections[
+    (intersections['Description_a'] != intersections['Description_b'])
+    & (intersections['Chr_b'].astype(str) != '.')
+]
+
+if intersections.empty:
+    print(
+        "No non-self overlaps at the requested -f threshold; "
+        "GFF left unlabeled (this is OK when candidates do not overlap)."
+    )
     sys.exit(0)
 
 # Create rc_m columns and rc_s columns
@@ -35,10 +57,12 @@ intersections['rc_m_b'] = intersections['Description_b'].str.split(';', expand=T
 intersections['rc_s_a'] = intersections['Description_a'].str.split(';', expand=True)[2]
 intersections['rc_s_b'] = intersections['Description_b'].str.split(';', expand=True)[2]
 
-
-intersections = intersections[intersections['Description_a'] != intersections['Description_b']]
 overlaps = intersections[intersections['Strand_a'] == intersections['Strand_b']]
 senseAnti = intersections[intersections['Strand_a'] != intersections['Strand_b']]
+print(
+    f"Labeling from {len(overlaps)} same-strand and "
+    f"{len(senseAnti)} opposite-strand intersect rows."
+)
 
 # Marking as overlap
 duplicatesCheck = []
