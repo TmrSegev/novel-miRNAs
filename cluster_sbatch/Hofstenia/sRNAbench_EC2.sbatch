@@ -20,8 +20,8 @@ echo -e "SLURM_JOB_NODELIST:\t" $SLURM_JOB_NODELIST "\n\n"
 
 ### Start your code below ####
 module load anaconda				### load anaconda module (must be present when working with conda environments)
-source activate /home/stome/.conda/envs/my_env				### activate a conda environment, replace my_env with your conda environmen
+source activate /home/stome/.conda/envs/srnabench				### activate a conda environment, replace my_env with your conda environmen
 
 echo start ## execute python script – replace with your own command 
-java -jar ../../sRNAtoolboxDB/exec/sRNAbench.jar input=/mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Hofstenia/Fastq/Hmia_annotation/filtered/EC2.filtered.fastq  output=../../sRNAtoolboxDB/out/Hofstenia_EC2 predict=true species=hofsteniaGenomeIndexed dbPath=/mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/sRNAtoolboxDB hairpin=animalsHairpin.fa mature=animalsMature.fa
+java -jar ../../sRNAtoolboxDB/exec/sRNAbench.jar input=/mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Hofstenia/Fastq/Hmia_annotation/filtered/EC2.filtered.fastq  output=../../sRNAtoolboxDB/out/Hofstenia_EC2 predict=true species=hofsteniaGenomeIndexed dbPath=/mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/sRNAtoolboxDB hairpin=/mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/mirbase_data/animalsHairpin.fa mature=/mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/mirbase_data/animalsMature.fa
 echo finished.
