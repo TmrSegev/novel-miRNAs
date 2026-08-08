@@ -192,13 +192,15 @@ mapper.pl "$READ_FASTQ" -e -i -j -m -h \
 
 **Hofstenia mapper.pl (one library):**
 
+Old-genome Hofstenia live wrappers use `mapper_out_test/` (not `mapper_out/`). Nematodes use `mapper_out/`.
+
 ```bash
 cd "$BASH_DIR"
 LIBRARY=EC1
 mapper.pl "$READ_FASTQ_DIR/${LIBRARY}.filtered.fastq" -e -i -j -m -h \
   -p "../Genome/refs/Hmia_ref/index/${INDEX_BASENAME}GenomeIndexed" \
-  -t "../mapper_out/hofstenia_Seq_vs_genome_${LIBRARY}.arf" \
-  -s "../mapper_out/hofstenia_Seq_collapsed_${LIBRARY}.fasta"
+  -t "../mapper_out_test/hofstenia_Seq_vs_genome_${LIBRARY}.arf" \
+  -s "../mapper_out_test/hofstenia_Seq_collapsed_${LIBRARY}.fasta"
 ```
 
 ### miRDeep (all species — one job per library)
@@ -536,10 +538,16 @@ STAR --runMode genomeGenerate --runThreadN 16 \
   --genomeDir ../STAR/genome_index/ --genomeSAindexNbases 11 \
   --genomeFastaFiles "$GENOME_FA"
 
+# Nematodes:
 sbatch star_align.sbatch
+# Hofstenia (libraries split across three jobs):
+sbatch star_align1.sbatch
+sbatch star_align2.sbatch
+sbatch star_align3.sbatch
 ```
 
-> Do **not** use `star_align_all_libraries.sbatch` on nematode `*_newGenome` tracks.
+> Do **not** use `star_align_all_libraries.sbatch` on nematode `*_newGenome` tracks.  
+> Shared discovery/count patterns follow **Hofstenia**; nematodes keep species-specific path layout (`Bash/`/`Genome/`, nested sRNAbench `out/$SPECIES/`, BLAST) where needed.
 
 Example inside star_align.sbatch
 
@@ -581,8 +589,8 @@ sbatch featurecounts_mirbase_sep.sbatch
 
 ```bash
 cd "$BASH_DIR"
-sbatch featurescounts_mirdeep_sep.sbatch
-sbatch featurescounts_sRNAbench_sep.sbatch
+sbatch featurecounts_mirdeep_sep.sbatch
+sbatch featurecounts_sRNAbench_sep.sbatch
 ```
 
 **Flanks** (after mature jobs succeed):
@@ -599,26 +607,35 @@ sbatch featurecounts_sRNAbench_flanked.sbatch
 Example inside mature featureCounts sbatch
 
 ```bash
-# TOOL_TAG=mirdeep or sRNAbench; -a must be $SCRIPTS_DIR GFF
+# GFF basename uses lowercase mirdeep; count files follow Hofstenia: miRNA_miRdeep_*
 featureCounts -t miRNA -g ID -O -s 1 -M \
-  -a "$SCRIPTS_DIR/${SPECIES}_${TOOL_TAG}.gff3" \
-  -o "../counts_sep/miRNA_${TOOL_TAG}_counts.txt" \
+  -a "$SCRIPTS_DIR/${SPECIES}_mirdeep.gff3" \
+  -o "../counts_sep/miRNA_miRdeep_counts.txt" \
   $STAR_SAMS
 
-# Elegans miRBase only — same mature flags as Hofstenia/mirdeep, plus -F GFF
-# (required for this GFF3; without it featureCounts looks for GTF-style ID "..." and fails)
-featureCounts -F GFF -t miRNA -g ID -O -s 1 -M \
+featureCounts -t miRNA -g ID -O -s 1 -M \
+  -a "$SCRIPTS_DIR/${SPECIES}_sRNAbench.gff3" \
+  -o "../counts_sep/miRNA_sRNAbench_counts.txt" \
+  $STAR_SAMS
+
+# Elegans miRBase only (separate conversation if this job fails)
+featureCounts -t miRNA -g ID -O -s 1 -M \
   -a "$BASE/mirbase_data/cel_mirbase_seq.gff3" \
   -o ../counts_sep/miRNA_mirbase_counts.txt \
   $STAR_SAMS
 ```
 
-Example inside flanked featureCounts sbatch
+Example inside flanked featureCounts sbatch (Hofstenia pattern; no `-F GFF`)
 
 ```bash
-featureCounts -F GFF -t pre_miRNA -g ID -O -s 1 -M \
-  -a "$SCRIPTS_DIR/${SPECIES}_${TOOL_TAG}_flanked_pre.gff3" \
-  -o "../counts_sep/miRNA_${TOOL_TAG}_counts_flanked.txt" \
+featureCounts -t pre_miRNA -g ID -O -s 1 -M \
+  -a "$SCRIPTS_DIR/${SPECIES}_mirdeep_flanked_pre.gff3" \
+  -o "../counts_sep/miRNA_miRdeep_counts_flanked.txt" \
+  $STAR_SAMS
+
+featureCounts -t pre_miRNA -g ID -O -s 1 -M \
+  -a "$SCRIPTS_DIR/${SPECIES}_sRNAbench_flanked_pre.gff3" \
+  -o "../counts_sep/miRNA_sRNAbench_counts_flanked.txt" \
   $STAR_SAMS
 ```
 
@@ -636,7 +653,8 @@ for lib in ${LIBRARIES//,/ }; do
 done
 echo "Missing SAMs: $missing_sam / $nlib"
 
-for tag in mirdeep sRNAbench; do
+# Count files use Hofstenia casing: miRNA_miRdeep_* (not miRNA_mirdeep_*)
+for tag in miRdeep sRNAbench; do
   need_file "$SPECIES_DIR/counts_sep/miRNA_${tag}_counts.txt"
   need_file "$SPECIES_DIR/counts_sep/miRNA_${tag}_counts_flanked.txt"
   hdr=$(head -n 2 "$SPECIES_DIR/counts_sep/miRNA_${tag}_counts.txt" | tail -n 1)
@@ -766,8 +784,8 @@ fi
 python "$REPO/intersectionsTable.py" -s "$SPECIES" $VARIANT \
   --mirdeep-inter-table "$RNA_MI_DIR/miRdeep_sRNAbench_intersect.bed" \
   --sRNAbench-inter-table "$RNA_MI_DIR/sRNAbench_miRdeep_intersect.bed" \
-  --fc-mirdeep "$SPECIES_DIR/counts_sep/miRNA_mirdeep_counts.txt" \
-  --fc-pre-mirdeep "$SPECIES_DIR/counts_sep/miRNA_mirdeep_counts_flanked.txt" \
+  --fc-mirdeep "$SPECIES_DIR/counts_sep/miRNA_miRdeep_counts.txt" \
+  --fc-pre-mirdeep "$SPECIES_DIR/counts_sep/miRNA_miRdeep_counts_flanked.txt" \
   --fc-sRNAbench "$SPECIES_DIR/counts_sep/miRNA_sRNAbench_counts.txt" \
   --fc-pre-sRNAbench "$SPECIES_DIR/counts_sep/miRNA_sRNAbench_counts_flanked.txt" \
   -rm "$SCRIPTS_DIR/mirdeep_all_remaining_filtered.csv" \
@@ -786,8 +804,8 @@ python "$REPO/intersectionsTable.py" -s "$SPECIES" $VARIANT \
 python "$REPO/intersectionsTable.py" -s "$SPECIES" $VARIANT \
   --mirdeep-inter-table "$RNA_MI_DIR/miRdeep_sRNAbench_intersect.bed" \
   --sRNAbench-inter-table "$RNA_MI_DIR/sRNAbench_miRdeep_intersect.bed" \
-  --fc-mirdeep "$SPECIES_DIR/counts_sep/miRNA_mirdeep_counts.txt" \
-  --fc-pre-mirdeep "$SPECIES_DIR/counts_sep/miRNA_mirdeep_counts_flanked.txt" \
+  --fc-mirdeep "$SPECIES_DIR/counts_sep/miRNA_miRdeep_counts.txt" \
+  --fc-pre-mirdeep "$SPECIES_DIR/counts_sep/miRNA_miRdeep_counts_flanked.txt" \
   --fc-sRNAbench "$SPECIES_DIR/counts_sep/miRNA_sRNAbench_counts.txt" \
   --fc-pre-sRNAbench "$SPECIES_DIR/counts_sep/miRNA_sRNAbench_counts_flanked.txt" \
   -rm "$SCRIPTS_DIR/mirdeep_all_remaining_filtered.csv" \
@@ -1048,6 +1066,7 @@ flowchart TD
 - Long background material moved to appendices.
 - Per-library manual loops removed as primary commands; prefer nematode vs Hofstenia sbatch (with optional “what’s inside” examples).
 - Phase 7 featureCounts: copy-paste is `sbatch` (mature → flanks); raw `featureCounts` lines kept as in-sbatch examples.
+- Count files follow Hofstenia: `miRNA_miRdeep_*` (docs aligned to live wrappers). Nematode flanked featureCounts wrappers added. Hofstenia old-genome mapper dir documented as `mapper_out_test/`.
 
 ---
 
@@ -1181,7 +1200,7 @@ $BASE/
   {Species}/
     TrimmedFastq/          # nematodes
     genome/ or Genome/
-    mapper_out/
+    mapper_out/            # nematodes; Hofstenia old-genome uses mapper_out_test/
     mirdeep_out/{library}/
     scripts/
     unique_candidates/
@@ -1259,8 +1278,8 @@ python "$REPO/intersectionsTable.py" -s Elegans $VARIANT \
   --mirbase-mirgenedb-inter "$RNA_MI_DIR/miRBase_miRGeneDB_intersect.bed" \
   --mirbase-mirdeep-inter "$RNA_MI_DIR/miRBase_miRdeep_intersect.bed" \
   --mirbase-sRNAbench-inter "$RNA_MI_DIR/miRBase_sRNAbench_intersect.bed" \
-  --fc-mirdeep "$SPECIES_DIR/counts_sep/miRNA_mirdeep_counts.txt" \
-  --fc-pre-mirdeep "$SPECIES_DIR/counts_sep/miRNA_mirdeep_counts_flanked.txt" \
+  --fc-mirdeep "$SPECIES_DIR/counts_sep/miRNA_miRdeep_counts.txt" \
+  --fc-pre-mirdeep "$SPECIES_DIR/counts_sep/miRNA_miRdeep_counts_flanked.txt" \
   --fc-sRNAbench "$SPECIES_DIR/counts_sep/miRNA_sRNAbench_counts.txt" \
   --fc-pre-sRNAbench "$SPECIES_DIR/counts_sep/miRNA_sRNAbench_counts_flanked.txt" \
   -rm "$SCRIPTS_DIR/mirdeep_all_remaining_filtered.csv" \

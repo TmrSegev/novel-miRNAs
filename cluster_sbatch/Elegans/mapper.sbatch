@@ -20,7 +20,7 @@ echo -e "SLURM_JOB_NODELIST:\t" $SLURM_JOB_NODELIST "\n\n"
 
 ### Start your code below ####
 module load anaconda				### load anaconda module (must be present when working with conda environments)
-source activate /sise/home/stome/.conda/envs/my_env/				### activate a conda environment, replace my_env with your conda environmen
+source activate /home/stome/.conda/envs/my_env				### activate a conda environment, replace my_env with your conda environmen
 
 # Per-library mapper.pl (Hofstenia-style): one FASTQ per command; no config.txt / -d.
 FQ=/mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Elegans/TrimmedFastq
