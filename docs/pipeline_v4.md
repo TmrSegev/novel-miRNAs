@@ -134,8 +134,6 @@ cutadapt -a AACTGTAGGCACCATCAAT --core 2 -e 0.25 --discard-untrimmed -m 17 -M 26
   "../Fastq/${SRR}.fastq" > "../TrimmedFastq/${SRR}_trimmed.fastq"
 ```
 
-
-
 ### Verify — Phase 1
 
 ```bash
@@ -203,8 +201,6 @@ mapper.pl "$READ_FASTQ_DIR/${LIBRARY}.filtered.fastq" -e -i -j -m -h \
   -s "../mapper_out/hofstenia_Seq_collapsed_${LIBRARY}.fasta"
 ```
 
-
-
 ### miRDeep (all species — one job per library)
 
 ```bash
@@ -235,8 +231,6 @@ cd "$SPECIES_DIR/mirdeep_out/$LIBRARY"
 python "$REPO/mirdeepPerLibraryFilter.py" -i result_*.csv \
   --filter-s 10 --exclude-c 100 --filter-mc 10
 ```
-
-
 
 ### Verify — Phase 2
 
@@ -310,8 +304,6 @@ java -jar "$BASE/sRNAtoolboxDB/exec/sRNAbench.jar" \
   hairpin=animalsHairpin.fa mature=animalsMature.fa
 ```
 
-
-
 ### Filter
 
 **Nematodes:**
@@ -331,8 +323,6 @@ Example inside filter sbatch (per library)
 ```bash
 python "$REPO/srnabenchPerLibraryFilter.py" -i novel.txt -a novel451.txt --filter-mc 10
 ```
-
-
 
 ### Verify — Phase 3
 
@@ -573,37 +563,63 @@ STAR --genomeDir ../STAR/genome_index/ \
   --outFilterMultimapNmax 20 --runThreadN 16 --outSAMtype SAM
 ```
 
+### featureCounts + flanks
 
+Prefer **sbatch** (jobs can take 1–2 h). Each wrapper runs **one** multi-SAM `featureCounts` (all library SAMs → one matrix with per-library columns). Do **not** merge SAMs/BAMs and do **not** run one featureCounts per library. Annotate against `$SCRIPTS_DIR/*.gff3` (not `mirdeep_out/`). Wait for mature jobs before flanks.
 
-### featureCounts + flanks (all species)
+**Nematodes — mature** (Elegans `featurecounts_sep_`*; Macrosperma/Sulstoni often `featurecounts_*_sep` — `ls "$BASH_DIR"/feature*counts*.sbatch` if unsure):
 
 ```bash
 cd "$BASH_DIR"
-for TOOL_TAG in mirdeep sRNAbench; do
-  featureCounts -t miRNA -g ID -O -s 1 -M \
-    -a "$SCRIPTS_DIR/${SPECIES}_${TOOL_TAG}.gff3" \
-    -o "../counts_sep/miRNA_${TOOL_TAG}_counts.txt" \
-    $STAR_SAMS
-done
+sbatch featurecounts_mirdeep_sep.sbatch
+sbatch featurecounts_sRNAbench_sep.sbatch
+# Elegans only:
+sbatch featurecounts_mirbase_sep.sbatch
+```
 
-# Elegans only — miRBase counts
-if [[ "$SPECIES" == "Elegans" ]]; then
-  featureCounts -R SAM -t miRNA -g ID -O -s 1 -M \
-    -a "$BASE/mirbase_data/cel_mirbase_seq.gff3" \
-    -o ../counts_sep/miRNA_mirbase_counts.txt \
-    $STAR_SAMS
-fi
+**Hofstenia — mature:**
 
+```bash
+cd "$BASH_DIR"
+sbatch featurescounts_mirdeep_sep.sbatch
+sbatch featurescounts_sRNAbench_sep.sbatch
+```
+
+**Flanks** (after mature jobs succeed):
+
+```bash
 cd "$SCRIPTS_DIR"
 python "$REPO/add_flank_to_GFF.py" -s "$SPECIES" $VARIANT
 
 cd "$BASH_DIR"
-for TOOL_TAG in mirdeep sRNAbench; do
-  featureCounts -F GFF -t pre_miRNA -g ID -O -s 1 -M \
-    -a "$SCRIPTS_DIR/${SPECIES}_${TOOL_TAG}_flanked_pre.gff3" \
-    -o "../counts_sep/miRNA_${TOOL_TAG}_counts_flanked.txt" \
-    $STAR_SAMS
-done
+sbatch featurecounts_mirdeep_flanked.sbatch
+sbatch featurecounts_sRNAbench_flanked.sbatch
+```
+
+Example inside mature featureCounts sbatch
+
+```bash
+# TOOL_TAG=mirdeep or sRNAbench; -a must be $SCRIPTS_DIR GFF
+featureCounts -t miRNA -g ID -O -s 1 -M \
+  -a "$SCRIPTS_DIR/${SPECIES}_${TOOL_TAG}.gff3" \
+  -o "../counts_sep/miRNA_${TOOL_TAG}_counts.txt" \
+  $STAR_SAMS
+
+# Elegans miRBase only — same mature flags as Hofstenia/mirdeep, plus -F GFF
+# (required for this GFF3; without it featureCounts looks for GTF-style ID "..." and fails)
+featureCounts -F GFF -t miRNA -g ID -O -s 1 -M \
+  -a "$BASE/mirbase_data/cel_mirbase_seq.gff3" \
+  -o ../counts_sep/miRNA_mirbase_counts.txt \
+  $STAR_SAMS
+```
+
+Example inside flanked featureCounts sbatch
+
+```bash
+featureCounts -F GFF -t pre_miRNA -g ID -O -s 1 -M \
+  -a "$SCRIPTS_DIR/${SPECIES}_${TOOL_TAG}_flanked_pre.gff3" \
+  -o "../counts_sep/miRNA_${TOOL_TAG}_counts_flanked.txt" \
+  $STAR_SAMS
 ```
 
 ### Verify — Phase 7
@@ -721,8 +737,6 @@ bedtools intersect -s -f 0.6 -a "$SCRIPTS_DIR/${SPECIES}_mirdeep_pre_only.gff3" 
 bedtools intersect -s -f 0.6 -a "$SCRIPTS_DIR/${SPECIES}_sRNAbench_pre_only.gff3" -b "$MIRGENEDB_GFF" > sRNAbench_miRGeneDB_intersect.bed
 bedtools intersect -s -f 0.6 -a "$MIRBASE_GFF" -b "$MIRGENEDB_GFF" > miRBase_miRGeneDB_intersect.bed
 ```
-
-
 
 ### Verify — Phase 9
 
@@ -1033,6 +1047,7 @@ flowchart TD
 - Copy-paste area moved to the top (essentials + `nm` setup, then phases).
 - Long background material moved to appendices.
 - Per-library manual loops removed as primary commands; prefer nematode vs Hofstenia sbatch (with optional “what’s inside” examples).
+- Phase 7 featureCounts: copy-paste is `sbatch` (mature → flanks); raw `featureCounts` lines kept as in-sbatch examples.
 
 ---
 
@@ -1068,7 +1083,7 @@ Most are set by `nm` / `load_pipeline_env.sh`. Library lists live in `pipeline_c
 
 1. `-s` always canonical `$SPECIES` (`Elegans`, not `elegans`).
 2. `$VARIANT` include verbatim (empty string is fine).
-3. `$STAR_SAMS` — run featureCounts from `$BASH_DIR`.
+3. `$STAR_SAMS` — featureCounts sbatch wrappers run from `$BASH_DIR` and must list all library SAMs (same set as `$STAR_SAMS`).
 4. Phase 5: A → B → C in order; never C before B.
 5. Phase 11 `allCandidatesFasta` reads intersections; Phase 13 reads `$ZIV_XLSX` with `--sheetname "$ZIV_SHEET"`.
 
