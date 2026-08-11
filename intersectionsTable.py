@@ -20,6 +20,28 @@ STATISTICS
 SAVE TO EXCEL
 """
 
+
+def normalize_description(series):
+    """Coerce bedtools/GFF description fields to string; nulls / empty → '.'."""
+    return (
+        series.fillna(".")
+        .replace("", ".")
+        .astype(str)
+        .replace({"nan": ".", "None": ".", "<NA>": "."})
+    )
+
+
+def extract_description_field(series, field_index):
+    """Split description on ';'; return field_index, or NaN if that field is absent.
+
+    Needed when -loj leaves Description as '.' / empty for non-overlaps: pandas may
+    type an all-null column as float64 (breaks .str), and expand may have < field_index+1 cols.
+    """
+    parts = normalize_description(series).str.split(";", expand=True)
+    if parts.shape[1] <= field_index:
+        return pd.Series(np.nan, index=series.index)
+    return parts[field_index]
+
 # -----GETTING INPUTS-----
 species = None
 mirdeep_intersections_table_path = None
@@ -157,6 +179,8 @@ else:
 # -----mirdeep intersections table:-----
 
 mirdeep_intersections_table = pd.read_csv(mirdeep_intersections_table_path, sep='\t', names=['Chr_mirdeep', '.1', 'pre_miRNA1', 'Start_mirdeep', 'End_mirdeep', '.2', 'Strand_mirdeep', '.3', 'Description_mirdeep', 'Chr_sRNAbench', '.4', 'pre_miRNA2', 'Start_sRNAbench', 'End_sRNAbench', '.5', 'Strand_sRNAbench', '.6', 'Description_sRNAbench'])
+mirdeep_intersections_table['Description_mirdeep'] = normalize_description(mirdeep_intersections_table['Description_mirdeep'])
+mirdeep_intersections_table['Description_sRNAbench'] = normalize_description(mirdeep_intersections_table['Description_sRNAbench'])
 print(f"INITIAL SHAPE of mirdeep_intersections_table: {mirdeep_intersections_table.shape}")
 print(f"Shape before deduplication: {mirdeep_intersections_table.shape}")
 
@@ -165,6 +189,8 @@ mirdeep_intersections_table.drop_duplicates(subset=['Description_mirdeep'], keep
 
 print(f"Shape after deduplication: {mirdeep_intersections_table.shape}")
 mirdeep_intersections_table = mirdeep_intersections_table.drop(['.1', 'pre_miRNA1', '.2', '.3', '.4', 'pre_miRNA2', '.5', '.6'], axis=1)
+n_srna_hit = int((mirdeep_intersections_table['Description_sRNAbench'] != '.').sum())
+print(f"miRdeep rows with sRNAbench overlap: {n_srna_hit}/{len(mirdeep_intersections_table)}")
 mirdeep_intersections_table['index'] = mirdeep_intersections_table['Description_mirdeep'].str.split(';').apply(lambda x: x[3]).str.replace('ID=','')
 
 
@@ -198,6 +224,8 @@ if use_mirbase:
 # -----sRNAbench intersections table:-----
 
 sRNAbench_intersections_table = pd.read_csv(sRNAbench_intersections_table_path, sep='\t', names=['Chr_sRNAbench', '.1', 'pre_miRNA1', 'Start_sRNAbench', 'End_sRNAbench', '.2', 'Strand_sRNAbench', '.3', 'Description_sRNAbench', 'Chr_mirdeep', '.4', 'pre_miRNA2', 'Start_mirdeep', 'End_mirdeep', '.5', 'Strand_mirdeep', '.6', 'Description_mirdeep'])
+sRNAbench_intersections_table['Description_sRNAbench'] = normalize_description(sRNAbench_intersections_table['Description_sRNAbench'])
+sRNAbench_intersections_table['Description_mirdeep'] = normalize_description(sRNAbench_intersections_table['Description_mirdeep'])
 sRNAbench_intersections_table = sRNAbench_intersections_table.drop(['.1', 'pre_miRNA1', '.2', '.3', '.4', 'pre_miRNA2', '.5', '.6'], axis=1)
 sRNAbench_intersections_table['index'] = sRNAbench_intersections_table['Description_sRNAbench'].str.split(';').apply(lambda x: x[3]).str.replace('ID=','')
 
@@ -338,16 +366,16 @@ mirdeep_blast_fc_intersections_table = mirdeep_blast_fc_intersections_table.drop
 # filter by sum_fc_m < threshold
 mirdeep_blast_fc_intersections_table["sum_FC_m > thres"] = np.where(mirdeep_blast_fc_intersections_table['sum_FC_m'] > sum_fc_thres, 1, 0)
 
-# Extract readcounts columns
-mirdeep_blast_fc_intersections_table['RC_m mirdeep'] = mirdeep_blast_fc_intersections_table["Description_mirdeep"].str.split(';', expand=True)[1]
-mirdeep_blast_fc_intersections_table['RC_s mirdeep'] = mirdeep_blast_fc_intersections_table["Description_mirdeep"].str.split(';', expand=True)[2]
-mirdeep_blast_fc_intersections_table['RC_m sRNAbench'] = mirdeep_blast_fc_intersections_table["Description_sRNAbench"].str.split(';', expand=True)[1]
-mirdeep_blast_fc_intersections_table['RC_s sRNAbench'] = mirdeep_blast_fc_intersections_table["Description_sRNAbench"].str.split(';', expand=True)[2]
+# Extract readcounts columns (partner Description may be '.' / NaN under bedtools -loj)
+mirdeep_blast_fc_intersections_table['RC_m mirdeep'] = extract_description_field(mirdeep_blast_fc_intersections_table["Description_mirdeep"], 1)
+mirdeep_blast_fc_intersections_table['RC_s mirdeep'] = extract_description_field(mirdeep_blast_fc_intersections_table["Description_mirdeep"], 2)
+mirdeep_blast_fc_intersections_table['RC_m sRNAbench'] = extract_description_field(mirdeep_blast_fc_intersections_table["Description_sRNAbench"], 1)
+mirdeep_blast_fc_intersections_table['RC_s sRNAbench'] = extract_description_field(mirdeep_blast_fc_intersections_table["Description_sRNAbench"], 2)
 mirdeep_blast_fc_intersections_table[['RC_m sRNAbench', 'RC_s sRNAbench']] = mirdeep_blast_fc_intersections_table[['RC_m sRNAbench', 'RC_s sRNAbench']].fillna('0')
-mirdeep_blast_fc_intersections_table['RC_m mirdeep'] = mirdeep_blast_fc_intersections_table['RC_m mirdeep'].str.replace('RC_m=', '').astype('int64')
-mirdeep_blast_fc_intersections_table['RC_s mirdeep'] = mirdeep_blast_fc_intersections_table['RC_s mirdeep'].str.replace('RC_s=', '').astype('int64')
-mirdeep_blast_fc_intersections_table['RC_m sRNAbench'] = mirdeep_blast_fc_intersections_table['RC_m sRNAbench'].str.replace('RC_m=', '').astype('int64')
-mirdeep_blast_fc_intersections_table['RC_s sRNAbench'] = mirdeep_blast_fc_intersections_table['RC_s sRNAbench'].str.replace('RC_s=', '').astype('int64')
+mirdeep_blast_fc_intersections_table['RC_m mirdeep'] = mirdeep_blast_fc_intersections_table['RC_m mirdeep'].astype(str).str.replace('RC_m=', '').astype('int64')
+mirdeep_blast_fc_intersections_table['RC_s mirdeep'] = mirdeep_blast_fc_intersections_table['RC_s mirdeep'].astype(str).str.replace('RC_s=', '').astype('int64')
+mirdeep_blast_fc_intersections_table['RC_m sRNAbench'] = mirdeep_blast_fc_intersections_table['RC_m sRNAbench'].astype(str).str.replace('RC_m=', '').astype('int64')
+mirdeep_blast_fc_intersections_table['RC_s sRNAbench'] = mirdeep_blast_fc_intersections_table['RC_s sRNAbench'].astype(str).str.replace('RC_s=', '').astype('int64')
 
 # Create diff columns
 mirdeep_blast_fc_intersections_table['Diff Sum_FC_m / RC_m mirdeep'] = mirdeep_blast_fc_intersections_table['sum_FC_m'] / mirdeep_blast_fc_intersections_table['RC_m mirdeep']
@@ -441,16 +469,16 @@ sRNAbench_blast_fc_intersections_table = sRNAbench_blast_fc_intersections_table.
 # filter by sum_fc_m < threshold
 sRNAbench_blast_fc_intersections_table["sum_FC_m > thres"] = np.where(sRNAbench_blast_fc_intersections_table['sum_FC_m'] > sum_fc_thres, 1, 0)
 
-# Extract readcounts columns
-sRNAbench_blast_fc_intersections_table['RC_m mirdeep'] = sRNAbench_blast_fc_intersections_table["Description_mirdeep"].str.split(';', expand=True)[1]
-sRNAbench_blast_fc_intersections_table['RC_s mirdeep'] = sRNAbench_blast_fc_intersections_table["Description_mirdeep"].str.split(';', expand=True)[2]
-sRNAbench_blast_fc_intersections_table['RC_m sRNAbench'] = sRNAbench_blast_fc_intersections_table["Description_sRNAbench"].str.split(';', expand=True)[1]
-sRNAbench_blast_fc_intersections_table['RC_s sRNAbench'] = sRNAbench_blast_fc_intersections_table["Description_sRNAbench"].str.split(';', expand=True)[2]
+# Extract readcounts columns (partner Description may be '.' / NaN under bedtools -loj)
+sRNAbench_blast_fc_intersections_table['RC_m mirdeep'] = extract_description_field(sRNAbench_blast_fc_intersections_table["Description_mirdeep"], 1)
+sRNAbench_blast_fc_intersections_table['RC_s mirdeep'] = extract_description_field(sRNAbench_blast_fc_intersections_table["Description_mirdeep"], 2)
+sRNAbench_blast_fc_intersections_table['RC_m sRNAbench'] = extract_description_field(sRNAbench_blast_fc_intersections_table["Description_sRNAbench"], 1)
+sRNAbench_blast_fc_intersections_table['RC_s sRNAbench'] = extract_description_field(sRNAbench_blast_fc_intersections_table["Description_sRNAbench"], 2)
 sRNAbench_blast_fc_intersections_table[['RC_m mirdeep', 'RC_s mirdeep']] = sRNAbench_blast_fc_intersections_table[['RC_m mirdeep', 'RC_s mirdeep']].fillna('0')
-sRNAbench_blast_fc_intersections_table['RC_m mirdeep'] = sRNAbench_blast_fc_intersections_table['RC_m mirdeep'].str.replace('RC_m=', '').astype('int64')
-sRNAbench_blast_fc_intersections_table['RC_s mirdeep'] = sRNAbench_blast_fc_intersections_table['RC_s mirdeep'].str.replace('RC_s=', '').astype('int64')
-sRNAbench_blast_fc_intersections_table['RC_m sRNAbench'] = sRNAbench_blast_fc_intersections_table['RC_m sRNAbench'].str.replace('RC_m=', '').astype('int64')
-sRNAbench_blast_fc_intersections_table['RC_s sRNAbench'] = sRNAbench_blast_fc_intersections_table['RC_s sRNAbench'].str.replace('RC_s=', '').astype('int64')
+sRNAbench_blast_fc_intersections_table['RC_m mirdeep'] = sRNAbench_blast_fc_intersections_table['RC_m mirdeep'].astype(str).str.replace('RC_m=', '').astype('int64')
+sRNAbench_blast_fc_intersections_table['RC_s mirdeep'] = sRNAbench_blast_fc_intersections_table['RC_s mirdeep'].astype(str).str.replace('RC_s=', '').astype('int64')
+sRNAbench_blast_fc_intersections_table['RC_m sRNAbench'] = sRNAbench_blast_fc_intersections_table['RC_m sRNAbench'].astype(str).str.replace('RC_m=', '').astype('int64')
+sRNAbench_blast_fc_intersections_table['RC_s sRNAbench'] = sRNAbench_blast_fc_intersections_table['RC_s sRNAbench'].astype(str).str.replace('RC_s=', '').astype('int64')
 
 # Create diff columns
 sRNAbench_blast_fc_intersections_table['Diff Sum_FC_m / RC_m mirdeep'] = sRNAbench_blast_fc_intersections_table['sum_FC_m'] / sRNAbench_blast_fc_intersections_table['RC_m mirdeep']
@@ -584,17 +612,17 @@ if use_mirbase:
     # filter by sum_fc_m < threshold
     mirbase_fc_intersections_table["sum_FC_m > thres"] = np.where(mirbase_fc_intersections_table['sum_FC_m'] > sum_fc_thres, 1, 0)
 
-    # Extract readcounts columns
-    mirbase_fc_intersections_table['RC_m mirdeep'] = mirbase_fc_intersections_table["Description_mirdeep"].str.split(';', expand=True)[1]
-    mirbase_fc_intersections_table['RC_s mirdeep'] = mirbase_fc_intersections_table["Description_mirdeep"].str.split(';', expand=True)[2]
-    mirbase_fc_intersections_table['RC_m sRNAbench'] = mirbase_fc_intersections_table["Description_sRNAbench"].str.split(';', expand=True)[1]
-    mirbase_fc_intersections_table['RC_s sRNAbench'] = mirbase_fc_intersections_table["Description_sRNAbench"].str.split(';', expand=True)[2]
+    # Extract readcounts columns (partner Description may be '.' / NaN under bedtools -loj)
+    mirbase_fc_intersections_table['RC_m mirdeep'] = extract_description_field(mirbase_fc_intersections_table["Description_mirdeep"], 1)
+    mirbase_fc_intersections_table['RC_s mirdeep'] = extract_description_field(mirbase_fc_intersections_table["Description_mirdeep"], 2)
+    mirbase_fc_intersections_table['RC_m sRNAbench'] = extract_description_field(mirbase_fc_intersections_table["Description_sRNAbench"], 1)
+    mirbase_fc_intersections_table['RC_s sRNAbench'] = extract_description_field(mirbase_fc_intersections_table["Description_sRNAbench"], 2)
     mirbase_fc_intersections_table[['RC_m mirdeep', 'RC_s mirdeep']] = mirbase_fc_intersections_table[['RC_m mirdeep', 'RC_s mirdeep']].fillna('0')
     mirbase_fc_intersections_table[['RC_m sRNAbench', 'RC_s sRNAbench']] = mirbase_fc_intersections_table[['RC_m sRNAbench', 'RC_s sRNAbench']].fillna('0')
-    mirbase_fc_intersections_table['RC_m mirdeep'] = mirbase_fc_intersections_table['RC_m mirdeep'].str.replace('RC_m=', '').astype('int64')
-    mirbase_fc_intersections_table['RC_s mirdeep'] = mirbase_fc_intersections_table['RC_s mirdeep'].str.replace('RC_s=', '').astype('int64')
-    mirbase_fc_intersections_table['RC_m sRNAbench'] = mirbase_fc_intersections_table['RC_m sRNAbench'].str.replace('RC_m=', '').astype('int64')
-    mirbase_fc_intersections_table['RC_s sRNAbench'] = mirbase_fc_intersections_table['RC_s sRNAbench'].str.replace('RC_s=', '').astype('int64')
+    mirbase_fc_intersections_table['RC_m mirdeep'] = mirbase_fc_intersections_table['RC_m mirdeep'].astype(str).str.replace('RC_m=', '').astype('int64')
+    mirbase_fc_intersections_table['RC_s mirdeep'] = mirbase_fc_intersections_table['RC_s mirdeep'].astype(str).str.replace('RC_s=', '').astype('int64')
+    mirbase_fc_intersections_table['RC_m sRNAbench'] = mirbase_fc_intersections_table['RC_m sRNAbench'].astype(str).str.replace('RC_m=', '').astype('int64')
+    mirbase_fc_intersections_table['RC_s sRNAbench'] = mirbase_fc_intersections_table['RC_s sRNAbench'].astype(str).str.replace('RC_s=', '').astype('int64')
 
     # Create diff columns
     mirbase_fc_intersections_table['Diff Sum_FC_m / RC_m mirdeep'] = mirbase_fc_intersections_table['sum_FC_m'] / mirbase_fc_intersections_table['RC_m mirdeep']
@@ -841,7 +869,9 @@ unified = unified.dropna(axis=1, thresh=1)
 unified = unified.reindex(columns=[col for col in unified.columns if col != 'Type'] + ['Type'])
 
 # --- Removing novel451
-unified["novel451"] = np.where(unified['Description_sRNAbench'].str.contains("novel451"), 1, 0)
+unified["novel451"] = np.where(
+    normalize_description(unified['Description_sRNAbench']).str.contains("novel451"), 1, 0
+)
 
 # -----SAVE TO EXCEL-----
 

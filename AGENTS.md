@@ -3,6 +3,7 @@
 ## How this repo is operated
 
 - **Edit locally** on the laptop, **push to git**, then **pull on the cluster**.
+- **Auto-commit + push:** After each meaningful change in this repo, commit and `git push` to `origin` without asking. Do not wait for an explicit “commit/push” request. Still never force-push, amend others’ commits, or rewrite history unless explicitly asked.
 - Cluster path for scripts: `/mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs`
 - Data and job submission live on the cluster; coding agents do not run the pipeline there.
 - Every command in `docs/pipeline_v4.md` must be **copy-paste ready** for a human SSH session (exported vars + absolute `$REPO/...` invocations). Do not assume an agent will execute those phases.
