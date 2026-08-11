@@ -879,7 +879,7 @@ fi
 
 **Script:** `intersectionsTable.py` → `$INTERSECTIONS_XLSX`. Expression filter: `--sum-fc-thres 100`.
 
-### Nematodes (with BLAST)
+### Nematodes except Elegans (with BLAST)
 
 ```bash
 python "$REPO/intersectionsTable.py" -s "$SPECIES" $VARIANT \
@@ -897,7 +897,32 @@ python "$REPO/intersectionsTable.py" -s "$SPECIES" $VARIANT \
   --blast-sRNAbench "$BLAST_QUERY_DIR/sRNAbench_blastn_compact"
 ```
 
-**Elegans only** — also pass miRBase / miRGeneDB intersects + `--fc_mirbase` / `-mgff` (full flag list in [Appendix I](#appendix-i--species-specific-forks) / `Pipeline Elegans.md`).
+### Elegans (BLAST + miRBase / miRGeneDB)
+
+```bash
+python "$REPO/intersectionsTable.py" -s "$SPECIES" $VARIANT \
+  --mirdeep-inter-table "$RNA_MI_DIR/miRdeep_sRNAbench_intersect.bed" \
+  --mirdeep-mirbase-inter "$RNA_MI_DIR/miRdeep_miRBase_intersect.bed" \
+  --mirdeep-mirgenedb-inter "$RNA_MI_DIR/miRdeep_miRGeneDB_intersect.bed" \
+  --sRNAbench-inter-table "$RNA_MI_DIR/sRNAbench_miRdeep_intersect.bed" \
+  --sRNAbench-mirbase-inter "$RNA_MI_DIR/sRNAbench_miRBase_intersect.bed" \
+  --sRNAbench-mirgenedb-inter "$RNA_MI_DIR/sRNAbench_miRGeneDB_intersect.bed" \
+  --mirbase-mirgenedb-inter "$RNA_MI_DIR/miRBase_miRGeneDB_intersect.bed" \
+  --mirbase-mirdeep-inter "$RNA_MI_DIR/miRBase_miRdeep_intersect.bed" \
+  --mirbase-sRNAbench-inter "$RNA_MI_DIR/miRBase_sRNAbench_intersect.bed" \
+  --fc-mirdeep "$SPECIES_DIR/counts_sep/miRNA_miRdeep_counts.txt" \
+  --fc-pre-mirdeep "$SPECIES_DIR/counts_sep/miRNA_miRdeep_counts_flanked.txt" \
+  --fc-sRNAbench "$SPECIES_DIR/counts_sep/miRNA_sRNAbench_counts.txt" \
+  --fc-pre-sRNAbench "$SPECIES_DIR/counts_sep/miRNA_sRNAbench_counts_flanked.txt" \
+  --fc-mirbase "$SPECIES_DIR/counts_sep/miRNA_mirbase_counts.txt" \
+  -rm "$SCRIPTS_DIR/mirdeep_all_remaining_filtered.csv" \
+  -rs "$SCRIPTS_DIR/sRNAbench_all_remaining_filtered.csv" \
+  -mgff "$BASE/mirbase_data/cel_mirbase_seq.gff3" \
+  -l "$LIBRARIES" \
+  --sum-fc-thres 100 \
+  --blast-mirdeep "$BLAST_QUERY_DIR/miRdeep_blastn_compact" \
+  --blast-sRNAbench "$BLAST_QUERY_DIR/sRNAbench_blastn_compact"
+```
 
 ### Hofstenia (no BLAST)
 
@@ -1372,10 +1397,10 @@ $RNACENTRAL/
 ```bash
 python "$REPO/intersectionsTable.py" -s Elegans $VARIANT \
   --mirdeep-inter-table "$RNA_MI_DIR/miRdeep_sRNAbench_intersect.bed" \
-  --mirdeep-mibrase-inter "$RNA_MI_DIR/miRdeep_miRBase_intersect.bed" \
+  --mirdeep-mirbase-inter "$RNA_MI_DIR/miRdeep_miRBase_intersect.bed" \
   --mirdeep-mirgenedb-inter "$RNA_MI_DIR/miRdeep_miRGeneDB_intersect.bed" \
   --sRNAbench-inter-table "$RNA_MI_DIR/sRNAbench_miRdeep_intersect.bed" \
-  --sRNAbench-mibrase-inter "$RNA_MI_DIR/sRNAbench_miRBase_intersect.bed" \
+  --sRNAbench-mirbase-inter "$RNA_MI_DIR/sRNAbench_miRBase_intersect.bed" \
   --sRNAbench-mirgenedb-inter "$RNA_MI_DIR/sRNAbench_miRGeneDB_intersect.bed" \
   --mirbase-mirgenedb-inter "$RNA_MI_DIR/miRBase_miRGeneDB_intersect.bed" \
   --mirbase-mirdeep-inter "$RNA_MI_DIR/miRBase_miRdeep_intersect.bed" \
@@ -1390,7 +1415,7 @@ python "$REPO/intersectionsTable.py" -s Elegans $VARIANT \
   --sum-fc-thres 100 \
   --blast-mirdeep "$BLAST_QUERY_DIR/miRdeep_blastn_compact" \
   --blast-sRNAbench "$BLAST_QUERY_DIR/sRNAbench_blastn_compact" \
-  --fc_mirbase "$SPECIES_DIR/counts_sep/miRNA_mirbase_counts.txt" \
+  --fc-mirbase "$SPECIES_DIR/counts_sep/miRNA_mirbase_counts.txt" \
   -mgff "$BASE/mirbase_data/cel_mirbase_seq.gff3"
 ```
 

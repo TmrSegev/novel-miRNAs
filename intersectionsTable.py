@@ -171,7 +171,7 @@ while i < len(sys.argv):
         featurecounts_pre_mirdeep_path = sys.argv[i + 1]
     elif arg == '--fc-pre-sRNAbench':
         featurecounts_pre_sRNAbench_path = sys.argv[i + 1]
-    elif arg == '--fc_mirbase':
+    elif arg in ('--fc-mirbase', '--fc_mirbase'):
         featurecounts_mirbase_path = sys.argv[i + 1]
     elif arg == '-rm':
         remaining_mirdeep_path = sys.argv[i + 1]
@@ -187,11 +187,11 @@ while i < len(sys.argv):
         libraries = sys.argv[i + 1].split(',')
     elif arg == '--sum-fc-thres':
         sum_fc_thres = int(sys.argv[i + 1])
-    elif arg == '--mirdeep-mibrase-inter':
+    elif arg in ('--mirdeep-mirbase-inter', '--mirdeep-mibrase-inter'):
         mirdeep_mibrase_inter = sys.argv[i + 1]
     elif arg == '--mirdeep-mirgenedb-inter':
         mirdeep_mirgenedb_inter = sys.argv[i + 1]
-    elif arg == '--sRNAbench-mibrase-inter':
+    elif arg in ('--sRNAbench-mirbase-inter', '--sRNAbench-mibrase-inter'):
         sRNAbench_mibrase_inter = sys.argv[i + 1]
     elif arg == '--sRNAbench-mirgenedb-inter':
         sRNAbench_mirgenedb_inter = sys.argv[i + 1]
@@ -219,9 +219,9 @@ while i < len(sys.argv):
               f' -l <list>: list of sequencing libraries. Write the list seperated with commas, witout spaces. Example: library1,library2,library3 \n'
               f' --sum-fc-thres <int>: filtering threshold. Any candidates with sum_fc_m <= threshold will be filtered.\n'
               f'\nElegans only parameters:\n'
-              f' --mirdeep-mibrase-inter <path>: path to bedtools -a mirdeep and -b mirbase intersection .bed file.\n'
+              f' --mirdeep-mirbase-inter <path>: path to bedtools -a mirdeep and -b mirbase intersection .bed file.\n'
               f' --mirdeep-mirgenedb-inter <path>: path to bedtools -a mirdeep and -b mirgenedb intersection .bed file.\n'
-              f' --sRNAbench-mibrase-inter <path>: path to bedtools -a sRNAbench and -b mirbase intersection .bed file.\n'
+              f' --sRNAbench-mirbase-inter <path>: path to bedtools -a sRNAbench and -b mirbase intersection .bed file.\n'
               f' --sRNAbench-mirgenedb-inter <path>: path to bedtools -a sRNAbench and -b mirgenedb intersection .bed file.\n'
               f' --mirbase-mirgenedb-inter <path>: path to bedtools -a mirbase and -b mirgenedb intersection .bed file.\n'
               f' --mirbase-mirdeep-inter <path>: path to bedtools -a mirbase and -b mirdeep intersection .bed file.\n'
@@ -235,6 +235,28 @@ cfg = get_species_config(species, base_path, variant=variant)
 output_dir = cfg["output_dir"]
 use_blast = species_uses_blast(cfg)
 use_mirbase = species_uses_mirbase(cfg)
+
+if use_mirbase:
+    elegans_inputs = {
+        "--mirdeep-mirbase-inter": mirdeep_mibrase_inter,
+        "--mirdeep-mirgenedb-inter": mirdeep_mirgenedb_inter,
+        "--sRNAbench-mirbase-inter": sRNAbench_mibrase_inter,
+        "--sRNAbench-mirgenedb-inter": sRNAbench_mirgenedb_inter,
+        "--mirbase-mirgenedb-inter": mirbase_mirgenedb_inter,
+        "--mirbase-mirdeep-inter": mirbase_mirdeep_inter,
+        "--mirbase-sRNAbench-inter": mirbase_sRNAbench_inter,
+        "--fc-mirbase": featurecounts_mirbase_path,
+        "-mgff": mirbase_gff_path,
+    }
+    missing = [flag for flag, value in elegans_inputs.items() if not value]
+    if missing:
+        print(
+            "Error: {} requires these Elegans-specific arguments: {}".format(
+                species, ", ".join(missing)
+            ),
+            file=sys.stderr,
+        )
+        sys.exit(2)
 
 if remaining_mirdeep_path is None and remaining1_mirdeep_path and remaining2_mirdeep_path:
     r1 = pd.read_csv(remaining1_mirdeep_path, sep="\t")
