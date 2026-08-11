@@ -167,10 +167,22 @@ export STAR_SAMS="$(for lib in ${LIBRARIES//,/ }; do echo ../STAR/align_to_genom
 FAIL=0
 ok()   { echo "OK: $*"; }
 fail() { echo "FAIL: $*"; FAIL=1; }
+# Pipeline outputs: must exist, be non-empty, and have mtime within the last 7 days.
 need_file() {
   local f="$1"
-  if [[ -s "$f" ]]; then ok "file $f ($(wc -c <"$f") bytes)"
-  else fail "missing/empty: $f"; fi
+  if [[ ! -s "$f" ]]; then
+    fail "missing/empty: $f"
+  elif [[ -z "$(find "$f" -mtime -7 2>/dev/null)" ]]; then
+    fail "stale (mtime >7d): $f"
+  else
+    ok "file $f ($(wc -c <"$f") bytes, mtime≤7d)"
+  fi
+}
+# Reference inputs (e.g. genome FASTA): existence only — not produced by this phase.
+need_input() {
+  local f="$1"
+  if [[ -s "$f" ]]; then ok "input $f ($(wc -c <"$f") bytes)"
+  else fail "missing/empty input: $f"; fi
 }
 need_dir() {
   local d="$1"
@@ -197,5 +209,5 @@ echo "  SPECIES=$SPECIES  TRACK=$TRACK  VARIANT=${VARIANT:-<empty>}"
 echo "  SPECIES_DIR=$SPECIES_DIR"
 echo "  LIBRARIES=$LIBRARIES"
 echo "  GENOME_FA=$GENOME_FA"
-echo "Helpers: need_file / need_dir / nm_snapshot"
+echo "Helpers: need_file (≤7d) / need_input / need_dir / nm_snapshot"
 unset _NM_ARG1 _NM_ARG2 _NM_ENV_DIR

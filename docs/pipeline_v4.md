@@ -62,10 +62,22 @@ This sets `$REPO`, `$BASE`, `$SPECIES`, `$TRACK`, `$LIBRARIES`, `$SPECIES_DIR`, 
 FAIL=0
 ok()   { echo "OK: $*"; }
 fail() { echo "FAIL: $*"; FAIL=1; }
+# Pipeline outputs: must exist, be non-empty, and have mtime within the last 7 days.
 need_file() {
   local f="$1"
-  if [[ -s "$f" ]]; then ok "file $f ($(wc -c <"$f") bytes)"
-  else fail "missing/empty: $f"; fi
+  if [[ ! -s "$f" ]]; then
+    fail "missing/empty: $f"
+  elif [[ -z "$(find "$f" -mtime -7 2>/dev/null)" ]]; then
+    fail "stale (mtime >7d): $f"
+  else
+    ok "file $f ($(wc -c <"$f") bytes, mtime≤7d)"
+  fi
+}
+# Reference inputs (e.g. genome FASTA): existence only — not produced by this phase.
+need_input() {
+  local f="$1"
+  if [[ -s "$f" ]]; then ok "input $f ($(wc -c <"$f") bytes)"
+  else fail "missing/empty input: $f"; fi
 }
 need_dir() {
   local d="$1"
@@ -138,8 +150,16 @@ cutadapt -a AACTGTAGGCACCATCAAT --core 2 -e 0.25 --discard-untrimmed -m 17 -M 26
 
 ```bash
 FAIL=0
-need_file "$GENOME_FA"
-ls "$GENOME_DIR"/index/*GenomeIndexed*.ebwt "$GENOME_DIR"/index/*GenomeIndexed*.bt2 2>/dev/null | head
+need_input "$GENOME_FA"
+shopt -s nullglob
+idx=("$GENOME_DIR"/index/*GenomeIndexed*.ebwt "$GENOME_DIR"/index/*GenomeIndexed*.bt2)
+shopt -u nullglob
+if (( ${#idx[@]} == 0 )); then
+  fail "missing bowtie index under $GENOME_DIR/index"
+else
+  need_file "${idx[0]}"
+  ok "bowtie index files: ${#idx[@]}"
+fi
 need_file "$BASE/sRNAtoolboxDB/seqOBJ/${SRNABENCH_INDEX}.zip"
 if [[ "$SPECIES" == "Elegans" && -z "$VARIANT" ]]; then
   need_file "$BASE/mirbase_data/cel_mirbase_seq.gff3"
@@ -242,10 +262,13 @@ missing=0
 for lib in ${LIBRARIES//,/ }; do
   d="$SPECIES_DIR/mirdeep_out/$lib"
   need_dir "$d"
-  if ! ls "$d"/remaining_file_*.csv >/dev/null 2>&1; then
+  shopt -s nullglob
+  rem=("$d"/remaining_file_*.csv)
+  shopt -u nullglob
+  if (( ${#rem[@]} == 0 )); then
     fail "no remaining_file_*.csv in $d"; missing=$((missing+1))
   else
-    ok "remaining files for $lib"
+    for f in "${rem[@]}"; do need_file "$f"; done
   fi
 done
 echo "Libraries missing remaining CSV: $missing / $(echo ${LIBRARIES//,/ } | wc -w)"
@@ -340,10 +363,11 @@ for lib in ${LIBRARIES//,/ }; do
     d="$BASE/sRNAtoolboxDB/out/${SPECIES}/${SPECIES}_${lib}"
   fi
   need_dir "$d"
-  if ! ls "$d"/sRNAbench_remaining.csv >/dev/null 2>&1; then
+  rem="$d/sRNAbench_remaining.csv"
+  if [[ ! -e "$rem" ]]; then
     fail "no sRNAbench_remaining.csv in $d"; missing=$((missing+1))
   else
-    ok "sRNAbench remaining for $lib"
+    need_file "$rem"
   fi
 done
 echo "Libraries missing remaining CSV: $missing"
@@ -435,8 +459,14 @@ python "$REPO/mirdeepUniteGFF.py" -o Hofstenia_mirdeep.gff3 -s Hofstenia \
 ```bash
 FAIL=0
 need_file "$SCRIPTS_DIR/debugging_${SPECIES}_sRNAbench.csv"
-ls "$SCRIPTS_DIR"/debugging_${SPECIES}_miRDeep*.csv >/dev/null 2>&1 \
-  && ok "miRDeep debugging CSV(s)" || fail "missing debugging_${SPECIES}_miRDeep*.csv"
+shopt -s nullglob
+mdbg=("$SCRIPTS_DIR"/debugging_${SPECIES}_miRDeep*.csv)
+shopt -u nullglob
+if (( ${#mdbg[@]} == 0 )); then
+  fail "missing debugging_${SPECIES}_miRDeep*.csv"
+else
+  for f in "${mdbg[@]}"; do need_file "$f"; done
+fi
 
 need_file "$SPECIES_DIR/unique_candidates/sRNAbench_uniqueCandidates.csv"
 need_file "$SPECIES_DIR/unique_candidates/miRDeep_uniqueCandidates.csv"
@@ -649,7 +679,11 @@ nlib=0
 for lib in ${LIBRARIES//,/ }; do
   nlib=$((nlib+1))
   sam="$SPECIES_DIR/STAR/align_to_genome/$lib/${SPECIES}_Aligned.out.sam"
-  if [[ -s "$sam" ]]; then ok "SAM $lib"; else fail "missing SAM $sam"; missing_sam=$((missing_sam+1)); fi
+  if [[ ! -e "$sam" ]]; then
+    fail "missing SAM $sam"; missing_sam=$((missing_sam+1))
+  else
+    need_file "$sam"
+  fi
 done
 echo "Missing SAMs: $missing_sam / $nlib"
 
@@ -672,16 +706,45 @@ fi
 
 ## Phase 8 — BLAST homolog search
 
-**Nematodes only** — skip Hofstenia.
+**Nematodes only** — skip Hofstenia. Wrappers live under `$RNACENTRAL/bash/` (`cluster_sbatch/RNAcentral/bash/` in git).
+
+### Once — build miRNA BLAST DB
+
+Prep FASTA (spaces → underscores), then submit `blast_create_mirnas_db.sbatch`:
 
 ```bash
-# once — build DB
 cd "$RNACENTRAL/BLAST_DB"
 python "$REPO/filterSpacesBlastDB.py" > Caenorhabditis_pre_miRNA.fasta
-makeblastdb -in Caenorhabditis_pre_miRNA.fasta -title miRNADB -dbtype nucl \
-  -out Caenorhabditis_pre_miRNAsDB
 
-# per species / track
+cd "$RNACENTRAL/bash"
+sbatch blast_create_mirnas_db.sbatch
+```
+
+> Do **not** use `blast_create_database.sbatch` — that builds a different DB (`worms_db` from `Caenorhabditis_AND_entry_typeSequence.fasta`), not the Phase 8 miRNA DB.
+
+Example inside `blast_create_mirnas_db.sbatch`
+
+```bash
+makeblastdb -in ../BLAST_DB/Caenorhabditis_pre_miRNA.fasta -title miRNADB -dbtype nucl \
+  -out ../BLAST_DB/Caenorhabditis_pre_miRNAsDB
+```
+
+### Per species — blastn queries
+
+**Old genome** (`TRACK=$SPECIES`) — prefer sbatch (writes `queries/{Elegans,Macrosperma,Sulstoni}/`):
+
+```bash
+mkdir -p "$BLAST_QUERY_DIR"
+cd "$RNACENTRAL/bash"
+# pick the matching wrapper:
+sbatch blast_elegans_queries.sbatch
+sbatch blast_macrosperma_queries.sbatch
+sbatch blast_sulstoni_queries.sbatch
+```
+
+**New genome** (`TRACK=${SPECIES}_newGenome`) — existing query sbatch files hardcode `queries/$SPECIES/` and old `$SCRIPTS_DIR`; run blastn with env vars instead:
+
+```bash
 mkdir -p "$BLAST_QUERY_DIR"
 cd "$RNACENTRAL/bash"
 blastn -query "$SCRIPTS_DIR/${SPECIES}_mirdeep.fasta" \
@@ -692,6 +755,20 @@ blastn -query "$SCRIPTS_DIR/${SPECIES}_mirdeep.fasta" \
 blastn -query "$SCRIPTS_DIR/${SPECIES}_sRNAbench.fasta" \
   -db ../BLAST_DB/Caenorhabditis_pre_miRNAsDB \
   -out "$BLAST_QUERY_DIR/sRNAbench_blastn_compact" \
+  -outfmt 6 -evalue 10 -task blastn-short
+```
+
+Example inside query sbatch (Macrosperma; Elegans/Sulstoni same pattern)
+
+```bash
+blastn -query ../../Charles_seq/Macrosperma/scripts/Macrosperma_mirdeep.fasta \
+  -db ../BLAST_DB/Caenorhabditis_pre_miRNAsDB \
+  -out ../queries/Macrosperma/miRdeep_blastn_compact \
+  -outfmt 6 -evalue 10 -task blastn-short
+
+blastn -query /mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Macrosperma/scripts/Macrosperma_sRNAbench.fasta \
+  -db ../BLAST_DB/Caenorhabditis_pre_miRNAsDB \
+  -out ../queries/Macrosperma/sRNAbench_blastn_compact \
   -outfmt 6 -evalue 10 -task blastn-short
 ```
 
@@ -1006,22 +1083,22 @@ Status: **Hofstenia_newGenome already has prior outputs**; nematode `_newGenome`
 ## Appendix B — Workflow overview
 
 
-| Step | Phase                       | Main scripts / tools                                                    |
-| ---- | --------------------------- | ----------------------------------------------------------------------- |
-| 1    | Prep / index                | cutadapt, bowtie-build, makeSeqObj.jar, `mirbaseToGFF3.py` (Elegans)    |
-| 2    | miRDeep per library         | mapper.pl, miRDeep2.pl, `mirdeepPerLibraryFilter.py`                    |
-| 3    | sRNAbench per library       | sRNAbench.jar, `srnabenchPerLibraryFilter.py`                           |
-| 4    | Filter criteria (reference) | *(ran in 2–3)*                                                          |
-| 5    | Unite / unique_candidates   | unite scripts, `processGoodCandidates.py`, `compare_genome_to_fasta.py` |
-| 6    | Sense / antisense           | bedtools, `overlapSenseAnti.py`                                         |
-| 7    | STAR / featureCounts        | STAR, featureCounts, `add_flank_to_GFF.py`                              |
-| 8    | BLAST                       | `filterSpacesBlastDB.py`, blastn *(nematodes)*                          |
-| 9    | Cross-tool intersects       | bedtools                                                                |
-| 10   | Intersections table         | `intersectionsTable.py`                                                 |
-| 11   | Ziv                         | `allCandidatesFasta.py`, `Ziv_feature_SOS.py`                           |
-| 12   | 5p-het / Oscar              | *(placeholder)*                                                         |
-| 13   | Final candidates            | `allCandidatesFasta.py`                                                 |
-| 14   | Statistics                  | `statistics.py`                                                         |
+| Step | Phase                       | Main scripts / tools                                                                              |
+| ---- | --------------------------- | ------------------------------------------------------------------------------------------------- |
+| 1    | Prep / index                | cutadapt, bowtie-build, makeSeqObj.jar, `mirbaseToGFF3.py` (Elegans)                              |
+| 2    | miRDeep per library         | mapper.pl, miRDeep2.pl, `mirdeepPerLibraryFilter.py`                                              |
+| 3    | sRNAbench per library       | sRNAbench.jar, `srnabenchPerLibraryFilter.py`                                                     |
+| 4    | Filter criteria (reference) | *(ran in 2–3)*                                                                                    |
+| 5    | Unite / unique_candidates   | unite scripts, `processGoodCandidates.py`, `compare_genome_to_fasta.py`                           |
+| 6    | Sense / antisense           | bedtools, `overlapSenseAnti.py`                                                                   |
+| 7    | STAR / featureCounts        | STAR, featureCounts, `add_flank_to_GFF.py`                                                        |
+| 8    | BLAST                       | `filterSpacesBlastDB.py`, `blast_create_mirnas_db.sbatch`, `blast_*_queries.sbatch` *(nematodes)* |
+| 9    | Cross-tool intersects       | bedtools                                                                                          |
+| 10   | Intersections table         | `intersectionsTable.py`                                                                           |
+| 11   | Ziv                         | `allCandidatesFasta.py`, `Ziv_feature_SOS.py`                                                     |
+| 12   | 5p-het / Oscar              | *(placeholder)*                                                                                   |
+| 13   | Final candidates            | `allCandidatesFasta.py`                                                                           |
+| 14   | Statistics                  | `statistics.py`                                                                                   |
 
 
 ```mermaid
@@ -1066,6 +1143,7 @@ flowchart TD
 - Long background material moved to appendices.
 - Per-library manual loops removed as primary commands; prefer nematode vs Hofstenia sbatch (with optional “what’s inside” examples).
 - Phase 7 featureCounts: copy-paste is `sbatch` (mature → flanks); raw `featureCounts` lines kept as in-sbatch examples.
+- Phase 8 BLAST: copy-paste is `sbatch` (`blast_create_mirnas_db.sbatch` + `blast_{elegans,macrosperma,sulstoni}_queries.sbatch`); parameterized `blastn` kept for `$TRACK` / newGenome. Do not use `blast_create_database.sbatch` (different DB).
 - Count files follow Hofstenia: `miRNA_miRdeep_*` (docs aligned to live wrappers). Nematode flanked featureCounts wrappers added. Hofstenia old-genome mapper dir documented as `mapper_out_test/`.
 
 ---
@@ -1234,7 +1312,7 @@ $RNACENTRAL/
 | 6     | `overlapSenseAnti.py`                          | after self-intersect BED                          |
 | 1     | `mirbaseToGFF3.py`                             | Elegans only                                      |
 | 7     | `add_flank_to_GFF.py`                          | `-s $SPECIES`                                     |
-| 8     | `filterSpacesBlastDB.py`                       | nematodes once                                    |
+| 8     | `filterSpacesBlastDB.py` + BLAST sbatch        | nematodes; query wrappers = old track only        |
 | 10    | `intersectionsTable.py`                        | `--sum-fc-thres 100`                              |
 | 11    | `allCandidatesFasta.py` / `Ziv_feature_SOS.py` | → `$ZIV_XLSX`                                     |
 | 13    | `allCandidatesFasta.py`                        | `--sheetname "$ZIV_SHEET"`                        |
