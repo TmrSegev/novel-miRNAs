@@ -791,18 +791,21 @@ fi
 
 ## Phase 9 — Cross-tool (and known-miRNA) intersections
 
-Strand-aware (`-s`); sRNAbench ↔ miRDeep at `-f 0.6`.
+Strand-aware (`-s`); sRNAbench ↔ miRDeep at `-f 0.6`. Follow the canonical
+Hofstenia command: `-wa -wb` is required because `intersectionsTable.py`
+consumes all 9 GFF fields from both A and B, and `-loj` retains candidates
+without a cross-tool match.
 
 ### All species — cross-tool
 
 ```bash
 cd "$RNA_MI_DIR"
-bedtools intersect -s -f 0.6 \
+bedtools intersect -wa -wb -loj -s -f 0.6 \
   -a "$SCRIPTS_DIR/${SPECIES}_mirdeep_pre_only.gff3" \
   -b "$SCRIPTS_DIR/${SPECIES}_sRNAbench_pre_only.gff3" \
   > miRdeep_sRNAbench_intersect.bed
 
-bedtools intersect -s -f 0.6 \
+bedtools intersect -wa -wb -loj -s -f 0.6 \
   -a "$SCRIPTS_DIR/${SPECIES}_sRNAbench_pre_only.gff3" \
   -b "$SCRIPTS_DIR/${SPECIES}_mirdeep_pre_only.gff3" \
   > sRNAbench_miRdeep_intersect.bed
@@ -824,13 +827,13 @@ cd "$RNA_MI_DIR"
 MIRBASE_GFF="$BASE/mirbase_data/cel_mirbase_seq.gff3"
 MIRGENEDB_GFF="$BASE/mirgenedb_data_v3/cel_mirgenedb.gff3"
 
-bedtools intersect -s -f 0.6 -a "$SCRIPTS_DIR/${SPECIES}_mirdeep_pre_only.gff3" -b "$MIRBASE_GFF" > miRdeep_miRBase_intersect.bed
-bedtools intersect -s -f 0.6 -a "$SCRIPTS_DIR/${SPECIES}_sRNAbench_pre_only.gff3" -b "$MIRBASE_GFF" > sRNAbench_miRBase_intersect.bed
-bedtools intersect -s -f 0.6 -a "$MIRBASE_GFF" -b "$SCRIPTS_DIR/${SPECIES}_mirdeep_pre_only.gff3" > miRBase_miRdeep_intersect.bed
-bedtools intersect -s -f 0.6 -a "$MIRBASE_GFF" -b "$SCRIPTS_DIR/${SPECIES}_sRNAbench_pre_only.gff3" > miRBase_sRNAbench_intersect.bed
-bedtools intersect -s -f 0.6 -a "$SCRIPTS_DIR/${SPECIES}_mirdeep_pre_only.gff3" -b "$MIRGENEDB_GFF" > miRdeep_miRGeneDB_intersect.bed
-bedtools intersect -s -f 0.6 -a "$SCRIPTS_DIR/${SPECIES}_sRNAbench_pre_only.gff3" -b "$MIRGENEDB_GFF" > sRNAbench_miRGeneDB_intersect.bed
-bedtools intersect -s -f 0.6 -a "$MIRBASE_GFF" -b "$MIRGENEDB_GFF" > miRBase_miRGeneDB_intersect.bed
+bedtools intersect -wa -wb -loj -s -f 0.6 -a "$SCRIPTS_DIR/${SPECIES}_mirdeep_pre_only.gff3" -b "$MIRBASE_GFF" > miRdeep_miRBase_intersect.bed
+bedtools intersect -wa -wb -loj -s -f 0.6 -a "$SCRIPTS_DIR/${SPECIES}_sRNAbench_pre_only.gff3" -b "$MIRBASE_GFF" > sRNAbench_miRBase_intersect.bed
+bedtools intersect -wa -wb -loj -s -f 0.6 -a "$MIRBASE_GFF" -b "$SCRIPTS_DIR/${SPECIES}_mirdeep_pre_only.gff3" > miRBase_miRdeep_intersect.bed
+bedtools intersect -wa -wb -loj -s -f 0.6 -a "$MIRBASE_GFF" -b "$SCRIPTS_DIR/${SPECIES}_sRNAbench_pre_only.gff3" > miRBase_sRNAbench_intersect.bed
+bedtools intersect -wa -wb -loj -s -f 0.6 -a "$SCRIPTS_DIR/${SPECIES}_mirdeep_pre_only.gff3" -b "$MIRGENEDB_GFF" > miRdeep_miRGeneDB_intersect.bed
+bedtools intersect -wa -wb -loj -s -f 0.6 -a "$SCRIPTS_DIR/${SPECIES}_sRNAbench_pre_only.gff3" -b "$MIRGENEDB_GFF" > sRNAbench_miRGeneDB_intersect.bed
+bedtools intersect -wa -wb -loj -s -f 0.6 -a "$MIRBASE_GFF" -b "$MIRGENEDB_GFF" > miRBase_miRGeneDB_intersect.bed
 ```
 
 ### Verify — Phase 9
@@ -839,6 +842,27 @@ bedtools intersect -s -f 0.6 -a "$MIRBASE_GFF" -b "$MIRGENEDB_GFF" > miRBase_miR
 FAIL=0
 need_file "$RNA_MI_DIR/miRdeep_sRNAbench_intersect.bed"
 need_file "$RNA_MI_DIR/sRNAbench_miRdeep_intersect.bed"
+
+for spec in \
+  "miRdeep_sRNAbench_intersect.bed:${SPECIES}_mirdeep_pre_only.gff3" \
+  "sRNAbench_miRdeep_intersect.bed:${SPECIES}_sRNAbench_pre_only.gff3"; do
+  bed=${spec%%:*}
+  gff=${spec#*:}
+  bed_path="$RNA_MI_DIR/$bed"
+  gff_path="$SCRIPTS_DIR/$gff"
+  if [[ -s "$bed_path" ]] && awk -F'\t' 'NF != 18 { bad=1 } END { exit bad }' "$bed_path"; then
+    ok "$bed has 18 A+B fields per row"
+  else
+    fail "$bed is not full A+B output; rerun with -wa -wb -loj"
+    continue
+  fi
+  expected=$(awk -F'\t' '$0 !~ /^#/ && $3 == "pre_miRNA" { n++ } END { print n+0 }' "$gff_path")
+  observed=$(awk -F'\t' '{ seen[$9]=1 } END { for (x in seen) n++; print n+0 }' "$bed_path")
+  [[ "$observed" -eq "$expected" ]] \
+    && ok "$bed retains all $expected A-side candidates" \
+    || fail "$bed has $observed unique A candidates; expected $expected (missing -loj or stale input)"
+done
+
 if [[ "$SPECIES" == "Elegans" ]]; then
   for f in miRdeep_miRBase_intersect.bed sRNAbench_miRBase_intersect.bed \
            miRdeep_miRGeneDB_intersect.bed sRNAbench_miRGeneDB_intersect.bed \

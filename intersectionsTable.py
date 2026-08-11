@@ -42,6 +42,74 @@ def extract_description_field(series, field_index):
         return pd.Series(np.nan, index=series.index)
     return parts[field_index]
 
+
+def load_cross_intersections(path, columns, a_tool, b_tool):
+    """Load a full A+B bedtools intersection and reject incomplete output."""
+    expected_fields = len(columns)
+    observed_fields = set()
+    with open(path) as handle:
+        for line in handle:
+            if line.strip():
+                observed_fields.add(len(line.rstrip("\n").split("\t")))
+
+    if not observed_fields:
+        raise ValueError("Cross-tool intersection file is empty: {}".format(path))
+    if observed_fields != {expected_fields}:
+        raise ValueError(
+            "{} -> {} intersection must have {} tab-separated fields per row, "
+            "but found {} in {}. Re-run Phase 9 with "
+            "'bedtools intersect -wa -wb -loj -s -f 0.6'.".format(
+                a_tool, b_tool, expected_fields, sorted(observed_fields), path
+            )
+        )
+
+    table = pd.read_csv(path, sep="\t", names=columns)
+    table["Description_{}".format(a_tool)] = normalize_description(
+        table["Description_{}".format(a_tool)]
+    )
+    table["Description_{}".format(b_tool)] = normalize_description(
+        table["Description_{}".format(b_tool)]
+    )
+    return table
+
+
+def attach_remaining_columns(table, remaining, description_col, column_map, tool):
+    """Attach candidate metadata using the GFF index field, never row position."""
+    index_field = extract_description_field(table[description_col], 3)
+    candidate_index = pd.to_numeric(
+        index_field.astype(str).str.replace("index=", ""), errors="coerce"
+    )
+    if candidate_index.isna().any():
+        raise ValueError(
+            "{} primary descriptions contain missing/invalid index fields.".format(tool)
+        )
+
+    candidate_index = candidate_index.astype("int64")
+    expected = set(range(len(remaining)))
+    observed = set(candidate_index.tolist())
+    if observed != expected:
+        missing = sorted(expected - observed)
+        unexpected = sorted(observed - expected)
+        raise ValueError(
+            "{} intersection candidates do not match the remaining-candidates file: "
+            "{} rows in remaining, {} unique intersection indices; "
+            "missing indices {}{}; unexpected indices {}{}. "
+            "Re-run Phase 5 and then Phase 9 with -wa -wb -loj.".format(
+                tool,
+                len(remaining),
+                len(observed),
+                missing[:10],
+                "..." if len(missing) > 10 else "",
+                unexpected[:10],
+                "..." if len(unexpected) > 10 else "",
+            )
+        )
+
+    remaining_by_index = remaining.reset_index(drop=True)
+    for output_col, source_col in column_map.items():
+        table[output_col] = candidate_index.map(remaining_by_index[source_col])
+    return table
+
 # -----GETTING INPUTS-----
 species = None
 mirdeep_intersections_table_path = None
@@ -178,9 +246,13 @@ else:
 # -----CREATE INTERSECTIONS TABLES-----
 # -----mirdeep intersections table:-----
 
-mirdeep_intersections_table = pd.read_csv(mirdeep_intersections_table_path, sep='\t', names=['Chr_mirdeep', '.1', 'pre_miRNA1', 'Start_mirdeep', 'End_mirdeep', '.2', 'Strand_mirdeep', '.3', 'Description_mirdeep', 'Chr_sRNAbench', '.4', 'pre_miRNA2', 'Start_sRNAbench', 'End_sRNAbench', '.5', 'Strand_sRNAbench', '.6', 'Description_sRNAbench'])
-mirdeep_intersections_table['Description_mirdeep'] = normalize_description(mirdeep_intersections_table['Description_mirdeep'])
-mirdeep_intersections_table['Description_sRNAbench'] = normalize_description(mirdeep_intersections_table['Description_sRNAbench'])
+mirdeep_intersection_columns = ['Chr_mirdeep', '.1', 'pre_miRNA1', 'Start_mirdeep', 'End_mirdeep', '.2', 'Strand_mirdeep', '.3', 'Description_mirdeep', 'Chr_sRNAbench', '.4', 'pre_miRNA2', 'Start_sRNAbench', 'End_sRNAbench', '.5', 'Strand_sRNAbench', '.6', 'Description_sRNAbench']
+mirdeep_intersections_table = load_cross_intersections(
+    mirdeep_intersections_table_path,
+    mirdeep_intersection_columns,
+    "mirdeep",
+    "sRNAbench",
+)
 print(f"INITIAL SHAPE of mirdeep_intersections_table: {mirdeep_intersections_table.shape}")
 print(f"Shape before deduplication: {mirdeep_intersections_table.shape}")
 
@@ -223,9 +295,13 @@ if use_mirbase:
 
 # -----sRNAbench intersections table:-----
 
-sRNAbench_intersections_table = pd.read_csv(sRNAbench_intersections_table_path, sep='\t', names=['Chr_sRNAbench', '.1', 'pre_miRNA1', 'Start_sRNAbench', 'End_sRNAbench', '.2', 'Strand_sRNAbench', '.3', 'Description_sRNAbench', 'Chr_mirdeep', '.4', 'pre_miRNA2', 'Start_mirdeep', 'End_mirdeep', '.5', 'Strand_mirdeep', '.6', 'Description_mirdeep'])
-sRNAbench_intersections_table['Description_sRNAbench'] = normalize_description(sRNAbench_intersections_table['Description_sRNAbench'])
-sRNAbench_intersections_table['Description_mirdeep'] = normalize_description(sRNAbench_intersections_table['Description_mirdeep'])
+sRNAbench_intersection_columns = ['Chr_sRNAbench', '.1', 'pre_miRNA1', 'Start_sRNAbench', 'End_sRNAbench', '.2', 'Strand_sRNAbench', '.3', 'Description_sRNAbench', 'Chr_mirdeep', '.4', 'pre_miRNA2', 'Start_mirdeep', 'End_mirdeep', '.5', 'Strand_mirdeep', '.6', 'Description_mirdeep']
+sRNAbench_intersections_table = load_cross_intersections(
+    sRNAbench_intersections_table_path,
+    sRNAbench_intersection_columns,
+    "sRNAbench",
+    "mirdeep",
+)
 sRNAbench_intersections_table = sRNAbench_intersections_table.drop(['.1', 'pre_miRNA1', '.2', '.3', '.4', 'pre_miRNA2', '.5', '.6'], axis=1)
 sRNAbench_intersections_table['index'] = sRNAbench_intersections_table['Description_sRNAbench'].str.split(';').apply(lambda x: x[3]).str.replace('ID=','')
 
@@ -647,19 +723,26 @@ if use_mirbase:
 # -----ADD SEQUENCES-----
 # ---miRdeep:
 print(f"INITIAL SHAPE of remaining_mirdeep: {remaining_mirdeep.shape}")
-print(remaining_mirdeep.columns)
-print(remaining_mirdeep.head())
-mirdeep_blast_fc_intersections_table['consensus mature sequence'] = remaining_mirdeep['consensus mature sequence'].str.upper()
-mirdeep_blast_fc_intersections_table['consensus star sequence'] = remaining_mirdeep['consensus star sequence'].str.upper()
-mirdeep_blast_fc_intersections_table['consensus precursor sequence'] = remaining_mirdeep['consensus precursor sequence'].str.upper()
-mirdeep_blast_fc_intersections_table['overlaps'] = remaining_mirdeep['overlaps']
-
-print(mirdeep_blast_fc_intersections_table['consensus mature sequence'].head())
-print(mirdeep_blast_fc_intersections_table['consensus precursor sequence'].head())
-
-print("NANs:")
-print(mirdeep_blast_fc_intersections_table['consensus mature sequence'].isna().sum())
-print(mirdeep_blast_fc_intersections_table['consensus precursor sequence'].isna().sum())
+mirdeep_blast_fc_intersections_table = attach_remaining_columns(
+    mirdeep_blast_fc_intersections_table,
+    remaining_mirdeep,
+    "Description_mirdeep",
+    {
+        "consensus mature sequence": "consensus mature sequence",
+        "consensus star sequence": "consensus star sequence",
+        "consensus precursor sequence": "consensus precursor sequence",
+        "overlaps": "overlaps",
+    },
+    "miRdeep",
+)
+for column in [
+    "consensus mature sequence",
+    "consensus star sequence",
+    "consensus precursor sequence",
+]:
+    mirdeep_blast_fc_intersections_table[column] = (
+        mirdeep_blast_fc_intersections_table[column].str.upper()
+    )
 # Create 5p/3p columns for mirdeep
 def find_mature_index(row):
     index = row["consensus precursor sequence"].find(row["consensus mature sequence"])
@@ -692,10 +775,22 @@ mirdeep_blast_fc_intersections_table['star_size'] = mirdeep_blast_fc_intersectio
 
 #---sRNAbench:
 remaining_sRNAbench = pd.read_csv(remaining_sRNAbench_path, sep='\t')
-sRNAbench_blast_fc_intersections_table['5pseq'] = remaining_sRNAbench['5pseq'].str.replace('T', 'U')
-sRNAbench_blast_fc_intersections_table['3pseq'] = remaining_sRNAbench['3pseq'].str.replace('T', 'U')
-sRNAbench_blast_fc_intersections_table['hairpinSeq'] = remaining_sRNAbench['hairpinSeq'].str.replace('T', 'U')
-sRNAbench_blast_fc_intersections_table['overlaps'] = remaining_sRNAbench['overlaps']
+sRNAbench_blast_fc_intersections_table = attach_remaining_columns(
+    sRNAbench_blast_fc_intersections_table,
+    remaining_sRNAbench,
+    "Description_sRNAbench",
+    {
+        "5pseq": "5pseq",
+        "3pseq": "3pseq",
+        "hairpinSeq": "hairpinSeq",
+        "overlaps": "overlaps",
+    },
+    "sRNAbench",
+)
+for column in ["5pseq", "3pseq", "hairpinSeq"]:
+    sRNAbench_blast_fc_intersections_table[column] = (
+        sRNAbench_blast_fc_intersections_table[column].str.replace('T', 'U')
+    )
 
 # Extract loop size
 def loop_size(row):
