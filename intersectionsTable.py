@@ -110,6 +110,47 @@ def attach_remaining_columns(table, remaining, description_col, column_map, tool
         table[output_col] = candidate_index.map(remaining_by_index[source_col])
     return table
 
+
+def load_mirbase_feature_metadata(gff_path):
+    """Map featureCounts miRBase IDs to precursor index and arm metadata."""
+    annotation = gffpd.read_gff3(gff_path)
+    mirna = annotation.df[annotation.df["type"] == "miRNA"].copy()
+    attributes = mirna["attributes"].astype(str)
+
+    metadata = pd.DataFrame(index=mirna.index)
+    metadata["feature_id"] = attributes.str.extract(
+        r"(?:^|;)ID=([^;]+)", expand=False
+    )
+    metadata["index"] = attributes.str.extract(
+        r"(?:^|;)Derives_from=MI([^;]+)", expand=False
+    )
+    name = attributes.str.extract(r"(?:^|;)Name=([^;]+)", expand=False)
+    metadata["5p/3p"] = name.str.extract(r"(5p|3p)$", expand=False)
+    metadata["annotated_arm"] = attributes.str.extract(
+        r"(?:^|;)(5p|3p)$", expand=False
+    )
+
+    invalid = metadata[
+        metadata["feature_id"].isna()
+        | metadata["index"].isna()
+        | metadata["annotated_arm"].isna()
+    ]
+    if not invalid.empty:
+        raise ValueError(
+            "Could not extract ID, Derives_from, and arm from {} miRBase "
+            "miRNA rows in {}.".format(len(invalid), gff_path)
+        )
+    if metadata["feature_id"].duplicated().any():
+        duplicates = metadata.loc[
+            metadata["feature_id"].duplicated(), "feature_id"
+        ].tolist()
+        raise ValueError(
+            "Duplicate miRBase feature IDs in {}: {}".format(
+                gff_path, duplicates[:10]
+            )
+        )
+    return metadata.reset_index(drop=True)
+
 # -----GETTING INPUTS-----
 species = None
 mirdeep_intersections_table_path = None
@@ -621,14 +662,28 @@ if use_mirbase:
     featurecounts_mirbase = featurecounts_mirbase.drop(['Chr', 'Start', 'End', 'Strand', 'Length'], axis=1)
     featurecounts_mirbase = featurecounts_mirbase.iloc[2:]
 
-
-    # Create index column for featurecounts
-    featurecounts_mirbase['index'] = featurecounts_mirbase['Geneid'].str.split(';').apply(lambda x : x[3])
-    featurecounts_mirbase['index'] = featurecounts_mirbase['index'].str.replace('Derives_from=MI', '')
-
-    # Create 5p/3p columns
-    featurecounts_mirbase['5p/3p'] = featurecounts_mirbase['Geneid'].str.split(';').apply(lambda x : x[2])
-    featurecounts_mirbase['5p/3p'] = featurecounts_mirbase['5p/3p'].str[-2:]
+    # featureCounts was run with "-g ID", so Geneid contains only the miRBase
+    # feature ID. Recover precursor and arm metadata from the source GFF.
+    mirbase_metadata = load_mirbase_feature_metadata(mirbase_gff_path)
+    featurecounts_mirbase["feature_id"] = featurecounts_mirbase["Geneid"].str.extract(
+        r"(?:^|;)ID=([^;]+)", expand=False
+    ).fillna(featurecounts_mirbase["Geneid"])
+    featurecounts_mirbase = pd.merge(
+        featurecounts_mirbase,
+        mirbase_metadata,
+        on="feature_id",
+        how="left",
+        validate="one_to_one",
+    )
+    unmapped = featurecounts_mirbase["index"].isna()
+    if unmapped.any():
+        missing_ids = featurecounts_mirbase.loc[unmapped, "feature_id"].tolist()
+        raise ValueError(
+            "miRBase featureCounts IDs are absent from {}: {}".format(
+                mirbase_gff_path, missing_ids[:10]
+            )
+        )
+    featurecounts_mirbase = featurecounts_mirbase.drop("feature_id", axis=1)
 
     # Casting libraries columns to int64
     featurecounts_mirbase = featurecounts_mirbase.astype(cast_dict)
@@ -638,13 +693,13 @@ if use_mirbase:
     libraries_5p = [library + '_5p' for library in libraries]
     rename_dict_5p = dict(zip(libraries, libraries_5p))
     counts_mb_5p = counts_mb_5p.rename(columns=rename_dict_5p)
-    counts_mb_5p = counts_mb_5p.drop('5p/3p', axis=1)
+    counts_mb_5p = counts_mb_5p.drop(['5p/3p', 'annotated_arm'], axis=1)
 
     counts_mb_3p = featurecounts_mirbase[featurecounts_mirbase['5p/3p'] == '3p']
     libraries_3p = [library + '_3p' for library in libraries]
     rename_dict_3p = dict(zip(libraries, libraries_3p))
     counts_mb_3p = counts_mb_3p.rename(columns=rename_dict_3p)
-    counts_mb_3p = counts_mb_3p.drop('5p/3p', axis=1)
+    counts_mb_3p = counts_mb_3p.drop(['5p/3p', 'annotated_arm'], axis=1)
 
     counts_no_5p3p = featurecounts_mirbase[(featurecounts_mirbase['5p/3p'] != '3p') & (featurecounts_mirbase['5p/3p'] != '5p')]
 
@@ -685,7 +740,7 @@ if use_mirbase:
     counts_no_5p3p = counts_no_5p3p.drop('5p/3p', axis=1)
     rename_dict = dict(zip(libraries, libraries_mature))
     counts_no_5p3p = counts_no_5p3p.rename(columns=rename_dict)
-    counts_no_5p3p['mature'] = counts_no_5p3p['Geneid'].str.split(';', expand=True)[5]
+    counts_no_5p3p['mature'] = counts_no_5p3p.pop('annotated_arm')
     counts_no_5p3p['sum_FC_m'] = counts_no_5p3p[libraries_mature].sum(axis=1)
     mature_df = mature_df.append(counts_no_5p3p)
 
