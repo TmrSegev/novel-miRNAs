@@ -662,12 +662,16 @@ if use_mirbase:
     featurecounts_mirbase = featurecounts_mirbase.drop(['Chr', 'Start', 'End', 'Strand', 'Length'], axis=1)
     featurecounts_mirbase = featurecounts_mirbase.iloc[2:]
 
-    # featureCounts was run with "-g ID", so Geneid contains only the miRBase
-    # feature ID. Recover precursor and arm metadata from the source GFF.
+    # featureCounts was run with "-g ID". Depending on featureCounts/GFF
+    # parsing, Geneid is either a plain MIMAT ID or that ID followed by
+    # pipe/semicolon-delimited attributes. Normalize it to the first ID token.
     mirbase_metadata = load_mirbase_feature_metadata(mirbase_gff_path)
-    featurecounts_mirbase["feature_id"] = featurecounts_mirbase["Geneid"].str.extract(
-        r"(?:^|;)ID=([^;]+)", expand=False
-    ).fillna(featurecounts_mirbase["Geneid"])
+    featurecounts_mirbase["feature_id"] = (
+        featurecounts_mirbase["Geneid"]
+        .astype(str)
+        .str.split(r"[|;]", n=1, expand=True)[0]
+        .str.replace(r"^ID=", "", regex=True)
+    )
     featurecounts_mirbase = pd.merge(
         featurecounts_mirbase,
         mirbase_metadata,
