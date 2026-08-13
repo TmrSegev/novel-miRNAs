@@ -16,10 +16,11 @@ def get_seq_data(path, start_end_mark=False):
     seq = {}
     for seq_record in SeqIO.parse(path, "fasta"):
         seq_id = seq_record.description
+        rna = Ziv_Git.as_rna(seq_record.seq)
         if start_end_mark:
-            seq[seq_id] = ('S' + "".join(str(seq_record.seq)) + 'E')
+            seq[seq_id] = ('S' + rna + 'E')
         else:
-            seq[seq_id] = ("".join(str(seq_record.seq)))
+            seq[seq_id] = rna
     return seq
 
 
@@ -69,8 +70,9 @@ def build_dict():
             'Mature_max_bulge', 'Loop_length', 'Fold', '3p/5p', 'Hairpin_seq_trimmed', 'Star', 'Start_star',
             'End_star', 'Star_length', 'Star_connections', 'Star_BP_ratio', 'Star_max_bulge',
             'Hairpin_seq_trimmed_length', 'Mature_max_bulge_asymmetry', 'Star_max_bulge_asymmetry',
-            'min_one_mer_mature', 'min_one_mer_hairpin', 'max_one_mer_mature', 'max_two_mer_mature',
-            'max_one_mer_hairpin', 'max_two_mer_hairpin', '5p_overhang', '3p_overhang', 'Valid mir'
+            'Max_bulge_symmetry', 'min_one_mer_mature', 'min_one_mer_hairpin', 'max_one_mer_mature',
+            'max_two_mer_mature', 'max_one_mer_hairpin', 'max_two_mer_hairpin', '5p_overhang',
+            '3p_overhang', 'Valid mir'
     ]
     return {f'{key}_ziv': [] for key in keys}
 
@@ -84,13 +86,19 @@ def build_exception_dict():
         'Star': -1, 'Start_star': -1, 'End_star': -1, 'Star_length': -1,
         'Star_connections': -1, 'Star_BP_ratio': -1, 'Star_max_bulge': -1,
         'Hairpin_seq_trimmed_length': -1, 'Mature_max_bulge_asymmetry': -1,
-        'Star_max_bulge_asymmetry': -1, 'min_one_mer_mature': -1,
+        'Star_max_bulge_asymmetry': -1, 'Max_bulge_symmetry': -1, 'min_one_mer_mature': -1,
         'min_one_mer_hairpin': -1, 'max_one_mer_mature': -1, 'max_two_mer_mature': -1,
         'max_one_mer_hairpin': -1, 'max_two_mer_hairpin': -1,
         '5p_overhang': -1, '3p_overhang': -1, 'Valid mir': False
     }
     return {f'{k}_ziv': v for k, v in exception_values.items()}
 
+
+def append_ziv_row(mirdb_dict, row_dict):
+    """Append one candidate using the fixed schema so pandas never sees ragged arrays."""
+    defaults = build_exception_dict()
+    for k in mirdb_dict:
+        mirdb_dict[k].append(row_dict.get(k, defaults[k]))
 
 
 def find_seed(name, seq):
@@ -344,22 +352,20 @@ if __name__ == '__main__':
             seed = find_seed(name, seq)
         except Exception as e:
             print("Skipping", name, "–", e)
+            append_ziv_row(mirdb_dict, build_exception_dict())
+            if species == "miRGeneDB":
+                candidate_names_list.append(name)
             continue
         print("seed is:", seed)
         create_setting_ini(seed)
         try:
-            out_dict = Ziv_Git.start_filtering(seq, true_mature=mature[name], true_star=star[name])
-            for k, v in out_dict['new'].items():
-                mirdb_dict[k].append(v)
-            # Track candidate name for successful processing
+            out_dict = Ziv_Git.start_filtering(seq, true_mature=mature[name], true_star=star.get(name))
+            append_ziv_row(mirdb_dict, out_dict['new'])
             if species == "miRGeneDB":
                 candidate_names_list.append(name)
         except Exception as e:
             print("FAILED in start_filtering or append:", e)
-            exception_dict = build_exception_dict()
-            for k, v in exception_dict.items():
-                mirdb_dict[k].append(v)
-            # Track candidate name even for exceptions
+            append_ziv_row(mirdb_dict, build_exception_dict())
             if species == "miRGeneDB":
                 candidate_names_list.append(name)
             continue

@@ -10,10 +10,24 @@ from subprocess import Popen
 from Bio import pairwise2
 import numpy as np
 os.chdir(r"/mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Ziv_Features/")
-_ct_dump_count = 0
 
 dirpath = os.getcwd()
 res = {}
+
+
+def as_rna(seq):
+    """Uppercase RNA, strip whitespace, and convert T→U so substring search matches FASTA alphabets."""
+    if seq is None:
+        return ""
+    return "".join(str(seq).upper().split()).replace("T", "U")
+
+
+def missing_seq(seq):
+    if seq is None:
+        return True
+    return str(seq).strip().lower() in ("", "nan", "none")
+
+
 def build_global_variables():
     seed=short_window_size=long_window_size=max_energy=input_filter_parameters=organism_name_in_db=None
     path = ''
@@ -130,7 +144,8 @@ def ct_file_parser_5p(ct_df, start_mature, end_mature, param):
             repair_index_end_mature += 1
             increased_end_mature = True
     except Exception as e:
-        print(e, index_i,repair_index_start_mature,repair_index_end_mature)
+        print(e, index_i, repair_index_start_mature, repair_index_end_mature)
+        raise
     direct = False
     if int(ct_df.loc[end_mature - 2][4]) != 0:
         start_star_direct = int(ct_df.loc[end_mature - 2][4]) - 1
@@ -452,9 +467,14 @@ def filter_candidates(true_mature=None, true_star=None):
 
     for key, value in list(res.items()):
         index += 1
-        hairpin = value['Hairpin_seq_ziv']
+        hairpin = as_rna(value['Hairpin_seq_ziv'])
+        value['Hairpin_seq_ziv'] = hairpin
+        if not missing_seq(true_mature):
+            true_mature = as_rna(true_mature)
+        if not missing_seq(true_star):
+            true_star = as_rna(true_star)
 
-        if true_mature:
+        if not missing_seq(true_mature):
             mature = true_mature
         else:
             m = hairpin.find(seed)
@@ -487,17 +507,14 @@ def filter_candidates(true_mature=None, true_star=None):
         ct_df = ct_df.iloc[1:]
         ct_df = ct_df.astype({4: 'int'})
 
-        global _ct_dump_count
-        if _ct_dump_count < 10:
-            ct_df.to_csv(f'ct_debug_{_ct_dump_count}.tsv', sep='\t', index=False)
-            print(f"[debug] wrote ct_debug_{_ct_dump_count}.tsv")
-            _ct_dump_count += 1
-
         if len(ct_df) == 0:
-            continue
+            raise ValueError("Empty CT file from RNAfold/b2ct")
 
-        if true_mature:
-            start_mature = hairpin.find(true_mature) + 1
+        if not missing_seq(true_mature):
+            pos = hairpin.find(true_mature)
+            if pos == -1:
+                raise ValueError(f"Mature sequence {true_mature} not found in hairpin")
+            start_mature = pos + 1
             start_seed, end_seed = start_mature + 1, start_mature + 8
             end_mature = min(start_mature + len(true_mature) - 1, len(ct_df))
         else:
@@ -516,7 +533,7 @@ def filter_candidates(true_mature=None, true_star=None):
         if mature_5p:
             hairpin_boundries = ct_file_parser_5p(ct_df, start_mature, end_mature, param)
 
-        if true_star and true_star != "nan":
+        if not missing_seq(true_star):
             pos = hairpin.find(true_star)
             if pos == -1:
                 raise ValueError(f"Star sequence {true_star} not found in hairpin")
@@ -533,7 +550,7 @@ def filter_candidates(true_mature=None, true_star=None):
         star_numbers_of_connections, star_max_bulge = star_complimentarity(star_df)
         star_bp_ratio = star_numbers_of_connections / float(len(star_df)) if len(star_df)>0 else 0
 
-        if true_star != "nan":
+        if not missing_seq(true_star):
             star = true_star
         else:
             star = hairpin[start_star:end_star + 1]
@@ -586,6 +603,7 @@ def filter_candidates(true_mature=None, true_star=None):
 
         res[key]['Mature_max_bulge_asymmetry_ziv'] = mature_max_bulge_symmetry
         res[key]['Star_max_bulge_asymmetry_ziv'] = star_max_bulge_symmetry
+        res[key]['Max_bulge_symmetry_ziv'] = mature_max_bulge_symmetry
         res[key]['min_one_mer_mature_ziv'] = min_one_mer_mature
         res[key]['min_one_mer_hairpin_ziv'] = min_one_mer_hairpin
         res[key]['max_one_mer_mature_ziv'] = max_one_mer_mature
@@ -804,8 +822,16 @@ def create_html_file():
 
 
 def start_filtering(seq, true_mature=None, true_star=None):
-    obj = {'Chr_ziv': 'Rom_gen', 'Start_hairpin_ziv':0, 'End_hairpin_ziv': len(seq), 'Strand_ziv': str(seq),
-           'Hairpin_seq_ziv': str(seq)}
-    res['new'] = obj
+    global res
+    seq = as_rna(seq)
+    res = {
+        'new': {
+            'Chr_ziv': 'Rom_gen',
+            'Start_hairpin_ziv': 0,
+            'End_hairpin_ziv': len(seq),
+            'Strand_ziv': str(seq),
+            'Hairpin_seq_ziv': str(seq),
+        }
+    }
     filter_candidates(true_mature, true_star)
     return res
