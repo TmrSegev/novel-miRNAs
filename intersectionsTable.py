@@ -1,3 +1,4 @@
+import os
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -1050,8 +1051,10 @@ unified["novel451"] = np.where(
 )
 
 # -----SAVE TO EXCEL-----
-
-writer = pd.ExcelWriter(output_dir + 'intersections_table_{}.xlsx'.format(species))
+# cfg["output_dir"] has no trailing slash (os.path.join); do not string-concat.
+xlsx_path = os.path.join(output_dir, "intersections_table_{}.xlsx".format(species))
+print("Writing {}".format(xlsx_path))
+writer = pd.ExcelWriter(xlsx_path)
 mirdeep_blast_fc_intersections_table.to_excel(writer, sheet_name='miRdeep')
 sRNAbench_blast_fc_intersections_table.to_excel(writer, sheet_name='sRNAbench')
 if use_mirbase:
@@ -1061,3 +1064,4 @@ if use_blast and blast_mirdeep_orig is not None:
     blast_mirdeep_orig.to_excel(writer, sheet_name='blast_miRdeep')
     blast_sRNAbench_orig.to_excel(writer, sheet_name='blast_sRNAbench')
 writer.save()
+print("Wrote {}".format(xlsx_path))
