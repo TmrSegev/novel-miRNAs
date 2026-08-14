@@ -94,56 +94,125 @@ Manual `export` blocks (fallback if you cannot source the loader): [Appendix D](
 
 ## Phase 1 — Read preprocessing and genome indexing
 
-**Tools:** cutadapt, bowtie-build, makeSeqObj.jar, `mirbaseToGFF3.py` (Elegans only)  
-**Outputs:** trimmed reads (nematodes), bowtie index, sRNAbench seq object, optional Elegans miRBase GFF.
+**Tools:** cutadapt (nematodes), bowtie-build, makeSeqObj.jar, STAR `genomeGenerate`, `mirbaseToGFF3.py` (Elegans only)  
+**Outputs:** trimmed reads (nematodes), bowtie index, STAR genome index, sRNAbench seq object, optional Elegans miRBase GFF.
+
+Wait for each job to finish (and check job success) before depending on its outputs. `makeseqobj.sbatch` does **not** install the zip into `sRNAtoolboxDB` — that copy is a follow-up command below.
 
 ### Nematodes
 
 ```bash
 cd "$BASH_DIR"
-sbatch cutadapt.sbatch          # if not already trimmed
+# Trim: Macrosperma/Sulstoni old genome only. Skip Elegans and all *_newGenome tracks
+# (those reuse $BASE/{Species}/TrimmedFastq; there is no cutadapt.sbatch there).
+sbatch cutadapt.sbatch
 
-cd "$GENOME_DIR"
-bowtie-build -f "$GENOME_FA" "index/${INDEX_BASENAME}GenomeIndexed"
-# if miRDeep needs whitespace-stripped genome:
-perl -lane 's/\s+.+$//' < "$GENOME_FA" > "$GENOME_FA_NO_WS"
+# Bowtie: nematode *_newGenome only (old genomes already indexed; no wrapper).
+sbatch bowtie_index.sbatch
 
-java -jar "$BASE/sRNAtoolboxDB/exec/makeSeqObj.jar" "$GENOME_FA"
-SEQOBJ_ZIP="$(dirname "$GENOME_FA")/$(basename "$GENOME_FA" | cut -d. -f1).zip"
-mv "$SEQOBJ_ZIP" "$BASE/sRNAtoolboxDB/seqOBJ/${SRNABENCH_INDEX}.zip"
-cp -r "$GENOME_DIR/index/." "$BASE/sRNAtoolboxDB/index/"
+sbatch makeseqobj.sbatch
+sbatch star_genome_indexing.sbatch
 ```
 
-**Elegans only** — miRBase GFF (once; needed before Phase 7/9 miRBase steps):
+Old-genome bowtie rebuild (no `bowtie_index.sbatch`; use `$SRNABENCH_INDEX`, not `${INDEX_BASENAME}GenomeIndexed`):
 
 ```bash
-cd "$BASE/mirbase_data"
-python "$REPO/mirbaseToGFF3.py"
+cd "$GENOME_DIR"
+mkdir -p index
+bowtie-build -f "$GENOME_FA" "index/${SRNABENCH_INDEX}"
 ```
 
 ### Hofstenia
 
-Reads are pre-trimmed (`$READ_FASTQ_DIR`). Index only:
-
-```bash
-cd "$GENOME_DIR"
-bowtie-build -f "$GENOME_FA" "index/${INDEX_BASENAME}GenomeIndexed"
-
-java -jar "$BASE/sRNAtoolboxDB/exec/makeSeqObj.jar" "$GENOME_FA"
-SEQOBJ_ZIP="$(dirname "$GENOME_FA")/$(basename "$GENOME_FA" | cut -d. -f1).zip"
-mv "$SEQOBJ_ZIP" "$BASE/sRNAtoolboxDB/seqOBJ/${SRNABENCH_INDEX}.zip"
-cp -r "$GENOME_DIR/index/." "$BASE/sRNAtoolboxDB/index/"
-```
-
-> **sbatch (new-genome):** `bowtie_index.sbatch`, `makeseqobj.sbatch`, `star_genome_indexing.sbatch` under `$BASH_DIR`.
-
-Example inside cutadapt.sbatch (nematode, one library)
+Reads are pre-trimmed (`$READ_FASTQ_DIR`). No `cutadapt.sbatch`. No `bowtie_index.sbatch` — bowtie is interactive (mapper expects `$GENOME_DIR/index/$SRNABENCH_INDEX`).
 
 ```bash
 cd "$BASH_DIR"
-SRR=SRR13072557
-cutadapt -a AACTGTAGGCACCATCAAT --core 2 -e 0.25 --discard-untrimmed -m 17 -M 26 \
-  "../Fastq/${SRR}.fastq" > "../TrimmedFastq/${SRR}_trimmed.fastq"
+sbatch makeseqobj.sbatch
+sbatch star_index_genome.sbatch
+```
+
+`Hofstenia_newGenome` also has `star_genome_indexing.sbatch` (same STAR command) and `make_seq_obj.sbatch` (same as `makeseqobj.sbatch`). Prefer the names above.
+
+```bash
+cd "$GENOME_DIR"
+mkdir -p index
+bowtie-build -f "$GENOME_FA" "index/${SRNABENCH_INDEX}"
+```
+
+### After indexing jobs finish — install seqOBJ + bowtie copies
+
+Not inside the sbatch files. `makeSeqObj.jar` writes a zip next to the FASTA (`$(basename "$GENOME_FA" | cut -d. -f1).zip`). sRNAbench `species=` must match the zip basename under `sRNAtoolboxDB/seqOBJ/`.
+
+```bash
+SEQOBJ_ZIP="$(dirname "$GENOME_FA")/$(basename "$GENOME_FA" | cut -d. -f1).zip"
+# Hofstenia_newGenome sRNAbench wrappers use species=hofPB_v6 (not $SRNABENCH_INDEX).
+if [[ "$TRACK" == "Hofstenia_newGenome" ]]; then
+  SEQOBJ_NAME=hofPB_v6
+else
+  SEQOBJ_NAME="$SRNABENCH_INDEX"
+fi
+mv "$SEQOBJ_ZIP" "$BASE/sRNAtoolboxDB/seqOBJ/${SEQOBJ_NAME}.zip"
+cp -r "$GENOME_DIR/index/." "$BASE/sRNAtoolboxDB/index/"
+```
+
+**Elegans only** — whitespace-stripped genome (old genome; `$GENOME_FA_NO_WS` differs) and miRBase GFF (once; needed before Phase 7/9 miRBase steps):
+
+```bash
+perl -lane 's/\s+.+$//' < "$GENOME_FA" > "$GENOME_FA_NO_WS"
+
+cd "$BASE/mirbase_data"
+python "$REPO/mirbaseToGFF3.py"
+```
+
+Example inside cutadapt.sbatch (Macrosperma, one library; Sulstoni uses `--core 2`)
+
+```bash
+cutadapt -a AACTGTAGGCACCATCAAT --core 12 -e 0.25 --discard-untrimmed -m 17 -M 26 \
+  ../Fastq/SRR13072564.1.fastq > ../TrimmedFastq/SRR13072564.1_trimmed.fastq
+```
+
+Example inside bowtie_index.sbatch (Elegans_newGenome; Macrosperma/Sulstoni swap FASTA + `*NewGenomeIndexed`)
+
+```bash
+GENOME="../genome/CELEG.caenorhabditis_elegans_PRJNA13758_WBPS19.scaffolds.fna"
+bowtie-build -f "$GENOME" ../genome/index/elegansNewGenomeIndexed
+samtools faidx "$GENOME"
+```
+
+Example inside makeseqobj.sbatch
+
+**Nematode (Elegans_newGenome):**
+
+```bash
+java -jar ../../sRNAtoolboxDB/exec/makeSeqObj.jar \
+  ../genome/CELEG.caenorhabditis_elegans_PRJNA13758_WBPS19.scaffolds.fna
+```
+
+**Hofstenia (old genome; new genome points at `hofPB_v6.FINAL.fa`):**
+
+```bash
+java -jar ../../sRNAtoolboxDB/exec/makeSeqObj.jar \
+  /mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Hofstenia/Genome/refs/Hmia_ref/Hmia.030120.fasta
+```
+
+Example inside STAR index sbatch (`star_genome_indexing.sbatch` nematodes; `star_index_genome.sbatch` Hofstenia)
+
+**Nematode (Elegans_newGenome):**
+
+```bash
+STAR --runMode genomeGenerate --runThreadN 16 \
+  --genomeDir ../STAR/genome_index/ \
+  --genomeSAindexNbases 11 \
+  --genomeFastaFiles ../genome/CELEG.caenorhabditis_elegans_PRJNA13758_WBPS19.scaffolds.fna
+```
+
+**Hofstenia (old genome):**
+
+```bash
+STAR --runMode genomeGenerate --runThreadN 16 \
+  --genomeDir ../STAR/genome_index/ --genomeSAindexNbases 11 \
+  --genomeFastaFiles /mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Hofstenia/Genome/refs/Hmia_ref/Hmia.030120.fasta
 ```
 
 ### Verify — Phase 1
@@ -160,12 +229,22 @@ else
   need_file "${idx[0]}"
   ok "bowtie index files: ${#idx[@]}"
 fi
-need_file "$BASE/sRNAtoolboxDB/seqOBJ/${SRNABENCH_INDEX}.zip"
+need_dir "$SPECIES_DIR/STAR/genome_index"
+if [[ "$TRACK" == "Hofstenia_newGenome" ]]; then
+  need_file "$BASE/sRNAtoolboxDB/seqOBJ/hofPB_v6.zip"
+else
+  need_file "$BASE/sRNAtoolboxDB/seqOBJ/${SRNABENCH_INDEX}.zip"
+fi
 if [[ "$SPECIES" == "Elegans" && -z "$VARIANT" ]]; then
   need_file "$BASE/mirbase_data/cel_mirbase_seq.gff3"
 fi
 if [[ "$SPECIES" != "Hofstenia" ]]; then
-  need_dir "$SPECIES_DIR/TrimmedFastq"
+  # New-genome nematodes reuse the old track's TrimmedFastq.
+  if [[ -n "$VARIANT" ]]; then
+    need_dir "$BASE/$SPECIES/TrimmedFastq"
+  else
+    need_dir "$SPECIES_DIR/TrimmedFastq"
+  fi
 fi
 [[ $FAIL -eq 0 ]] && echo "Phase 1 VERIFY PASSED" || echo "Phase 1 VERIFY FAILED"
 ```
@@ -560,14 +639,12 @@ done
 **Tools:** STAR, featureCounts, `add_flank_to_GFF.py`  
 STAR = one FASTQ / one output dir **per library**. featureCounts = **one** multi-SAM call per tool (`$STAR_SAMS`).
 
-### STAR index + align
+### STAR align
+
+STAR index is Phase 1 (`star_genome_indexing.sbatch` nematodes; `star_index_genome.sbatch` Hofstenia). Here: align only.
 
 ```bash
 cd "$BASH_DIR"
-STAR --runMode genomeGenerate --runThreadN 16 \
-  --genomeDir ../STAR/genome_index/ --genomeSAindexNbases 11 \
-  --genomeFastaFiles "$GENOME_FA"
-
 # Nematodes:
 sbatch star_align.sbatch
 # Hofstenia (libraries split across three jobs):
@@ -1137,7 +1214,7 @@ Status: **Hofstenia_newGenome already has prior outputs**; nematode `_newGenome`
 
 | Step | Phase                       | Main scripts / tools                                                                              |
 | ---- | --------------------------- | ------------------------------------------------------------------------------------------------- |
-| 1    | Prep / index                | cutadapt, bowtie-build, makeSeqObj.jar, `mirbaseToGFF3.py` (Elegans)                              |
+| 1    | Prep / index                | cutadapt, bowtie-build, makeSeqObj.jar, STAR genomeGenerate, `mirbaseToGFF3.py` (Elegans)         |
 | 2    | miRDeep per library         | mapper.pl, miRDeep2.pl, `mirdeepPerLibraryFilter.py`                                              |
 | 3    | sRNAbench per library       | sRNAbench.jar, `srnabenchPerLibraryFilter.py`                                                     |
 | 4    | Filter criteria (reference) | *(ran in 2–3)*                                                                                    |
