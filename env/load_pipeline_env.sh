@@ -161,11 +161,14 @@ case "$SPECIES" in
     ;;
 esac
 
-export SEQOBJ_NAME="$SRNABENCH_INDEX"
-# Live Hofstenia_newGenome sRNAbench wrappers use species=hofPB_v6.
+# Always overwrite so a previous `nm` cannot leak SEQOBJ_NAME across tracks.
+# Hofstenia_newGenome sRNAbench wrappers use species=hofPB_v6 (zip from makeSeqObj).
 if [[ "$TRACK" == "Hofstenia_newGenome" ]]; then
   export SEQOBJ_NAME=hofPB_v6
+else
+  export SEQOBJ_NAME="$SRNABENCH_INDEX"
 fi
+export SEQOBJ_ZIP="$BASE/sRNAtoolboxDB/seqOBJ/${SEQOBJ_NAME}.zip"
 
 export STAR_SAMS="$(for lib in ${LIBRARIES//,/ }; do echo ../STAR/align_to_genome/$lib/${SPECIES}_Aligned.out.sam; done)"
 
@@ -216,5 +219,6 @@ echo "  SPECIES_DIR=$SPECIES_DIR"
 echo "  LIBRARIES=$LIBRARIES"
 echo "  GENOME_FA=$GENOME_FA"
 echo "  SRNABENCH_INDEX=$SRNABENCH_INDEX  SEQOBJ_NAME=$SEQOBJ_NAME"
+echo "  SEQOBJ_ZIP=$SEQOBJ_ZIP"
 echo "Helpers: need_file (≤7d) / need_input / need_dir / nm_snapshot"
 unset _NM_ARG1 _NM_ARG2 _NM_ENV_DIR

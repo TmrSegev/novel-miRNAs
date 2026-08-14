@@ -207,7 +207,16 @@ else
   ok "bowtie index files: ${#idx[@]}"
 fi
 need_dir "$SPECIES_DIR/STAR/genome_index"
-need_file "$BASE/sRNAtoolboxDB/seqOBJ/${SEQOBJ_NAME}.zip"
+# seqOBJ zip = sRNAbench species= key. Never expand an empty name to ".zip".
+# Hofstenia_newGenome wrappers use species=hofPB_v6 (not $SRNABENCH_INDEX).
+seqobj="${SEQOBJ_NAME:-}"
+[[ "$TRACK" == "Hofstenia_newGenome" ]] && seqobj="${seqobj:-hofPB_v6}"
+seqobj="${seqobj:-$SRNABENCH_INDEX}"
+if [[ -z "$seqobj" ]]; then
+  fail "cannot resolve seqOBJ zip name (SEQOBJ_NAME/SRNABENCH_INDEX unset)"
+else
+  need_file "$BASE/sRNAtoolboxDB/seqOBJ/${seqobj}.zip"
+fi
 if [[ "$SPECIES" == "Elegans" && -z "$VARIANT" ]]; then
   need_file "$BASE/mirbase_data/cel_mirbase_seq.gff3"
 fi
@@ -1262,7 +1271,7 @@ Most are set by `nm` / `load_pipeline_env.sh`. Library lists live in `pipeline_c
 | `$BASH_DIR`                            | sbatch wrappers                              | `bash/` or Elegans `Bash/`          |
 | `$GENOME_DIR` / `$GENOME_FA`           | Genome paths                                 | species-specific                    |
 | `$INDEX_BASENAME` / `$SRNABENCH_INDEX` | Bowtie / sRNAbench index names               | `elegansNewGenomeIndexed`           |
-| `$SEQOBJ_NAME`                         | `sRNAtoolboxDB/seqOBJ/` zip basename         | usually `$SRNABENCH_INDEX`          |
+| `$SEQOBJ_NAME` / `$SEQOBJ_ZIP`         | seqOBJ zip basename / full path              | `hofPB_v6` on Hofstenia_newGenome; else `$SRNABENCH_INDEX` |
 | `$STAR_SAMS`                           | All library SAMs (space-separated)           | built by loader                     |
 | `$SEED`                                | Seed file (nematodes)                        | `$BASE/mirbase_data/Seeds.txt`      |
 | `$HOF_FLAGS`                           | Hofstenia unite flags                        | `--base-path $BASE` or empty        |
