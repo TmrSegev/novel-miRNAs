@@ -24,4 +24,6 @@ source activate /home/stome/.conda/envs/my_env				### activate a conda environme
 
 echo start ## execute python script – replace with your own command 
 java -jar ../../sRNAtoolboxDB/exec/makeSeqObj.jar /mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Hofstenia/Genome/refs/Hmia_ref/Hmia.030120.fasta
+mkdir -p ../../sRNAtoolboxDB/seqOBJ
+mv /mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Hofstenia/Genome/refs/Hmia_ref/Hmia.zip ../../sRNAtoolboxDB/seqOBJ/hofsteniaGenomeIndexed.zip
 echo finished.

@@ -23,6 +23,8 @@ module load anaconda				### load anaconda module (must be present when working w
 source activate /home/stome/.conda/envs/my_env				### activate a conda environment, replace my_env with your conda environmen
 echo start ## execute python script – replace with your own command 
 java -jar ../../sRNAtoolboxDB/exec/makeSeqObj.jar ../Genome/caenorhabditis_elegans.PRJNA13758.WBPS16.genomic.fa
+mkdir -p ../../sRNAtoolboxDB/seqOBJ
+mv ../Genome/caenorhabditis_elegans.zip ../../sRNAtoolboxDB/seqOBJ/elegansGenomeIndexed.zip
 echo finished.
 
 

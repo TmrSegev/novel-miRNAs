@@ -15,5 +15,7 @@ module load anaconda
 source activate /home/stome/.conda/envs/my_env
 
 java -jar ../../sRNAtoolboxDB/exec/makeSeqObj.jar ../genome/CMACR.caenorhabditis_macrosperma_JU2083_v2.scaffolds.fna
+mkdir -p ../../sRNAtoolboxDB/seqOBJ
+mv ../genome/CMACR.zip ../../sRNAtoolboxDB/seqOBJ/macrospermaNewGenomeIndexed.zip
 
 echo finished.

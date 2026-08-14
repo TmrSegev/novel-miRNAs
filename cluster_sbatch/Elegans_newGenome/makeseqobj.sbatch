@@ -15,5 +15,7 @@ module load anaconda
 source activate /home/stome/.conda/envs/my_env
 
 java -jar ../../sRNAtoolboxDB/exec/makeSeqObj.jar ../genome/CELEG.caenorhabditis_elegans_PRJNA13758_WBPS19.scaffolds.fna
+mkdir -p ../../sRNAtoolboxDB/seqOBJ
+mv ../genome/CELEG.zip ../../sRNAtoolboxDB/seqOBJ/elegansNewGenomeIndexed.zip
 
 echo finished.

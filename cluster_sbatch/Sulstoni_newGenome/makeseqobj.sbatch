@@ -15,5 +15,7 @@ module load anaconda
 source activate /home/stome/.conda/envs/my_env
 
 java -jar ../../sRNAtoolboxDB/exec/makeSeqObj.jar ../genome/CSULS.caenorhabditis_sulstoni_PRJEB12601_WBPS19.scaffolds.fna
+mkdir -p ../../sRNAtoolboxDB/seqOBJ
+mv ../genome/CSULS.zip ../../sRNAtoolboxDB/seqOBJ/sulstoniNewGenomeIndexed.zip
 
 echo finished.

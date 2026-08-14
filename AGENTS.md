@@ -18,6 +18,7 @@
   - `RNAcentral/` — BLAST (incl. `blast_*_newgenome_queries.sbatch`) + `miRNAs/{Species|Species_newGenome}/intersections.sbatch`
 - On the cluster, Charles_seq / RNAcentral sbatch paths are **symlinks** into this tree; edit in git, then `git pull`. After adding new-genome wrappers, run `cluster_sbatch/symlink_newgenome_on_cluster.sh` once. Do not hand-edit the symlink targets as separate copies.
 - **Hofstenia is the canonical shared pattern** (per-library discovery, featureCounts naming like `miRNA_miRdeep_*`). Nematodes follow it unless species-specific (path casing, nested sRNAbench out, BLAST, miRBase).
+- Phase 1 wrapper names are the same on old and new tracks (`cutadapt.sbatch`, `bowtie_index.sbatch`, `makeseqobj.sbatch`, `star_genome_indexing.sbatch`). `nm Species new_genome` only switches `$TRACK`, genome FASTA, and output roots. Nematode new-genome cutadapt reuses the old-track Fastq/TrimmedFastq (same reads). Hofstenia has no cutadapt (reads already filtered).
 
 ## Pipeline run / overwrite notes
 

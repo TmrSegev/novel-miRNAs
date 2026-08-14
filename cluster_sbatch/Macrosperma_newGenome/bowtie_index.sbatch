@@ -15,7 +15,9 @@ module load anaconda
 source activate /home/stome/.conda/envs/my_env
 
 GENOME="../genome/CMACR.caenorhabditis_macrosperma_JU2083_v2.scaffolds.fna"
+mkdir -p ../genome/index
 bowtie-build -f "$GENOME" ../genome/index/macrospermaNewGenomeIndexed
 samtools faidx "$GENOME"
+cp -r ../genome/index/. ../../sRNAtoolboxDB/index/
 
 echo finished.

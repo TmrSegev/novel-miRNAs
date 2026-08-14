@@ -23,6 +23,8 @@ module load anaconda				### load anaconda module (must be present when working w
 source activate /home/stome/.conda/envs/my_env				### activate a conda environment, replace my_env with your conda environmen
 echo start ## execute python script – replace with your own command 
 java -jar ../../sRNAtoolboxDB/exec/makeSeqObj.jar ../genome/CMACR.caenorhabditis_macrosperma_JU2083_v1.scaffolds.fna
+mkdir -p ../../sRNAtoolboxDB/seqOBJ
+mv ../genome/CMACR.zip ../../sRNAtoolboxDB/seqOBJ/macrospermaGenomeIndexed.zip
 echo finished.
 
 
