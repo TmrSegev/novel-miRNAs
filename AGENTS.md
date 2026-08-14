@@ -11,12 +11,12 @@
 ## Job wrappers (`cluster_sbatch/`)
 
 - Slurm wrappers live in-repo under `cluster_sbatch/` (source of truth):
-  - `{Species}/` — bash/`Bash` wrappers (symlinked from `$BASH_DIR` on the cluster)
-  - `{Species}_newGenome/` — featureCounts wrappers for the alternate-assembly track (copy into `$BASH_DIR` after `git pull`; nematode/Hofstenia `_newGenome/bash` is not yet a full-dir symlink)
-  - `scripts/{Species}/` — filter `*.sbatch` (symlinked from `$SPECIES_DIR/scripts/`)
-  - `mirdeep_test/{Species}/{lib}/` — per-library `mirdeep_test.sbatch`
-  - `RNAcentral/` — BLAST + `intersections.sbatch`
-- On the cluster, old-genome Charles_seq / RNAcentral paths are **symlinks** into this tree; edit in git, then `git pull` — do not hand-edit the symlink targets as separate copies.
+  - `{Species}/` — old-genome bash/`Bash` (symlinked from `$BASH_DIR`)
+  - `{Species}_newGenome/` — new-genome bash (nematodes: whole-dir symlink from `$BASH_DIR`; Hofstenia: per-file `*.sbatch` links — `bash/` also holds mapper run dirs)
+  - `scripts/{Species}/` and `scripts/{Species}_newGenome/` — filter `*.sbatch` (per-file links under `$SPECIES_DIR/scripts/`)
+  - `mirdeep_test/{Species|Species_newGenome}/{lib}/` — per-library `mirdeep_test.sbatch`
+  - `RNAcentral/` — BLAST (incl. `blast_*_newgenome_queries.sbatch`) + `miRNAs/{Species|Species_newGenome}/intersections.sbatch`
+- On the cluster, Charles_seq / RNAcentral sbatch paths are **symlinks** into this tree; edit in git, then `git pull`. After adding new-genome wrappers, run `cluster_sbatch/symlink_newgenome_on_cluster.sh` once. Do not hand-edit the symlink targets as separate copies.
 - **Hofstenia is the canonical shared pattern** (per-library discovery, featureCounts naming like `miRNA_miRdeep_*`). Nematodes follow it unless species-specific (path casing, nested sRNAbench out, BLAST, miRBase).
 
 ## Pipeline run / overwrite notes

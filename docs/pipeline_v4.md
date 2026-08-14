@@ -611,7 +611,7 @@ Prefer **sbatch** (jobs can take 1–2 h). Each wrapper runs **one** multi-SAM `
 cd "$BASH_DIR"
 sbatch featurecounts_mirdeep_sep.sbatch
 sbatch featurecounts_sRNAbench_sep.sbatch
-# Elegans only:
+# Elegans old genome only (miRBase GFF is WBPS16 coordinates):
 sbatch featurecounts_mirbase_sep.sbatch
 ```
 
@@ -696,7 +696,7 @@ for tag in miRdeep sRNAbench; do
   [[ "$cols" -ge $((nlib + 6)) ]] && ok "$tag counts columns≈$cols (libs=$nlib)" \
     || fail "$tag counts look under-columned (NF=$cols, libs=$nlib) — was featureCounts multi-SAM?"
 done
-if [[ "$SPECIES" == "Elegans" ]]; then
+if [[ "$SPECIES" == "Elegans" && -z "$VARIANT" ]]; then
   need_file "$SPECIES_DIR/counts_sep/miRNA_mirbase_counts.txt"
 fi
 [[ $FAIL -eq 0 ]] && echo "Phase 7 VERIFY PASSED" || echo "Phase 7 VERIFY FAILED"
@@ -742,20 +742,14 @@ sbatch blast_macrosperma_queries.sbatch
 sbatch blast_sulstoni_queries.sbatch
 ```
 
-**New genome** (`TRACK=${SPECIES}_newGenome`) — existing query sbatch files hardcode `queries/$SPECIES/` and old `$SCRIPTS_DIR`; run blastn with env vars instead:
+**New genome** (`TRACK=${SPECIES}_newGenome`) — writes `queries/{Species}_newGenome/`:
 
 ```bash
 mkdir -p "$BLAST_QUERY_DIR"
 cd "$RNACENTRAL/bash"
-blastn -query "$SCRIPTS_DIR/${SPECIES}_mirdeep.fasta" \
-  -db ../BLAST_DB/Caenorhabditis_pre_miRNAsDB \
-  -out "$BLAST_QUERY_DIR/miRdeep_blastn_compact" \
-  -outfmt 6 -evalue 10 -task blastn-short
-
-blastn -query "$SCRIPTS_DIR/${SPECIES}_sRNAbench.fasta" \
-  -db ../BLAST_DB/Caenorhabditis_pre_miRNAsDB \
-  -out "$BLAST_QUERY_DIR/sRNAbench_blastn_compact" \
-  -outfmt 6 -evalue 10 -task blastn-short
+sbatch blast_elegans_newgenome_queries.sbatch
+sbatch blast_macrosperma_newgenome_queries.sbatch
+sbatch blast_sulstoni_newgenome_queries.sbatch
 ```
 
 Example inside query sbatch (Macrosperma; Elegans/Sulstoni same pattern)
@@ -797,6 +791,15 @@ consumes all 9 GFF fields from both A and B, and `-loj` retains candidates
 without a cross-tool match.
 
 ### All species — cross-tool
+
+Prefer sbatch (old and new genome; wrappers live under `$RNA_MI_DIR`):
+
+```bash
+cd "$RNA_MI_DIR"
+sbatch intersections.sbatch
+```
+
+Equivalent bedtools (Hofstenia pattern; `-wa -wb -loj` required):
 
 ```bash
 cd "$RNA_MI_DIR"
@@ -1192,7 +1195,7 @@ flowchart TD
 - Long background material moved to appendices.
 - Per-library manual loops removed as primary commands; prefer nematode vs Hofstenia sbatch (with optional “what’s inside” examples).
 - Phase 7 featureCounts: copy-paste is `sbatch` (mature → flanks); raw `featureCounts` lines kept as in-sbatch examples.
-- Phase 8 BLAST: copy-paste is `sbatch` (`blast_create_mirnas_db.sbatch` + `blast_{elegans,macrosperma,sulstoni}_queries.sbatch`); parameterized `blastn` kept for `$TRACK` / newGenome. Do not use `blast_create_database.sbatch` (different DB).
+- Phase 8 BLAST: copy-paste is `sbatch` (`blast_create_mirnas_db.sbatch` + `blast_{elegans,macrosperma,sulstoni}_queries.sbatch` for old tracks; `blast_*_newgenome_queries.sbatch` for `$TRACK`). Do not use `blast_create_database.sbatch` (different DB).
 - Count files follow Hofstenia: `miRNA_miRdeep_*` (docs aligned to live wrappers). Nematode flanked featureCounts wrappers added. Hofstenia old-genome mapper dir documented as `mapper_out_test/`.
 
 ---
@@ -1498,6 +1501,14 @@ Reuse reads from the original track; rebuild indices on new scaffolds. Outputs u
 nm Macrosperma new_genome
 # or: VARIANT="--variant new_genome"; TRACK=${SPECIES}_newGenome; re-export paths
 ```
+
+New-genome sbatch lives in `cluster_sbatch/{Species}_newGenome/` (plus `scripts/`, `mirdeep_test/`, `RNAcentral/`). After `git pull` on the cluster, **once**:
+
+```bash
+bash "$REPO/cluster_sbatch/symlink_newgenome_on_cluster.sh"
+```
+
+Then submit from `$BASH_DIR` / `$RNA_MI_DIR` as in Phases 1–9. Do **not** use `star_align_all_libraries.sbatch` or `mirdeep.sbatch` (legacy combined). Skip `featurecounts_mirbase_sep.sbatch` on WBPS19 (miRBase GFF is old-genome coordinates).
 
 ---
 
