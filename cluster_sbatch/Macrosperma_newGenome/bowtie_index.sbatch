@@ -16,6 +16,12 @@ source activate /home/stome/.conda/envs/my_env
 
 GENOME="../genome/CMACR.caenorhabditis_macrosperma_JU2083_v2.scaffolds.fna"
 IDX="../genome/index/macrospermaNewGenomeIndexed"
+if [[ ! -s "$GENOME" ]]; then
+  echo "ERROR: missing $GENOME" >&2
+  echo "cwd=$(pwd)  physical=$(pwd -P)" >&2
+  echo "If physical cwd is under novel-miRNAs/cluster_sbatch, bash/ is a whole-dir symlink." >&2
+  exit 1
+fi
 mkdir -p ../genome/index
 bowtie-build -f "$GENOME" "$IDX"
 samtools faidx "$GENOME"

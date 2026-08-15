@@ -12,7 +12,7 @@
 
 - Slurm wrappers live in-repo under `cluster_sbatch/` (source of truth):
   - `{Species}/` — old-genome bash/`Bash` (symlinked from `$BASH_DIR`)
-  - `{Species}_newGenome/` — new-genome bash (nematodes: whole-dir symlink from `$BASH_DIR`; Hofstenia: per-file `*.sbatch` links — `bash/` also holds mapper run dirs)
+  - `{Species}_newGenome/` — new-genome bash: **per-file** `*.sbatch` links under `$BASH_DIR` (Hofstenia also keeps mapper run dirs there). Never a whole-dir symlink into git — Slurm cwd follows it and `../genome` misses Charles_seq.
   - `scripts/{Species}/` and `scripts/{Species}_newGenome/` — filter `*.sbatch` (per-file links under `$SPECIES_DIR/scripts/`)
   - `mirdeep_test/{Species|Species_newGenome}/{lib}/` — per-library `mirdeep_test.sbatch`
   - `RNAcentral/` — BLAST (incl. `blast_*_newgenome_queries.sbatch`) + `miRNAs/{Species|Species_newGenome}/intersections.sbatch`

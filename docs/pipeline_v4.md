@@ -207,6 +207,16 @@ STAR --runMode genomeGenerate --runThreadN 16 \
 ```bash
 FAIL=0
 need_input "$GENOME_FA"
+# New-genome nematode jobs use ../genome from $BASH_DIR. A whole-dir bash symlink
+# into cluster_sbatch/ makes that path miss Charles_seq (bowtie "Unable to open").
+if [[ -n "$VARIANT" && "$SPECIES" != "Hofstenia" ]]; then
+  if [[ -L "$BASH_DIR" ]]; then
+    fail "BASH_DIR is a directory symlink ($BASH_DIR -> $(readlink "$BASH_DIR")); re-run $REPO/cluster_sbatch/symlink_newgenome_on_cluster.sh"
+  fi
+  rel="../genome/$(basename "$GENOME_FA")"
+  if [[ -s "$BASH_DIR/$rel" ]]; then ok "relative genome from BASH_DIR: $rel"
+  else fail "relative $rel missing from BASH_DIR (physical cwd under cluster_sbatch?)"; fi
+fi
 idx1="$GENOME_DIR/index/${SRNABENCH_INDEX}.1.ebwt"
 idx2="$GENOME_DIR/Index/${SRNABENCH_INDEX}.1.ebwt"
 if [[ -s "$idx1" ]]; then
@@ -1600,6 +1610,8 @@ New-genome sbatch lives in `cluster_sbatch/{Species}_newGenome/` (plus `scripts/
 ```bash
 bash "$REPO/cluster_sbatch/symlink_newgenome_on_cluster.sh"
 ```
+
+That script makes `$BASH_DIR` a **real directory** with per-file links. Do not replace it with a whole-directory symlink into the git repo — Slurm’s cwd follows that link, so `../genome` resolves next to `cluster_sbatch/` instead of `$SPECIES_DIR/genome` (`Unable to open` in bowtie-build even when `$GENOME_FA` exists). Check: `cd "$BASH_DIR" && pwd -P` must stay under `Charles_seq/`, and `ls ../genome/` must show the FASTA.
 
 Then submit from `$BASH_DIR` / `$RNA_MI_DIR` as in Phases 1–9. Do **not** use `star_align_all_libraries.sbatch` or `mirdeep.sbatch` (legacy combined). Skip `featurecounts_mirbase_sep.sbatch` on WBPS19 (miRBase GFF is old-genome coordinates).
 

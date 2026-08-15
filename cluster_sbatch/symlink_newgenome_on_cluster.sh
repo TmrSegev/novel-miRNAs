@@ -25,29 +25,24 @@ link_file() {
 
 echo "Archive: $ARCH"
 
-# --- nematode bash: whole-directory symlink (thin) ---
-for sp in Elegans Macrosperma Sulstoni; do
+# --- bash: per-file sbatch links (never a whole-dir symlink) ---
+# Whole-dir $BASH_DIR -> cluster_sbatch/{Track} makes Slurm cwd the git tree,
+# so ../genome and ../../sRNAtoolboxDB miss Charles_seq. Hofstenia already used
+# per-file links because mapper run dirs live in bash/; nematodes need the same
+# cwd behavior for relative genome/STAR/mapper paths.
+for sp in Elegans Macrosperma Sulstoni Hofstenia; do
   dest="$BASE/${sp}_newGenome/bash"
   src="$REPO/cluster_sbatch/${sp}_newGenome"
-  echo "=== $sp bash ==="
+  echo "=== $sp bash (per-file) ==="
   if [[ -L "$dest" ]]; then
-    ln -sfn "$src" "$dest"
-    echo "  refreshed symlink $dest"
-  else
-    mkdir -p "$(dirname "$dest")"
-    if [[ -e "$dest" ]]; then
-      mv "$dest" "$ARCH/${sp}_newGenome_bash"
-    fi
-    ln -sfn "$src" "$dest"
-    echo "  $dest -> $src"
+    rm "$dest"
+    echo "  removed whole-dir symlink $dest"
   fi
-done
-
-# --- Hofstenia bash: per-file only (mapper run dirs live here) ---
-echo "=== Hofstenia bash (per-file) ==="
-for f in "$REPO/cluster_sbatch/Hofstenia_newGenome/"*.sbatch; do
-  bn=$(basename "$f")
-  link_file "$f" "$BASE/Hofstenia_newGenome/bash/$bn"
+  mkdir -p "$dest"
+  for f in "$src"/*.sbatch; do
+    [[ -f "$f" ]] || continue
+    link_file "$f" "$dest/$(basename "$f")"
+  done
 done
 
 # --- filter sbatch in scripts/ (scripts/ also holds GFF/CSV) ---
@@ -92,8 +87,12 @@ for f in "$REPO/cluster_sbatch/RNAcentral/bash/"*_newgenome_queries.sbatch; do
 done
 
 echo
-echo "Done. Spot-check:"
+echo "Done. Spot-check (bash/ must be a real directory, not a symlink):"
 ls -ld "$BASE/Elegans_newGenome/bash" "$BASE/Hofstenia_newGenome/bash"
 ls -l "$BASE/Elegans_newGenome/bash/featurecounts_mirdeep_sep.sbatch"
 ls -l "$BASE/Hofstenia_newGenome/bash/sRNAbench_EC1.sbatch"
 ls -l "$RNAC/bash/blast_elegans_newgenome_queries.sbatch"
+if [[ -L "$BASE/Elegans_newGenome/bash" ]]; then
+  echo "ERROR: Elegans_newGenome/bash is still a directory symlink" >&2
+  exit 1
+fi
