@@ -21,6 +21,7 @@ source activate /home/stome/.conda/envs/my_env
 FQ=/mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Elegans/TrimmedFastq
 IDX=../genome/index/elegansNewGenomeIndexed
 OUT=../mapper_out
+mkdir -p "$OUT"
 
 echo start
 mapper.pl ${FQ}/SRR13072557.1_trimmed.fastq -e -i -j -m -h -p ${IDX} -t ${OUT}/elegans_Seq_vs_genome_CE57.arf -s ${OUT}/elegans_Seq_collapsed_CE57.fasta

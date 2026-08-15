@@ -20,6 +20,7 @@ source activate /home/stome/.conda/envs/my_env
 FQ=/mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Macrosperma/TrimmedFastq
 IDX=../genome/index/macrospermaNewGenomeIndexed
 OUT=../mapper_out
+mkdir -p "$OUT"
 
 echo start
 mapper.pl ${FQ}/SRR13072564.1_trimmed.fastq -e -i -j -m -h -p ${IDX} -t ${OUT}/macrosperma_Seq_vs_genome_MR4.arf -s ${OUT}/macrosperma_Seq_collapsed_MR4.fasta

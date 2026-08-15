@@ -287,9 +287,9 @@ Example inside mapper sbatch
 ```bash
 cd "$BASH_DIR"
 LIBRARY=CE57
-READ_FASTQ="../TrimmedFastq/SRR13072557.1_trimmed.fastq"
+READ_FASTQ="$BASE/$SPECIES/TrimmedFastq/SRR13072557.1_trimmed.fastq"
 mapper.pl "$READ_FASTQ" -e -i -j -m -h \
-  -p "../Genome/Index/${INDEX_BASENAME}GenomeIndexed" \
+  -p "../genome/index/${SRNABENCH_INDEX}" \
   -t "../mapper_out/elegans_Seq_vs_genome_${LIBRARY}.arf" \
   -s "../mapper_out/elegans_Seq_collapsed_${LIBRARY}.fasta"
 ```
@@ -393,8 +393,8 @@ Example inside sRNAbench sbatch
 cd "$BASH_DIR"
 LIBRARY=CE57
 java -jar "$BASE/sRNAtoolboxDB/exec/sRNAbench.jar" \
-  input="$SPECIES_DIR/TrimmedFastq/SRR13072557.1_trimmed.fastq" \
-  output="$BASE/sRNAtoolboxDB/out/${SPECIES}/${SPECIES}_${LIBRARY}" \
+  input="$BASE/$SPECIES/TrimmedFastq/SRR13072557.1_trimmed.fastq" \
+  output="$BASE/sRNAtoolboxDB/out/${TRACK}/${SPECIES}_${LIBRARY}" \
   predict=true species="$SRNABENCH_INDEX" \
   dbPath="$BASE/sRNAtoolboxDB" \
   hairpin=animalsHairpin.fa mature=animalsMature.fa
@@ -407,11 +407,13 @@ cd "$BASH_DIR"
 LIBRARY=EC1
 java -jar "$BASE/sRNAtoolboxDB/exec/sRNAbench.jar" \
   input="$READ_FASTQ_DIR/${LIBRARY}.filtered.fastq" \
-  output="$BASE/sRNAtoolboxDB/out/Hofstenia_${LIBRARY}" \
+  output="$BASE/sRNAtoolboxDB/out/${TRACK}/Hofstenia_${LIBRARY}" \
   predict=true species="$SRNABENCH_INDEX" \
   dbPath="$BASE/sRNAtoolboxDB" \
   hairpin=animalsHairpin.fa mature=animalsMature.fa
 ```
+
+Old-genome Hofstenia wrappers write `out/Hofstenia_${LIBRARY}` (no `$TRACK` subdirectory). New-genome live wrappers write `out/Hofstenia_newGenome/Hofstenia_${LIBRARY}`.
 
 ### Filter
 
@@ -659,7 +661,7 @@ sbatch star_align3.sbatch
 ```
 
 > Do **not** use `star_align_all_libraries.sbatch` on nematode `*_newGenome` tracks.  
-> Shared discovery/count patterns follow **Hofstenia**; nematodes keep species-specific path layout (`Bash/`/`Genome/`, nested sRNAbench `out/$SPECIES/`, BLAST) where needed.
+> Shared discovery/count patterns follow **Hofstenia**; nematodes keep species-specific path layout (`Bash/`/`Genome/` on the old Elegans track, BLAST, miRBase) where needed. sRNAbench new-genome output is `out/$TRACK/`.
 
 Example inside star_align.sbatch
 
@@ -668,7 +670,7 @@ Example inside star_align.sbatch
 ```bash
 LIBRARY=CE57
 STAR --genomeDir ../STAR/genome_index/ \
-  --readFilesIn "$SPECIES_DIR/TrimmedFastq/SRR13072557.1_trimmed.fastq" \
+  --readFilesIn "$BASE/$SPECIES/TrimmedFastq/SRR13072557.1_trimmed.fastq" \
   --outFileNamePrefix "../STAR/align_to_genome/${LIBRARY}/${SPECIES}_" \
   --outFilterMultimapNmax 20 --runThreadN 16 --outSAMtype SAM
 ```

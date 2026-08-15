@@ -14,6 +14,7 @@ echo -e "SLURM_JOB_NODELIST:\t" $SLURM_JOB_NODELIST "\n\n"
 module load anaconda
 source activate /home/stome/.conda/envs/my_env
 
+mkdir -p ../STAR/genome_index
 STAR --runMode genomeGenerate --runThreadN 16 \
   --genomeDir ../STAR/genome_index/ \
   --genomeSAindexNbases 11 \

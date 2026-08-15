@@ -61,6 +61,8 @@ for sp in Elegans Macrosperma Sulstoni Hofstenia; do
   for d in "$REPO/cluster_sbatch/mirdeep_test/${sp}_newGenome/"*; do
     [[ -d "$d" ]] || continue
     lib=$(basename "$d")
+    # Skip leftover nested Species/ copies if any remain in git.
+    [[ "$lib" == "$sp" ]] && continue
     src="$d/mirdeep_test.sbatch"
     [[ -f "$src" ]] || continue
     link_file "$src" "$BASE/${sp}_newGenome/mirdeep_out/$lib/mirdeep_test.sbatch"

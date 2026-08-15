@@ -16,9 +16,9 @@ module load anaconda
 source activate /home/stome/.conda/envs/my_env
 
 # Hofstenia-style: run from mirdeep_out/MR5/
-miRDeep2.pl ../../mapper_out/macrosperma_Seq_collapsed_MR5.fasta \
-  ../../genome/CMACR.caenorhabditis_macrosperma_JU2083_v2.scaffolds.fna \
-  ../../mapper_out/macrosperma_Seq_vs_genome_MR5.arf \
-  ../../../mirbase_data/animalsMature.fa none ../../../mirbase_data/animalsHairpin.fa -g -1 \
+miRDeep2.pl /mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Macrosperma_newGenome/mapper_out/macrosperma_Seq_collapsed_MR5.fasta \
+  /mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Macrosperma_newGenome/genome/CMACR.caenorhabditis_macrosperma_JU2083_v2.scaffolds.fna \
+  /mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Macrosperma_newGenome/mapper_out/macrosperma_Seq_vs_genome_MR5.arf \
+  /mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/mirbase_data/animalsMature.fa none /mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/mirbase_data/animalsHairpin.fa -g -1 \
   2>mirdeep.log
 echo finished.

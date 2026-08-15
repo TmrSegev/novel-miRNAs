@@ -20,6 +20,7 @@ source activate /home/stome/.conda/envs/my_env
 FQ=/mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Sulstoni/TrimmedFastq
 IDX=../genome/index/sulstoniNewGenomeIndexed
 OUT=../mapper_out
+mkdir -p "$OUT"
 
 echo start
 mapper.pl ${FQ}/SRR13072570.1_trimmed.fastq -e -i -j -m -h -p ${IDX} -t ${OUT}/sulstoni_Seq_vs_genome_SR0.arf -s ${OUT}/sulstoni_Seq_collapsed_SR0.fasta
