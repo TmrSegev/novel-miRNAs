@@ -162,12 +162,8 @@ case "$SPECIES" in
 esac
 
 # Always overwrite so a previous `nm` cannot leak SEQOBJ_NAME across tracks.
-# Hofstenia_newGenome sRNAbench wrappers use species=hofPB_v6 (zip from makeSeqObj).
-if [[ "$TRACK" == "Hofstenia_newGenome" ]]; then
-  export SEQOBJ_NAME=hofPB_v6
-else
-  export SEQOBJ_NAME="$SRNABENCH_INDEX"
-fi
+# Zip basename = sRNAbench species= = bowtie prefix ($SRNABENCH_INDEX) on all tracks.
+export SEQOBJ_NAME="$SRNABENCH_INDEX"
 export SEQOBJ_ZIP="$BASE/sRNAtoolboxDB/seqOBJ/${SEQOBJ_NAME}.zip"
 
 export STAR_SAMS="$(for lib in ${LIBRARIES//,/ }; do echo ../STAR/align_to_genome/$lib/${SPECIES}_Aligned.out.sam; done)"

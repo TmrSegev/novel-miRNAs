@@ -79,7 +79,7 @@ cp \-r /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia\_newGe
    
 
 **Command for new genome:**  
-mv /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia\_newGenome/sRNA\_PBonly/hofPB\_v6.zip /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/sRNAtoolboxDB/seqOBJ/
+mv /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia\_newGenome/sRNA\_PBonly/hofPB\_v6.zip /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/sRNAtoolboxDB/seqOBJ/hofsteniaNewGenomeIndexed.zip
 
 8. **sRNAbench.jar** \- one FASTQ per library (submit `sRNAbench_{LIBRARY}.sbatch`). Example EC1:
 

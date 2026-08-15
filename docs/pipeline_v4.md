@@ -175,6 +175,15 @@ mv /mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Hofstenia/Genome/refs/Hm
   ../../sRNAtoolboxDB/seqOBJ/hofsteniaGenomeIndexed.zip
 ```
 
+**Hofstenia_newGenome** (jar still writes `hofPB_v6.zip` from the FASTA prefix; rename to the `species=` key):
+
+```bash
+java -jar ../../sRNAtoolboxDB/exec/makeSeqObj.jar \
+  /mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Hofstenia_newGenome/sRNA_PBonly/hofPB_v6.FINAL.fa
+mv /mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Hofstenia_newGenome/sRNA_PBonly/hofPB_v6.zip \
+  ../../sRNAtoolboxDB/seqOBJ/hofsteniaNewGenomeIndexed.zip
+```
+
 Example inside star_genome_indexing.sbatch
 
 **Nematode (Elegans_newGenome):**
@@ -217,11 +226,8 @@ if [[ -n "$VARIANT" ]]; then
   fi
 fi
 need_dir "$SPECIES_DIR/STAR/genome_index"
-# seqOBJ zip = sRNAbench species= key. Never expand an empty name to ".zip".
-# Hofstenia_newGenome wrappers use species=hofPB_v6 (not $SRNABENCH_INDEX).
-seqobj="${SEQOBJ_NAME:-}"
-[[ "$TRACK" == "Hofstenia_newGenome" ]] && seqobj="${seqobj:-hofPB_v6}"
-seqobj="${seqobj:-$SRNABENCH_INDEX}"
+# seqOBJ zip = sRNAbench species= = bowtie prefix. Never expand an empty name to ".zip".
+seqobj="${SEQOBJ_NAME:-$SRNABENCH_INDEX}"
 if [[ -z "$seqobj" ]]; then
   fail "cannot resolve seqOBJ zip name (SEQOBJ_NAME/SRNABENCH_INDEX unset)"
 else
@@ -1281,7 +1287,7 @@ Most are set by `nm` / `load_pipeline_env.sh`. Library lists live in `pipeline_c
 | `$BASH_DIR`                            | sbatch wrappers                              | `bash/` or Elegans `Bash/`          |
 | `$GENOME_DIR` / `$GENOME_FA`           | Genome paths                                 | species-specific                    |
 | `$INDEX_BASENAME` / `$SRNABENCH_INDEX` | Bowtie / sRNAbench index names               | `elegansNewGenomeIndexed`           |
-| `$SEQOBJ_NAME` / `$SEQOBJ_ZIP`         | seqOBJ zip basename / full path              | `hofPB_v6` on Hofstenia_newGenome; else `$SRNABENCH_INDEX` |
+| `$SEQOBJ_NAME` / `$SEQOBJ_ZIP`         | seqOBJ zip basename / full path              | always `$SRNABENCH_INDEX`           |
 | `$STAR_SAMS`                           | All library SAMs (space-separated)           | built by loader                     |
 | `$SEED`                                | Seed file (nematodes)                        | `$BASE/mirbase_data/Seeds.txt`      |
 | `$HOF_FLAGS`                           | Hofstenia unite flags                        | `--base-path $BASE` or empty        |
@@ -1387,7 +1393,7 @@ export GENOME_FA=$GENOME_DIR/hofPB_v6.FINAL.fa
 export GENOME_FA_NO_WS=$GENOME_FA
 export READ_FASTQ_DIR=$BASE/Hofstenia/Fastq/Hmia_annotation/filtered
 export SRNABENCH_INDEX=hofsteniaNewGenomeIndexed
-export SEQOBJ_NAME=hofPB_v6
+export SEQOBJ_NAME=$SRNABENCH_INDEX
 export STAR_SAMS="$(for lib in ${LIBRARIES//,/ }; do echo ../STAR/align_to_genome/$lib/${SPECIES}_Aligned.out.sam; done)"
 ```
 

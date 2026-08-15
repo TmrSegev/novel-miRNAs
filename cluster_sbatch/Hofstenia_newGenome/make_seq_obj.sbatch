@@ -25,5 +25,5 @@ source activate /home/stome/.conda/envs/my_env				### activate a conda environme
 echo start ## execute python script – replace with your own command 
 java -jar ../../sRNAtoolboxDB/exec/makeSeqObj.jar /mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Hofstenia_newGenome/sRNA_PBonly/hofPB_v6.FINAL.fa
 mkdir -p ../../sRNAtoolboxDB/seqOBJ
-mv /mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Hofstenia_newGenome/sRNA_PBonly/hofPB_v6.zip ../../sRNAtoolboxDB/seqOBJ/hofPB_v6.zip
+mv /mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Hofstenia_newGenome/sRNA_PBonly/hofPB_v6.zip ../../sRNAtoolboxDB/seqOBJ/hofsteniaNewGenomeIndexed.zip
 echo finished.
