@@ -97,16 +97,18 @@ Manual `export` blocks (fallback if you cannot source the loader): [Appendix D](
 **Tools:** cutadapt (nematodes), bowtie-build, makeSeqObj.jar, STAR `genomeGenerate`, `mirbaseToGFF3.py` (Elegans only)  
 **Outputs:** trimmed reads (nematodes), bowtie index, STAR genome index, sRNAbench seq object, optional Elegans miRBase GFF.
 
-Same sbatch names on old and new tracks. `nm Species` vs `nm Species new_genome` selects `$BASH_DIR`, `$GENOME_FA`, and output roots. Wait for each job to finish before depending on its outputs.
+Same sbatch names on old and new tracks. `nm Species` vs `nm Species new_genome` selects `$BASH_DIR`, `$GENOME_FA`, and output roots.
+
+**Submit together** — cutadapt and the three index jobs only need existing reads / `$GENOME_FA`. They do **not** wait on each other (`makeseqobj` and STAR indexing do not need the bowtie index). Wait until **all** of them finish before Phase 1 Verify. Later phases wait on specific outputs: mapper (Phase 2) → bowtie index; sRNAbench (Phase 3) → seqOBJ; STAR align (Phase 7) → STAR index.
 
 ### Nematodes
 
 ```bash
 cd "$BASH_DIR"
 sbatch cutadapt.sbatch              # skip if TrimmedFastq already exists
-sbatch bowtie_index.sbatch
-sbatch makeseqobj.sbatch
-sbatch star_genome_indexing.sbatch
+sbatch bowtie_index.sbatch          # FASTA → bowtie index
+sbatch makeseqobj.sbatch            # FASTA → seqOBJ zip
+sbatch star_genome_indexing.sbatch  # FASTA → STAR index
 ```
 
 New-genome cutadapt still reads/writes the **old-track** Fastq/TrimmedFastq (same reads). Indexes and seqOBJ go under `$TRACK`.
@@ -117,9 +119,9 @@ Reads are already filtered (`$READ_FASTQ_DIR`). No cutadapt.
 
 ```bash
 cd "$BASH_DIR"
-sbatch bowtie_index.sbatch
-sbatch makeseqobj.sbatch
-sbatch star_genome_indexing.sbatch
+sbatch bowtie_index.sbatch          # FASTA → bowtie index
+sbatch makeseqobj.sbatch            # FASTA → seqOBJ zip
+sbatch star_genome_indexing.sbatch  # FASTA → STAR index
 ```
 
 **Elegans only** — whitespace-stripped genome (old genome; `$GENOME_FA_NO_WS` differs) and miRBase GFF (once; needed before Phase 7/9 miRBase steps):
