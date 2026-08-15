@@ -19,6 +19,7 @@ IDX=/mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Hofstenia/Genome/refs/H
 mkdir -p "$(dirname "$IDX")"
 bowtie-build -f "$GENOME" "$IDX"
 samtools faidx "$GENOME"
-cp -r /mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Hofstenia/Genome/refs/Hmia_ref/index/. ../../sRNAtoolboxDB/index/
+mkdir -p ../../sRNAtoolboxDB/index
+cp -a "${IDX}".* ../../sRNAtoolboxDB/index/
 
 echo finished.

@@ -15,9 +15,11 @@ module load anaconda
 source activate /home/stome/.conda/envs/my_env
 
 GENOME="../genome/CSULS.caenorhabditis_sulstoni_PRJEB12601_WBPS19.scaffolds.fna"
+IDX="../genome/index/sulstoniNewGenomeIndexed"
 mkdir -p ../genome/index
-bowtie-build -f "$GENOME" ../genome/index/sulstoniNewGenomeIndexed
+bowtie-build -f "$GENOME" "$IDX"
 samtools faidx "$GENOME"
-cp -r ../genome/index/. ../../sRNAtoolboxDB/index/
+mkdir -p ../../sRNAtoolboxDB/index
+cp -a "${IDX}".* ../../sRNAtoolboxDB/index/
 
 echo finished.

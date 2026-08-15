@@ -19,6 +19,9 @@ IDX=/mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Hofstenia_newGenome/sRN
 mkdir -p "$(dirname "$IDX")"
 bowtie-build -f "$GENOME" "$IDX"
 samtools faidx "$GENOME"
-cp -r /mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Hofstenia_newGenome/sRNA_PBonly/index/. ../../sRNAtoolboxDB/index/
+# Copy only this track's prefix. A directory copy would also ship stray
+# hofsteniaGenomeIndexed.* into the shared DB and overwrite the old genome.
+mkdir -p ../../sRNAtoolboxDB/index
+cp -a "${IDX}".* ../../sRNAtoolboxDB/index/
 
 echo finished.

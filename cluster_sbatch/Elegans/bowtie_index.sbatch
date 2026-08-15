@@ -19,6 +19,7 @@ IDX="../Genome/Index/elegansGenomeIndexed"
 mkdir -p ../Genome/Index
 bowtie-build -f "$GENOME" "$IDX"
 samtools faidx "$GENOME"
-cp -r ../Genome/Index/. ../../sRNAtoolboxDB/index/
+mkdir -p ../../sRNAtoolboxDB/index
+cp -a "${IDX}".* ../../sRNAtoolboxDB/index/
 
 echo finished.

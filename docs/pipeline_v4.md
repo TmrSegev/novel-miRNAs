@@ -154,6 +154,8 @@ samtools faidx "$GENOME"
 bowtie-build -f "$GENOME_FA" "$GENOME_DIR/index/${SRNABENCH_INDEX}"
 ```
 
+`$INDEX_BASENAME` is `hofstenia` on **both** tracks. Never write `index/${INDEX_BASENAME}GenomeIndexed` against the new FASTA — that creates `hofsteniaGenomeIndexed` under `Hofstenia_newGenome/sRNA_PBonly/index/` (wrong name; a directory copy into `sRNAtoolboxDB/index/` would overwrite the old-genome index).
+
 Example inside makeseqobj.sbatch
 
 **Nematode (Elegans_newGenome):**
@@ -196,15 +198,23 @@ STAR --runMode genomeGenerate --runThreadN 16 \
 ```bash
 FAIL=0
 need_input "$GENOME_FA"
-shopt -s nullglob
-idx=("$GENOME_DIR"/index/*GenomeIndexed*.ebwt "$GENOME_DIR"/Index/*GenomeIndexed*.ebwt
-     "$GENOME_DIR"/index/*GenomeIndexed*.bt2 "$GENOME_DIR"/Index/*GenomeIndexed*.bt2)
-shopt -u nullglob
-if (( ${#idx[@]} == 0 )); then
-  fail "missing bowtie index under $GENOME_DIR/index"
+idx1="$GENOME_DIR/index/${SRNABENCH_INDEX}.1.ebwt"
+idx2="$GENOME_DIR/Index/${SRNABENCH_INDEX}.1.ebwt"
+if [[ -s "$idx1" ]]; then
+  need_file "$idx1"
+elif [[ -s "$idx2" ]]; then
+  need_file "$idx2"
 else
-  need_file "${idx[0]}"
-  ok "bowtie index files: ${#idx[@]}"
+  fail "missing bowtie index ${SRNABENCH_INDEX} under $GENOME_DIR/index or Index"
+fi
+# New-genome dir must not hold the old-genome basename (shared sRNAtoolboxDB copy would clobber the old track).
+if [[ -n "$VARIANT" ]]; then
+  shopt -s nullglob
+  stray=("$GENOME_DIR"/index/${INDEX_BASENAME}GenomeIndexed.* "$GENOME_DIR"/Index/${INDEX_BASENAME}GenomeIndexed.*)
+  shopt -u nullglob
+  if (( ${#stray[@]} > 0 )); then
+    fail "stray old-genome index prefix ${INDEX_BASENAME}GenomeIndexed in $TRACK"
+  fi
 fi
 need_dir "$SPECIES_DIR/STAR/genome_index"
 # seqOBJ zip = sRNAbench species= key. Never expand an empty name to ".zip".
@@ -268,13 +278,13 @@ mapper.pl "$READ_FASTQ" -e -i -j -m -h \
 
 **Hofstenia mapper.pl (one library):**
 
-Old-genome Hofstenia live wrappers use `mapper_out_test/` (not `mapper_out/`). Nematodes use `mapper_out/`.
+Old-genome Hofstenia live wrappers use `mapper_out_test/` (not `mapper_out/`). Nematodes use `mapper_out/`. New-genome `-p` is `$GENOME_DIR/index/$SRNABENCH_INDEX` (`hofsteniaNewGenomeIndexed`), not `${INDEX_BASENAME}GenomeIndexed`.
 
 ```bash
 cd "$BASH_DIR"
 LIBRARY=EC1
 mapper.pl "$READ_FASTQ_DIR/${LIBRARY}.filtered.fastq" -e -i -j -m -h \
-  -p "../Genome/refs/Hmia_ref/index/${INDEX_BASENAME}GenomeIndexed" \
+  -p "$GENOME_DIR/index/${SRNABENCH_INDEX}" \
   -t "../mapper_out_test/hofstenia_Seq_vs_genome_${LIBRARY}.arf" \
   -s "../mapper_out_test/hofstenia_Seq_collapsed_${LIBRARY}.fasta"
 ```
@@ -1149,7 +1159,7 @@ Nematode **new_genome** tracks are mostly greenfield → lower overwrite risk if
 1. **Re-running an old track** (`TRACK=$SPECIES`) — Phases 5–11 write **in place**.
 2. `Hofstenia_newGenome` — already run historically; re-runs can replace prior outputs.
 3. **BLAST outs** — always use `$BLAST_QUERY_DIR` (`queries/$TRACK/`).
-4. **sRNAtoolboxDB index / seqOBJ** — shared under `$BASE/sRNAtoolboxDB/` if basenames collide.
+4. **sRNAtoolboxDB index / seqOBJ** — shared under `$BASE/sRNAtoolboxDB/` if basenames collide. New-genome wrappers must copy **only** `$SRNABENCH_INDEX.*` (not the whole `index/` dir). A stray `hofsteniaGenomeIndexed` built from `hofPB_v6.FINAL.fa` would overwrite the old-genome index used by `species=hofsteniaGenomeIndexed`.
 5. **Phase 6** — `overlapSenseAnti.py` edits the GFF **in place**.
 6. **Phase 11 (old genome)** — always `cd "$BASE/Ziv_Features"` before Step 11b.
 
@@ -1326,7 +1336,7 @@ export STAR_SAMS="$(for lib in ${LIBRARIES//,/ }; do echo ../STAR/align_to_genom
 
 **Macrosperma:** `SPECIES=Macrosperma`, `LIBRARIES=MR4,MR5,MR6,MR7,MR8`, `INDEX_BASENAME=macrosperma`, `BASH_DIR=$SPECIES_DIR/bash`, `GENOME_DIR=$SPECIES_DIR/genome`.  
 **Sulstoni:** `SPECIES=Sulstoni`, `LIBRARIES=SR0,...,SR7`, `INDEX_BASENAME=sulstoni`, lowercase `bash/` / `genome/`.  
-**new_genome:** `VARIANT="--variant new_genome"`, `TRACK=${SPECIES}_newGenome`, re-export dirs from `$TRACK`.
+**new_genome:** `VARIANT="--variant new_genome"`, `TRACK=${SPECIES}_newGenome`, re-export dirs from `$TRACK`, `SRNABENCH_INDEX=${INDEX_BASENAME}NewGenomeIndexed` (not `${INDEX_BASENAME}GenomeIndexed`).
 
 ### Manual export fallback — Hofstenia
 
@@ -1359,7 +1369,27 @@ export SEQOBJ_NAME=$SRNABENCH_INDEX
 export STAR_SAMS="$(for lib in ${LIBRARIES//,/ }; do echo ../STAR/align_to_genome/$lib/${SPECIES}_Aligned.out.sam; done)"
 ```
 
-For `Hofstenia_newGenome`: `TRACK=Hofstenia_newGenome`, `GENOME_FA` → `Hofstenia_newGenome/sRNA_PBonly/hofPB_v6.FINAL.fa`; keep `READ_FASTQ_DIR` on the original Fastq tree; `SEQOBJ_NAME=hofPB_v6` (sRNAbench `species=` on that track).
+For `Hofstenia_newGenome` (do not leave `SRNABENCH_INDEX=hofsteniaGenomeIndexed`):
+
+```bash
+export VARIANT="--variant new_genome"
+export TRACK=Hofstenia_newGenome
+export SPECIES_DIR=$BASE/$TRACK
+export SCRIPTS_DIR=$SPECIES_DIR/scripts
+export BASH_DIR=$SPECIES_DIR/bash
+export GENOME_DIR=$SPECIES_DIR/sRNA_PBonly
+export RNA_MI_DIR=$RNACENTRAL/miRNAs/$TRACK
+export BLAST_QUERY_DIR=$RNACENTRAL/queries/$TRACK
+export ZIV_XLSX=$BASE/Ziv_Features/all_remaining_after_ziv_${TRACK}.xlsx
+export INTERSECTIONS_XLSX=$RNA_MI_DIR/intersections_table_${SPECIES}.xlsx
+export MIRGE_FASTA_DIR=$SPECIES_DIR/miRge_after_Ziv/
+export GENOME_FA=$GENOME_DIR/hofPB_v6.FINAL.fa
+export GENOME_FA_NO_WS=$GENOME_FA
+export READ_FASTQ_DIR=$BASE/Hofstenia/Fastq/Hmia_annotation/filtered
+export SRNABENCH_INDEX=hofsteniaNewGenomeIndexed
+export SEQOBJ_NAME=hofPB_v6
+export STAR_SAMS="$(for lib in ${LIBRARIES//,/ }; do echo ../STAR/align_to_genome/$lib/${SPECIES}_Aligned.out.sam; done)"
+```
 
 ---
 
