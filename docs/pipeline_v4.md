@@ -1272,7 +1272,7 @@ flowchart TD
 
 - Copy-paste area moved to the top (essentials + `nm` setup, then phases).
 - Long background material moved to appendices.
-- Per-library manual loops removed as primary commands; prefer nematode vs Hofstenia sbatch (with optional “what’s inside” examples).
+- Per-library manual loops removed as primary commands; prefer nematode vs Hofstenia sbatch (with optional “what’s inside” examples). Phase 3 sRNAbench is the Hofstenia pattern on all species: `sRNAbench_{lib}.sbatch` (sequential nematode `srnabench.LEGACY.sbatch` unused).
 - Phase 7 featureCounts: copy-paste is `sbatch` (mature → flanks); raw `featureCounts` lines kept as in-sbatch examples.
 - Phase 8 BLAST: copy-paste is `sbatch` (`blast_create_mirnas_db.sbatch` + `blast_{elegans,macrosperma,sulstoni}_queries.sbatch` for old tracks; `blast_*_newgenome_queries.sbatch` for `$TRACK`). Do not use `blast_create_database.sbatch` (different DB).
 - Count files follow Hofstenia: `miRNA_miRdeep_*` (docs aligned to live wrappers). Nematode flanked featureCounts wrappers added. Hofstenia old-genome mapper dir documented as `mapper_out_test/`.

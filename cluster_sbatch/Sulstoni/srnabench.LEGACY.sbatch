@@ -1,4 +1,5 @@
 #!/bin/bash
+# LEGACY: sequential all-libraries. Prefer sRNAbench_{LIBRARY}.sbatch (one Slurm job per library).
 #SBATCH --partition main
 #SBATCH --time 3-03:30:00
 #SBATCH --job-name sRNAbench-Sulstoni
