@@ -23,6 +23,29 @@ link_file() {
   echo "  link $dest"
 }
 
+# Remove dest *.sbatch names that are no longer in git (renames like srnabench.sbatch
+# → srnabench.LEGACY.sbatch leave a leftover otherwise).
+prune_stale_sbatch() {
+  local src="$1" dest="$2"
+  local destf bn rel
+  shopt -s nullglob
+  for destf in "$dest"/*.sbatch; do
+    bn=$(basename "$destf")
+    [[ -f "$src/$bn" ]] && continue
+    if [[ -L "$destf" ]]; then
+      rm -f "$destf"
+      echo "  removed stale link $destf"
+    elif [[ -f "$destf" ]]; then
+      rel="${destf#$BASE/}"
+      rel="${rel#$RNAC/}"
+      mkdir -p "$ARCH/$(dirname "$rel")"
+      mv "$destf" "$ARCH/$rel"
+      echo "  archived leftover $destf"
+    fi
+  done
+  shopt -u nullglob
+}
+
 echo "Archive: $ARCH"
 
 # --- bash: per-file sbatch links (never a whole-dir symlink) ---
@@ -43,6 +66,7 @@ for sp in Elegans Macrosperma Sulstoni Hofstenia; do
     [[ -f "$f" ]] || continue
     link_file "$f" "$dest/$(basename "$f")"
   done
+  prune_stale_sbatch "$src" "$dest"
 done
 
 # --- filter sbatch in scripts/ (scripts/ also holds GFF/CSV) ---
