@@ -92,6 +92,7 @@ echo
 echo "Done. Spot-check (bash/ must be a real directory, not a symlink):"
 ls -ld "$BASE/Elegans_newGenome/bash" "$BASE/Hofstenia_newGenome/bash"
 ls -l "$BASE/Elegans_newGenome/bash/featurecounts_mirdeep_sep.sbatch"
+ls -l "$BASE/Elegans_newGenome/bash/sRNAbench_CE57.sbatch"
 ls -l "$BASE/Hofstenia_newGenome/bash/sRNAbench_EC1.sbatch"
 ls -l "$RNAC/bash/blast_elegans_newgenome_queries.sbatch"
 if [[ -L "$BASE/Elegans_newGenome/bash" ]]; then

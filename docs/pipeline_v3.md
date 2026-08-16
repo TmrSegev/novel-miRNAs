@@ -712,7 +712,9 @@ echo "Libraries missing remaining CSV: $missing / $(echo ${LIBRARIES//,/ } | wc 
 
 ```bash
 cd "$BASH_DIR"
-sbatch srnabench.sbatch
+for lib in ${LIBRARIES//,/ }; do
+  sbatch "sRNAbench_${lib}.sbatch"
+done
 ```
 
 Example single-library run (nematode):
@@ -755,7 +757,7 @@ sbatch "$SPECIES_DIR/scripts/filter_sRNAbench.sbatch"
 # Hofstenia: filter_hof_sRNAbench.sbatch
 ```
 
-> **sbatch:** `srnabench.sbatch` (nematodes: sequential per-library; Hofstenia: `sRNAbench_{LIBRARY}.sbatch`); `filter_sRNAbench.sbatch` / `filter_hof_sRNAbench.sbatch`.
+> **sbatch:** `sRNAbench_{LIBRARY}.sbatch` (all species; one job per library); `filter_sRNAbench.sbatch` / `filter_hof_sRNAbench.sbatch`. Sequential nematode `srnabench.sbatch` is `srnabench.LEGACY.sbatch`.
 
 
 

@@ -137,7 +137,7 @@ With the miRDeep algorithm the following steps were taken to generate candidates
 2. The seqobj zip file is created in the genome library. Moving command:   
    mv /mnt/new_groups/vaksler_group/Isana\_Tzah/Charles\_seq/Elegans/Genome/caenorhabditis\_elegans.zip /mnt/new_groups/vaksler_group/Isana\_Tzah/Charles\_seq/sRNAtoolboxDB/seqOBJ/
 
-9. **sRNAbench.jar** — run **separately for each library** via `sbatch srnabench.sbatch` (do not use `elegans_final.fastq`). Example for CE57:
+9. **sRNAbench.jar** — run **separately for each library** via `sbatch sRNAbench_{LIBRARY}.sbatch` (do not use `elegans_final.fastq`). Example for CE57:
 
    java \-jar ../../sRNAtoolboxDB/exec/sRNAbench.jar input=../TrimmedFastq/SRR13072557.1\_trimmed.fastq output=../../sRNAtoolboxDB/out/Elegans/Elegans\_CE57 predict=true species=elegansGenomeIndexed dbPath=/mnt/new_groups/vaksler_group/Isana\_Tzah/Charles\_seq/sRNAtoolboxDB hairpin=animalsHairpin.fa mature=animalsMature.fa
 
@@ -777,7 +777,7 @@ wget https://ftp.ebi.ac.uk/pub/databases/wormbase/parasite/releases/WBPS19/speci
 
    sbatch mapper.sbatch  
    sbatch mirdeep.sbatch  
-   sbatch srnabench.sbatch  
+   for lib in CE57 CE58 CE59 CE60 CE61 CE62 CE63 CE69 CE78 CE79 CE80 CE81; do sbatch "sRNAbench_${lib}.sbatch"; done  
    sbatch star\_align.sbatch  
    sbatch ../scripts/filter_mirdeep.sbatch  
    sbatch ../scripts/filter_sRNAbench.sbatch

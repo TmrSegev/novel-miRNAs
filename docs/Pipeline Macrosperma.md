@@ -132,7 +132,7 @@ Libraries: MR4, MR5, MR6, MR7, MR8 (5 libraries — run miRDeep and sRNAbench **
      
 7) **Per-library trimmed FASTQ** — do **not** combine for discovery (legacy `cat SRR* > Macrosperma_final.fastq` superseded).
 
-8) **sRNAbench.jar** — run **per library**. Example MR4:
+8) **sRNAbench.jar** — run **per library** via `sbatch sRNAbench_{LIBRARY}.sbatch`. Example MR4:
 
    java \-jar ../../sRNAtoolboxDB/exec/sRNAbench.jar input=../TrimmedFastq/SRR13072564.1\_trimmed.fastq output=../../sRNAtoolboxDB/out/Macrosperma/Macrosperma\_MR4 predict=true species=macrospermaGenomeIndexed dbPath=/mnt/new_groups/vaksler_group/Isana\_Tzah/Charles\_seq/sRNAtoolboxDB hairpin=animalsHairpin.fa mature=animalsMature.fa
 
@@ -350,7 +350,7 @@ Sequencing reads: reuse `Macrosperma/TrimmedFastq/` (MR4–MR8; same libraries a
    sbatch mapper.sbatch  
    # then either parallel mirdeep_test.sbatch in each mirdeep_out/{MR*}/, or:
    sbatch mirdeep.sbatch  
-   sbatch srnabench.sbatch  
+   for lib in MR4 MR5 MR6 MR7 MR8; do sbatch "sRNAbench_${lib}.sbatch"; done  
    sbatch star\_align.sbatch  
    sbatch ../scripts/filter_mirdeep.sbatch  
    sbatch ../scripts/filter_sRNAbench.sbatch

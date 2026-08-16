@@ -369,14 +369,7 @@ Do **not** combine FASTQs. Wait for sRNAbench to finish before filtering.
 
 ### sRNAbench
 
-**Nematodes:**
-
-```bash
-cd "$BASH_DIR"
-sbatch srnabench.sbatch
-```
-
-**Hofstenia:**
+One Slurm job per library (all species). Do **not** use `srnabench.sbatch` — that sequential nematode wrapper is `srnabench.LEGACY.sbatch`. Wait until **all** library jobs finish before filtering.
 
 ```bash
 cd "$BASH_DIR"
@@ -384,6 +377,8 @@ for lib in ${LIBRARIES//,/ }; do
   sbatch "sRNAbench_${lib}.sbatch"
 done
 ```
+
+New-genome `$BASH_DIR` uses per-file symlinks. After `git pull`, if those wrappers are missing there, run `$REPO/cluster_sbatch/symlink_newgenome_on_cluster.sh`.
 
 Example inside sRNAbench sbatch
 

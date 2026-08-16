@@ -141,7 +141,7 @@ path: \<basePath\>/Sulstoni/mirdeep\_out/\*
      
 7) **Per-library trimmed FASTQ** — do **not** combine for discovery (legacy `cat SRR* > Sulstoni_final.fastq` superseded).
 
-8) **sRNAbench.jar** — run **per library**. Example SR0:
+8) **sRNAbench.jar** — run **per library** via `sbatch sRNAbench_{LIBRARY}.sbatch`. Example SR0:
 
    java \-jar ../../sRNAtoolboxDB/exec/sRNAbench.jar input=../TrimmedFastq/SRR13072570.1\_trimmed.fastq output=../../sRNAtoolboxDB/out/Sulstoni/Sulstoni\_SR0 predict=true species=sulstoniGenomeIndexed dbPath=/mnt/new_groups/vaksler_group/Isana\_Tzah/Charles\_seq/sRNAtoolboxDB hairpin=animalsHairpin.fa mature=animalsMature.fa
 
@@ -349,7 +349,7 @@ wget https://ftp.ebi.ac.uk/pub/databases/wormbase/parasite/releases/WBPS19/speci
 
    sbatch mapper.sbatch  
    sbatch mirdeep.sbatch  
-   sbatch srnabench.sbatch  
+   for lib in SR0 SR1 SR2 SR3 SR4 SR5 SR6 SR7; do sbatch "sRNAbench_${lib}.sbatch"; done  
    sbatch star\_align.sbatch  
    sbatch ../scripts/filter_mirdeep.sbatch  
    sbatch ../scripts/filter_sRNAbench.sbatch
