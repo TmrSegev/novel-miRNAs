@@ -23,5 +23,5 @@ module load anaconda				### load anaconda module (must be present when working w
 source activate /home/stome/.conda/envs/my_env				### activate a conda environment, replace my_env with your conda environmen
 
 echo start ## execute python script – replace with your own command 
-miRDeep2.pl /mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Hofstenia_newGenome/mapper_out_test/hofstenia_Seq_collapsed_PH2.fasta /mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Hofstenia_newGenome/sRNA_PBonly/hofPB_v6.FINAL.fa /mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Hofstenia_newGenome/mapper_out_test/hofstenia_Seq_vs_genome_PH2.arf /mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/mirbase_data/animalsMature.fa none /mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/mirbase_data/animalsHairpin.fa -g -1 2>26.07.25.mirdeep.log
+miRDeep2.pl /groups/vaksler_group/Isana_Tzah/Charles_seq/Hofstenia_newGenome/mapper_out_test/hofstenia_Seq_collapsed_PH2.fasta /groups/vaksler_group/Isana_Tzah/Charles_seq/Hofstenia_newGenome/sRNA_PBonly/hofPB_v6.FINAL.fa /groups/vaksler_group/Isana_Tzah/Charles_seq/Hofstenia_newGenome/mapper_out_test/hofstenia_Seq_vs_genome_PH2.arf /groups/vaksler_group/Isana_Tzah/Charles_seq/mirbase_data/animalsMature.fa none /groups/vaksler_group/Isana_Tzah/Charles_seq/mirbase_data/animalsHairpin.fa -g -1 2>26.07.25.mirdeep.log
 echo finished.

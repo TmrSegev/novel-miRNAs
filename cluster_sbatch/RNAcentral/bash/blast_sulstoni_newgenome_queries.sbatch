@@ -23,8 +23,8 @@ module load anaconda				### load anaconda module (must be present when working w
 source activate /home/stome/.conda/envs/my_env				### activate a conda environment, replace my_env with your conda environmen
 echo start ## execute python script – replace with your own command 
 mkdir -p ../queries/Sulstoni_newGenome
-blastn -query /mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Sulstoni_newGenome/scripts/Sulstoni_mirdeep.fasta -db ../BLAST_DB/Caenorhabditis_pre_miRNAsDB -out ../queries/Sulstoni_newGenome/miRdeep_blastn_compact -outfmt 6 -evalue 10 -task blastn-short
-blastn -query /mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Sulstoni_newGenome/scripts/Sulstoni_sRNAbench.fasta -db ../BLAST_DB/Caenorhabditis_pre_miRNAsDB -out ../queries/Sulstoni_newGenome/sRNAbench_blastn_compact -outfmt 6 -evalue 10 -task blastn-short
+blastn -query /groups/vaksler_group/Isana_Tzah/Charles_seq/Sulstoni_newGenome/scripts/Sulstoni_mirdeep.fasta -db ../BLAST_DB/Caenorhabditis_pre_miRNAsDB -out ../queries/Sulstoni_newGenome/miRdeep_blastn_compact -outfmt 6 -evalue 10 -task blastn-short
+blastn -query /groups/vaksler_group/Isana_Tzah/Charles_seq/Sulstoni_newGenome/scripts/Sulstoni_sRNAbench.fasta -db ../BLAST_DB/Caenorhabditis_pre_miRNAsDB -out ../queries/Sulstoni_newGenome/sRNAbench_blastn_compact -outfmt 6 -evalue 10 -task blastn-short
 echo finished.
 
 

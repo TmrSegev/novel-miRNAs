@@ -22,10 +22,10 @@ echo -e "SLURM_JOB_NODELIST:\t" $SLURM_JOB_NODELIST "\n\n"
 module load anaconda				### load anaconda module (must be present when working with conda environments)
 source activate /home/stome/.conda/envs/my_env				### activate a conda environment, replace my_env with your conda environmen
 echo start ## execute python script – replace with your own command 
-bedtools intersect -wao -loj -f 0.4 -a /mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Sulstoni/scripts/Sulstoni_mirdeep_pre_only.gff3 -b /mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Sulstoni/scripts/Sulstoni_mirdeep_pre_only.gff3 > miRdeep_intersect.bed
-bedtools intersect -wao -loj -f 0.4 -a /mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Sulstoni/scripts/Sulstoni_sRNAbench_pre_only.gff3 -b /mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Sulstoni/scripts/Sulstoni_sRNAbench_pre_only.gff3 > sRNAbench_intersect.bed
-bedtools intersect -wa -wb -loj -s -f 0.6 -a /mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Sulstoni/scripts/Sulstoni_sRNAbench_pre_only.gff3 -b /mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Sulstoni/scripts/Sulstoni_mirdeep_pre_only.gff3 > sRNAbench_miRdeep_intersect.bed
-bedtools intersect -wa -wb -loj -s -f 0.6 -a /mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Sulstoni/scripts/Sulstoni_mirdeep_pre_only.gff3 -b /mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Sulstoni/scripts/Sulstoni_sRNAbench_pre_only.gff3 > miRdeep_sRNAbench_intersect.bed
+bedtools intersect -wao -loj -f 0.4 -a /groups/vaksler_group/Isana_Tzah/Charles_seq/Sulstoni/scripts/Sulstoni_mirdeep_pre_only.gff3 -b /groups/vaksler_group/Isana_Tzah/Charles_seq/Sulstoni/scripts/Sulstoni_mirdeep_pre_only.gff3 > miRdeep_intersect.bed
+bedtools intersect -wao -loj -f 0.4 -a /groups/vaksler_group/Isana_Tzah/Charles_seq/Sulstoni/scripts/Sulstoni_sRNAbench_pre_only.gff3 -b /groups/vaksler_group/Isana_Tzah/Charles_seq/Sulstoni/scripts/Sulstoni_sRNAbench_pre_only.gff3 > sRNAbench_intersect.bed
+bedtools intersect -wa -wb -loj -s -f 0.6 -a /groups/vaksler_group/Isana_Tzah/Charles_seq/Sulstoni/scripts/Sulstoni_sRNAbench_pre_only.gff3 -b /groups/vaksler_group/Isana_Tzah/Charles_seq/Sulstoni/scripts/Sulstoni_mirdeep_pre_only.gff3 > sRNAbench_miRdeep_intersect.bed
+bedtools intersect -wa -wb -loj -s -f 0.6 -a /groups/vaksler_group/Isana_Tzah/Charles_seq/Sulstoni/scripts/Sulstoni_mirdeep_pre_only.gff3 -b /groups/vaksler_group/Isana_Tzah/Charles_seq/Sulstoni/scripts/Sulstoni_sRNAbench_pre_only.gff3 > miRdeep_sRNAbench_intersect.bed
 echo finished.
 
 

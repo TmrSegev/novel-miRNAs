@@ -14,8 +14,8 @@ echo -e "SLURM_JOB_NODELIST:\t" $SLURM_JOB_NODELIST "\n\n"
 module load anaconda
 source activate /home/stome/.conda/envs/my_env
 
-GENOME=/mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Hofstenia_newGenome/sRNA_PBonly/hofPB_v6.FINAL.fa
-IDX=/mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Hofstenia_newGenome/sRNA_PBonly/index/hofsteniaNewGenomeIndexed
+GENOME=/groups/vaksler_group/Isana_Tzah/Charles_seq/Hofstenia_newGenome/sRNA_PBonly/hofPB_v6.FINAL.fa
+IDX=/groups/vaksler_group/Isana_Tzah/Charles_seq/Hofstenia_newGenome/sRNA_PBonly/index/hofsteniaNewGenomeIndexed
 mkdir -p "$(dirname "$IDX")"
 bowtie-build -f "$GENOME" "$IDX"
 samtools faidx "$GENOME"

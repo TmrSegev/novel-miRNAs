@@ -23,5 +23,5 @@ module load anaconda				### load anaconda module (must be present when working w
 source activate /home/stome/.conda/envs/my_env				### activate a conda environment, replace my_env with your conda environmen
 
 echo start ## execute python script – replace with your own command 
-miRDeep2.pl ../../mapper_out_test/hofstenia_Seq_collapsed_EC2.fasta /mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Hofstenia/Genome/refs/Hmia_ref/Hmia.030120.fasta ../../mapper_out_test/hofstenia_Seq_vs_genome_EC2.arf /mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/mirbase_data/animalsMature.fa none /mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/mirbase_data/animalsHairpin.fa -g -1 2>04.04.23.mirdeep.log
+miRDeep2.pl ../../mapper_out_test/hofstenia_Seq_collapsed_EC2.fasta /groups/vaksler_group/Isana_Tzah/Charles_seq/Hofstenia/Genome/refs/Hmia_ref/Hmia.030120.fasta ../../mapper_out_test/hofstenia_Seq_vs_genome_EC2.arf /groups/vaksler_group/Isana_Tzah/Charles_seq/mirbase_data/animalsMature.fa none /groups/vaksler_group/Isana_Tzah/Charles_seq/mirbase_data/animalsHairpin.fa -g -1 2>04.04.23.mirdeep.log
 echo finished.

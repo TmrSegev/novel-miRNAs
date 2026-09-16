@@ -23,5 +23,5 @@ module load anaconda				### load anaconda module (must be present when working w
 source activate /home/stome/.conda/envs/my_env				### activate a conda environment, replace my_env with your conda environmen
 
 echo start ## execute python script – replace with your own command 
-java -jar ../../sRNAtoolboxDB/exec/sRNAbench.jar input=/mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Hofstenia/Fastq/Hmia_annotation/filtered/hofstenia_final.fastq  output=../../sRNAtoolboxDB/out/Hofstenia predict=true species=hofsteniaGenomeIndexed dbPath=/mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/sRNAtoolboxDB hairpin=animalsHairpin.fa mature=animalsMature.fa
+java -jar ../../sRNAtoolboxDB/exec/sRNAbench.jar input=/groups/vaksler_group/Isana_Tzah/Charles_seq/Hofstenia/Fastq/Hmia_annotation/filtered/hofstenia_final.fastq  output=../../sRNAtoolboxDB/out/Hofstenia predict=true species=hofsteniaGenomeIndexed dbPath=/groups/vaksler_group/Isana_Tzah/Charles_seq/sRNAtoolboxDB hairpin=animalsHairpin.fa mature=animalsMature.fa
 echo finished.

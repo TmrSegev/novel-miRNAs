@@ -16,19 +16,19 @@
 echo "Job start"
 module load anaconda				### load anaconda module (must be present when working with conda environments)
 source activate /home/stome/.conda/envs/mirge_env				### activate a conda environment, replace my_env with your conda environmen
-cd /mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Hofstenia/
+cd /groups/vaksler_group/Isana_Tzah/Charles_seq/Hofstenia/
 
 # Loop through all files ending in *.filtered.fastq in the specified folder
-#for sample in /mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Hofstenia/Fastq/Hmia_annotation/filtered/GA3.filtered.fastq
-for sample in /mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Hofstenia/Fastq/Hmia_annotation/filtered/*.filtered.fastq
+#for sample in /groups/vaksler_group/Isana_Tzah/Charles_seq/Hofstenia/Fastq/Hmia_annotation/filtered/GA3.filtered.fastq
+for sample in /groups/vaksler_group/Isana_Tzah/Charles_seq/Hofstenia/Fastq/Hmia_annotation/filtered/*.filtered.fastq
 do
   echo "Processing $sample"
   miRge3.0 \
     -s $sample \
-    -lib /mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Hofstenia/miRge_after_Ziv_output/ \
+    -lib /groups/vaksler_group/Isana_Tzah/Charles_seq/Hofstenia/miRge_after_Ziv_output/ \
     -on Hofstenia \
     -db miRBase \
-    -o /mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Hofstenia/miRge_after_Ziv_output/results_m18 \
+    -o /groups/vaksler_group/Isana_Tzah/Charles_seq/Hofstenia/miRge_after_Ziv_output/results_m18 \
     -gff \
     -bam \
     -ie \

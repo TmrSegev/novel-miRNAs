@@ -1,4 +1,4 @@
-Scripts directory: /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/
+Scripts directory: /groups/vaksler_group/Isana_Tzah/novel-miRNAs/
 Invoke all pipeline scripts by absolute path from that directory (do not copy scripts into species folders).
 Pipeline documentation:
   docs/pipeline_v3.md          — canonical workflow (template reference, Phases 1–13)

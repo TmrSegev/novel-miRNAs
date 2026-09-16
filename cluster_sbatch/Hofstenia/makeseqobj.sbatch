@@ -23,7 +23,7 @@ module load anaconda				### load anaconda module (must be present when working w
 source activate /home/stome/.conda/envs/my_env				### activate a conda environment, replace my_env with your conda environmen
 
 echo start ## execute python script – replace with your own command 
-java -jar ../../sRNAtoolboxDB/exec/makeSeqObj.jar /mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Hofstenia/Genome/refs/Hmia_ref/Hmia.030120.fasta
+java -jar ../../sRNAtoolboxDB/exec/makeSeqObj.jar /groups/vaksler_group/Isana_Tzah/Charles_seq/Hofstenia/Genome/refs/Hmia_ref/Hmia.030120.fasta
 mkdir -p ../../sRNAtoolboxDB/seqOBJ
-mv /mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Hofstenia/Genome/refs/Hmia_ref/Hmia.zip ../../sRNAtoolboxDB/seqOBJ/hofsteniaGenomeIndexed.zip
+mv /groups/vaksler_group/Isana_Tzah/Charles_seq/Hofstenia/Genome/refs/Hmia_ref/Hmia.zip ../../sRNAtoolboxDB/seqOBJ/hofsteniaGenomeIndexed.zip
 echo finished.

@@ -24,7 +24,7 @@ source activate /home/stome/.conda/envs/my_env				### activate a conda environme
 echo start ## execute python script – replace with your own command 
 mkdir -p ../queries/Macrosperma_newGenome
 blastn -query ../../Charles_seq/Macrosperma_newGenome/scripts/Macrosperma_mirdeep.fasta -db ../BLAST_DB/Caenorhabditis_pre_miRNAsDB -out ../queries/Macrosperma_newGenome/miRdeep_blastn_compact -outfmt 6 -evalue 10 -task blastn-short
-blastn -query /mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Macrosperma_newGenome/scripts/Macrosperma_sRNAbench.fasta -db ../BLAST_DB/Caenorhabditis_pre_miRNAsDB -out ../queries/Macrosperma_newGenome/sRNAbench_blastn_compact -outfmt 6 -evalue 10 -task blastn-short
+blastn -query /groups/vaksler_group/Isana_Tzah/Charles_seq/Macrosperma_newGenome/scripts/Macrosperma_sRNAbench.fasta -db ../BLAST_DB/Caenorhabditis_pre_miRNAsDB -out ../queries/Macrosperma_newGenome/sRNAbench_blastn_compact -outfmt 6 -evalue 10 -task blastn-short
 echo finished.
 
 

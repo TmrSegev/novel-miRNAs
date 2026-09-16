@@ -15,10 +15,10 @@ echo -e "SLURM_JOB_NODELIST:\t" $SLURM_JOB_NODELIST "\n\n"
 module load anaconda
 source activate /home/stome/.conda/envs/my_env
 
-cd "/mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Elegans_newGenome/mirdeep_out"
+cd "/groups/vaksler_group/Isana_Tzah/Charles_seq/Elegans_newGenome/mirdeep_out"
 for folder in CE57 CE58 CE59 CE60 CE61 CE62 CE63 CE69 CE78 CE79 CE80 CE81; do
   if [ -d "$folder" ]; then
-    (cd "$folder" && echo "$folder" && python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/mirdeepPerLibraryFilter.py -i result*.csv --filter-s 10 --filter-mc 10 --exclude-c 100)
+    (cd "$folder" && echo "$folder" && python /groups/vaksler_group/Isana_Tzah/novel-miRNAs/mirdeepPerLibraryFilter.py -i result*.csv --filter-s 10 --filter-mc 10 --exclude-c 100)
   fi
 done
 echo finished.

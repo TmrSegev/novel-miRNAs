@@ -336,7 +336,7 @@ if __name__ == '__main__':
     if species == "miRGeneDB":
         all_remaining = pd.DataFrame()
         # Load double_mature names when processing mirgenedb
-        double_mature_path = "/mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/mirgenedb_data_v3/double_mature.fasta"
+        double_mature_path = "/groups/vaksler_group/Isana_Tzah/Charles_seq/mirgenedb_data_v3/double_mature.fasta"
         double_mature_names = load_double_mature_names(double_mature_path)
     else:
         all_remaining = pd.read_excel(all_remaining_path, sheet_name="all_candidates")

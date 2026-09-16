@@ -12,9 +12,9 @@ Manual cluster runs. Prefer **sbatch** (one nematode command, one Hofstenia comm
 
 **Fixed roots (cluster):**
 
-- Scripts (`$REPO`): `/mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/`
-- Data (`$BASE`): `/mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/`
-- Intersections / BLAST (`$RNACENTRAL`): `/mnt/new_groups/vaksler_group/Isana_Tzah/RNAcentral/`
+- Scripts (`$REPO`): `/groups/vaksler_group/Isana_Tzah/novel-miRNAs/`
+- Data (`$BASE`): `/groups/vaksler_group/Isana_Tzah/Charles_seq/`
+- Intersections / BLAST (`$RNACENTRAL`): `/groups/vaksler_group/Isana_Tzah/RNAcentral/`
 
 Invoke Python via absolute `$REPO/...`. Do not copy scripts into species folders.
 
@@ -34,7 +34,7 @@ Details (workflow diagram, variables, filters, citations, …) live in [appendic
 **Preferred** — MobaXterm / every new SSH session. Add once to cluster `~/.bashrc`:
 
 ```bash
-source /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/env/moba_aliases.sh
+source /groups/vaksler_group/Isana_Tzah/novel-miRNAs/env/moba_aliases.sh
 ```
 
 Then after connect (exports are **not** persisted across reconnects):
@@ -49,7 +49,7 @@ nm-list                     # show all tracks
 One-shot without aliases:
 
 ```bash
-source /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/env/load_pipeline_env.sh Macrosperma
+source /groups/vaksler_group/Isana_Tzah/novel-miRNAs/env/load_pipeline_env.sh Macrosperma
 # source .../env/load_pipeline_env.sh Macrosperma new_genome
 # source .../env/load_pipeline_env.sh Hofstenia_newGenome
 ```
@@ -172,8 +172,8 @@ mv ../genome/CELEG.zip ../../sRNAtoolboxDB/seqOBJ/elegansNewGenomeIndexed.zip
 
 ```bash
 java -jar ../../sRNAtoolboxDB/exec/makeSeqObj.jar \
-  /mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Hofstenia/Genome/refs/Hmia_ref/Hmia.030120.fasta
-mv /mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Hofstenia/Genome/refs/Hmia_ref/Hmia.zip \
+  /groups/vaksler_group/Isana_Tzah/Charles_seq/Hofstenia/Genome/refs/Hmia_ref/Hmia.030120.fasta
+mv /groups/vaksler_group/Isana_Tzah/Charles_seq/Hofstenia/Genome/refs/Hmia_ref/Hmia.zip \
   ../../sRNAtoolboxDB/seqOBJ/hofsteniaGenomeIndexed.zip
 ```
 
@@ -181,8 +181,8 @@ mv /mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Hofstenia/Genome/refs/Hm
 
 ```bash
 java -jar ../../sRNAtoolboxDB/exec/makeSeqObj.jar \
-  /mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Hofstenia_newGenome/sRNA_PBonly/hofPB_v6.FINAL.fa
-mv /mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Hofstenia_newGenome/sRNA_PBonly/hofPB_v6.zip \
+  /groups/vaksler_group/Isana_Tzah/Charles_seq/Hofstenia_newGenome/sRNA_PBonly/hofPB_v6.FINAL.fa
+mv /groups/vaksler_group/Isana_Tzah/Charles_seq/Hofstenia_newGenome/sRNA_PBonly/hofPB_v6.zip \
   ../../sRNAtoolboxDB/seqOBJ/hofsteniaNewGenomeIndexed.zip
 ```
 
@@ -201,7 +201,7 @@ STAR --runMode genomeGenerate --runThreadN 16 \
 ```bash
 STAR --runMode genomeGenerate --runThreadN 16 \
   --genomeDir ../STAR/genome_index/ --genomeSAindexNbases 11 \
-  --genomeFastaFiles /mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Hofstenia/Genome/refs/Hmia_ref/Hmia.030120.fasta
+  --genomeFastaFiles /groups/vaksler_group/Isana_Tzah/Charles_seq/Hofstenia/Genome/refs/Hmia_ref/Hmia.030120.fasta
 ```
 
 ### Verify — Phase 1
@@ -841,7 +841,7 @@ blastn -query ../../Charles_seq/Macrosperma/scripts/Macrosperma_mirdeep.fasta \
   -out ../queries/Macrosperma/miRdeep_blastn_compact \
   -outfmt 6 -evalue 10 -task blastn-short
 
-blastn -query /mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Macrosperma/scripts/Macrosperma_sRNAbench.fasta \
+blastn -query /groups/vaksler_group/Isana_Tzah/Charles_seq/Macrosperma/scripts/Macrosperma_sRNAbench.fasta \
   -db ../BLAST_DB/Caenorhabditis_pre_miRNAsDB \
   -out ../queries/Macrosperma/sRNAbench_blastn_compact \
   -outfmt 6 -evalue 10 -task blastn-short
@@ -1321,9 +1321,9 @@ Most are set by `nm` / `load_pipeline_env.sh`. Library lists live in `pipeline_c
 ### Manual export fallback — nematodes
 
 ```bash
-export REPO=/mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs
-export BASE=/mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq
-export RNACENTRAL=/mnt/new_groups/vaksler_group/Isana_Tzah/RNAcentral
+export REPO=/groups/vaksler_group/Isana_Tzah/novel-miRNAs
+export BASE=/groups/vaksler_group/Isana_Tzah/Charles_seq
+export RNACENTRAL=/groups/vaksler_group/Isana_Tzah/RNAcentral
 
 export SPECIES=Elegans
 export VARIANT=""
@@ -1358,9 +1358,9 @@ export STAR_SAMS="$(for lib in ${LIBRARIES//,/ }; do echo ../STAR/align_to_genom
 ### Manual export fallback — Hofstenia
 
 ```bash
-export REPO=/mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs
-export BASE=/mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq
-export RNACENTRAL=/mnt/new_groups/vaksler_group/Isana_Tzah/RNAcentral
+export REPO=/groups/vaksler_group/Isana_Tzah/novel-miRNAs
+export BASE=/groups/vaksler_group/Isana_Tzah/Charles_seq
+export RNACENTRAL=/groups/vaksler_group/Isana_Tzah/RNAcentral
 
 export SPECIES=Hofstenia
 export VARIANT=""

@@ -2,7 +2,7 @@
 # Optional one-line cluster ~/.bashrc hook for MobaXterm / SSH.
 #
 # Add to ~/.bashrc on the cluster (once):
-#   source /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/env/moba_aliases.sh
+#   source /groups/vaksler_group/Isana_Tzah/novel-miRNAs/env/moba_aliases.sh
 #
 # Then in any new session:
 #   nm Macrosperma
@@ -10,7 +10,7 @@
 #   nm Hofstenia_newGenome
 #   nm-list
 
-_NM_REPO="${NM_REPO:-/mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs}"
+_NM_REPO="${NM_REPO:-/groups/vaksler_group/Isana_Tzah/novel-miRNAs}"
 _NM_LOADER="$_NM_REPO/env/load_pipeline_env.sh"
 
 nm() {

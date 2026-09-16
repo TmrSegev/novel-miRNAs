@@ -15,10 +15,10 @@ echo -e "SLURM_JOB_NODELIST:\t" $SLURM_JOB_NODELIST "\n\n"
 module load anaconda
 source activate /home/stome/.conda/envs/my_env
 
-cd "/mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/sRNAtoolboxDB/out/Macrosperma"
+cd "/groups/vaksler_group/Isana_Tzah/Charles_seq/sRNAtoolboxDB/out/Macrosperma"
 for folder in Macrosperma_MR4 Macrosperma_MR5 Macrosperma_MR6 Macrosperma_MR7 Macrosperma_MR8; do
   if [ -d "$folder" ]; then
-    (cd "$folder" && echo "$folder" && python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/srnabenchPerLibraryFilter.py -i novel.txt -a novel451.txt --filter-mc 10)
+    (cd "$folder" && echo "$folder" && python /groups/vaksler_group/Isana_Tzah/novel-miRNAs/srnabenchPerLibraryFilter.py -i novel.txt -a novel451.txt --filter-mc 10)
   fi
 done
 echo finished.

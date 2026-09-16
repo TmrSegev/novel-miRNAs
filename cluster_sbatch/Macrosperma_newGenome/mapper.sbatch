@@ -17,7 +17,7 @@ module load anaconda
 source activate /home/stome/.conda/envs/my_env
 
 # Per-library mapper.pl (Hofstenia-style): one FASTQ per command; no config.txt / -d.
-FQ=/mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Macrosperma/TrimmedFastq
+FQ=/groups/vaksler_group/Isana_Tzah/Charles_seq/Macrosperma/TrimmedFastq
 IDX=../genome/index/macrospermaNewGenomeIndexed
 OUT=../mapper_out
 mkdir -p "$OUT"

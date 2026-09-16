@@ -3,9 +3,9 @@
 # Makes Charles_seq / RNAcentral new-genome sbatch paths point at cluster_sbatch/.
 set -euo pipefail
 
-REPO="${REPO:-/mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs}"
-BASE="${BASE:-/mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq}"
-RNAC="${RNACENTRAL:-/mnt/new_groups/vaksler_group/Isana_Tzah/RNAcentral}"
+REPO="${REPO:-/groups/vaksler_group/Isana_Tzah/novel-miRNAs}"
+BASE="${BASE:-/groups/vaksler_group/Isana_Tzah/Charles_seq}"
+RNAC="${RNACENTRAL:-/groups/vaksler_group/Isana_Tzah/RNAcentral}"
 TS=$(date +%Y%m%d_%H%M%S)
 ARCH="${BASE}/_archive/newgenome_sbatch_before_symlink_${TS}"
 mkdir -p "$ARCH"

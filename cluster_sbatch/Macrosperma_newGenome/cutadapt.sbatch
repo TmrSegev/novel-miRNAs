@@ -15,8 +15,8 @@ module load anaconda
 source activate /home/stome/.conda/envs/my_env
 
 # Same reads as the old-genome track; mapper/STAR/sRNAbench reuse this TrimmedFastq.
-FQ=/mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Macrosperma/Fastq
-OUT=/mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Macrosperma/TrimmedFastq
+FQ=/groups/vaksler_group/Isana_Tzah/Charles_seq/Macrosperma/Fastq
+OUT=/groups/vaksler_group/Isana_Tzah/Charles_seq/Macrosperma/TrimmedFastq
 mkdir -p "$OUT"
 
 echo start

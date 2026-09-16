@@ -23,7 +23,7 @@ module load anaconda				### load anaconda module (must be present when working w
 source activate /home/stome/.conda/envs/my_env				### activate a conda environment, replace my_env with your conda environmen
 
 # Per-library mapper.pl (Hofstenia-style): one FASTQ per command; no config.txt / -d.
-FQ=/mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Sulstoni/TrimmedFastq
+FQ=/groups/vaksler_group/Isana_Tzah/Charles_seq/Sulstoni/TrimmedFastq
 IDX=../genome/index/sulstoniGenomeIndexed
 OUT=../mapper_out
 

@@ -14,9 +14,9 @@ Generalized pipeline documentation for **manual runs on the cluster**. Every com
 
 **Fixed roots (cluster):**
 
-- Scripts (`$REPO`): `/mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/`
-- Data (`$BASE`): `/mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/`
-- Intersections / BLAST (`$RNACENTRAL`): `/mnt/new_groups/vaksler_group/Isana_Tzah/RNAcentral/`
+- Scripts (`$REPO`): `/groups/vaksler_group/Isana_Tzah/novel-miRNAs/`
+- Data (`$BASE`): `/groups/vaksler_group/Isana_Tzah/Charles_seq/`
+- Intersections / BLAST (`$RNACENTRAL`): `/groups/vaksler_group/Isana_Tzah/RNAcentral/`
 
 Invoke Python scripts by **absolute path** (`$REPO/...`); do not copy scripts into species folders.
 
@@ -30,7 +30,7 @@ Invoke Python scripts by **absolute path** (`$REPO/...`); do not copy scripts in
 
 ```bash
 # one-shot (any species / track)
-source /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/env/load_pipeline_env.sh Macrosperma
+source /groups/vaksler_group/Isana_Tzah/novel-miRNAs/env/load_pipeline_env.sh Macrosperma
 # source .../env/load_pipeline_env.sh Macrosperma new_genome
 # source .../env/load_pipeline_env.sh Hofstenia_newGenome
 ```
@@ -38,7 +38,7 @@ source /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/env/load_pipeline_e
 **MobaXterm / every new SSH session** — add once to cluster `~/.bashrc`:
 
 ```bash
-source /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/env/moba_aliases.sh
+source /groups/vaksler_group/Isana_Tzah/novel-miRNAs/env/moba_aliases.sh
 ```
 
 Then after connect:
@@ -68,9 +68,9 @@ Conventions:
 Edit `SPECIES`, `LIBRARIES`, and path casing for your target. Library lists match `pipeline_config.py`.
 
 ```bash
-export REPO=/mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs
-export BASE=/mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq
-export RNACENTRAL=/mnt/new_groups/vaksler_group/Isana_Tzah/RNAcentral
+export REPO=/groups/vaksler_group/Isana_Tzah/novel-miRNAs
+export BASE=/groups/vaksler_group/Isana_Tzah/Charles_seq
+export RNACENTRAL=/groups/vaksler_group/Isana_Tzah/RNAcentral
 
 # --- edit for your run ---
 export SPECIES=Elegans
@@ -118,9 +118,9 @@ export TRACK=${SPECIES}_newGenome
 ### Hofstenia
 
 ```bash
-export REPO=/mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs
-export BASE=/mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq
-export RNACENTRAL=/mnt/new_groups/vaksler_group/Isana_Tzah/RNAcentral
+export REPO=/groups/vaksler_group/Isana_Tzah/novel-miRNAs
+export BASE=/groups/vaksler_group/Isana_Tzah/Charles_seq
+export RNACENTRAL=/groups/vaksler_group/Isana_Tzah/RNAcentral
 
 export SPECIES=Hofstenia
 export VARIANT=""
@@ -387,7 +387,7 @@ The [shell setup](#manual-run-shell-setup) exports most of these. Use the table 
 | `$TRACK`              | On-disk folder name                                       | `Hofstenia` or `Hofstenia_newGenome`                                                                    |
 | `$LIBRARIES`          | Comma-separated library IDs                               | `EC1,EC2,EC3,...`                                                                                       |
 | `$LIBRARY`            | Single library ID (set in loop)                           | `EC1`                                                                                                   |
-| `$BASE`               | Charles_seq root                                          | `/mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq`                                                  |
+| `$BASE`               | Charles_seq root                                          | `/groups/vaksler_group/Isana_Tzah/Charles_seq`                                                  |
 | `$SPECIES_DIR`        | Species working root                                      | `$BASE/$TRACK`                                                                                          |
 | `$SCRIPTS_DIR`        | United GFF/FASTA dir                                      | `$SPECIES_DIR/scripts`                                                                                  |
 | `$BASH_DIR`           | sbatch wrappers                                           | `$SPECIES_DIR/bash` (Elegans: `Bash`)                                                                   |
@@ -398,12 +398,12 @@ The [shell setup](#manual-run-shell-setup) exports most of these. Use the table 
 | `$SRNABENCH_INDEX`    | sRNAbench `species=` key                                  | `${INDEX_BASENAME}GenomeIndexed`                                                                        |
 | `$READ_FASTQ`         | Per-library reads                                         | Nematodes: `TrimmedFastq/<SRR>_trimmed.fastq`; Hofstenia: `Fastq/.../filtered/{LIBRARY}.filtered.fastq` |
 | `$STAR_SAMS`          | All library SAMs (space-separated)                        | Built in shell setup                                                                                    |
-| `$RNACENTRAL`         | RNAcentral root                                           | `/mnt/new_groups/vaksler_group/Isana_Tzah/RNAcentral`                                                   |
+| `$RNACENTRAL`         | RNAcentral root                                           | `/groups/vaksler_group/Isana_Tzah/RNAcentral`                                                   |
 | `$SEED`               | Seed file (nematodes only)                                | `$BASE/mirbase_data/Seeds.txt`                                                                          |
 | `$HOF_FLAGS`          | Hofstenia unite flags                                     | `--base-path $BASE` or empty                                                                            |
 | `$RNA_MI_DIR`         | Intersections / BED / tables                              | `$RNACENTRAL/miRNAs/$TRACK`                                                                             |
 | `$BLAST_QUERY_DIR`    | BLAST out directory (nematodes)                           | `$RNACENTRAL/queries/$TRACK`                                                                            |
-| `$REPO`               | Script root                                               | `/mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs`                                                 |
+| `$REPO`               | Script root                                               | `/groups/vaksler_group/Isana_Tzah/novel-miRNAs`                                                 |
 | `$INTERSECTIONS_XLSX` | Phase 10 workbook                                         | `$RNA_MI_DIR/intersections_table_${SPECIES}.xlsx`                                                       |
 | `$ZIV_XLSX`           | Ziv-filtered workbook                                     | `$BASE/Ziv_Features/all_remaining_after_ziv_${TRACK}.xlsx`                                              |
 | `$ZIV_SHEET`          | Sheet for final candidates / statistics                   | Nematodes: `(D) Structural Features`; Hofstenia: `(A) Unfiltered`                                       |

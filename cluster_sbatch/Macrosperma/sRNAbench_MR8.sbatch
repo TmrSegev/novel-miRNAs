@@ -16,12 +16,12 @@ module load anaconda
 
 source activate /home/stome/.conda/envs/my_env
 
-DB=/mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/sRNAtoolboxDB
-TRIM=/mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Macrosperma/TrimmedFastq
-OUT=/mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/sRNAtoolboxDB/out/Macrosperma
+DB=/groups/vaksler_group/Isana_Tzah/Charles_seq/sRNAtoolboxDB
+TRIM=/groups/vaksler_group/Isana_Tzah/Charles_seq/Macrosperma/TrimmedFastq
+OUT=/groups/vaksler_group/Isana_Tzah/Charles_seq/sRNAtoolboxDB/out/Macrosperma
 mkdir -p "$OUT"
 echo start
-java -jar /mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/sRNAtoolboxDB/exec/sRNAbench.jar \
+java -jar /groups/vaksler_group/Isana_Tzah/Charles_seq/sRNAtoolboxDB/exec/sRNAbench.jar \
   input=${TRIM}/SRR13072568.1_trimmed.fastq \
   output=${OUT}/Macrosperma_MR8 predict=true species=macrospermaGenomeIndexed \
   dbPath=${DB} hairpin=animalsHairpin.fa mature=animalsMature.fa

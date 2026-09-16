@@ -16,7 +16,7 @@ module load anaconda
 
 source activate /home/stome/.conda/envs/my_env
 
-TRIM=/mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Macrosperma/TrimmedFastq
+TRIM=/groups/vaksler_group/Isana_Tzah/Charles_seq/Macrosperma/TrimmedFastq
 echo start
 STAR --genomeDir ../STAR/genome_index/ --readFilesIn ${TRIM}/SRR13072564.1_trimmed.fastq --outFileNamePrefix ../STAR/align_to_genome/MR4/Macrosperma_ --outFilterMultimapNmax 20 --runThreadN 16 --outSAMtype SAM
 STAR --genomeDir ../STAR/genome_index/ --readFilesIn ${TRIM}/SRR13072565.1_trimmed.fastq --outFileNamePrefix ../STAR/align_to_genome/MR5/Macrosperma_ --outFilterMultimapNmax 20 --runThreadN 16 --outSAMtype SAM

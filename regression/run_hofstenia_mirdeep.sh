@@ -5,7 +5,7 @@
 set -euo pipefail
 
 REPO="$(cd "$(dirname "$0")/.." && pwd)"
-PROD="/mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq"
+PROD="/groups/vaksler_group/Isana_Tzah/Charles_seq"
 SANDBOX="$REPO/regression/sandbox/Charles_seq"
 PROD_SCRIPTS="$PROD/Hofstenia/scripts"
 

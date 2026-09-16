@@ -2,7 +2,7 @@
 
 import os
 
-DEFAULT_WORKSPACE_ROOT = "/mnt/new_groups/vaksler_group/Isana_Tzah"
+DEFAULT_WORKSPACE_ROOT = "/groups/vaksler_group/Isana_Tzah"
 DEFAULT_BASE_PATH = os.path.join(DEFAULT_WORKSPACE_ROOT, "Charles_seq")
 DEFAULT_REPO_DIR = os.path.join(DEFAULT_WORKSPACE_ROOT, "novel-miRNAs")
 DEFAULT_NCRNA_DIR = os.path.join(DEFAULT_WORKSPACE_ROOT, "RNAcentral/ncRNAs_Caenorhabditis")

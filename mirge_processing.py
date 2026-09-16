@@ -34,7 +34,7 @@ output_track = cfg["variant_track"] if cfg and cfg.get("variant") == "new_genome
 sheet_name = cfg["mirge_input_sheet"] if cfg else "(D) Structural Features"
 
 input_excel = Path(
-    f"/mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Ziv_Features/"
+    f"/groups/vaksler_group/Isana_Tzah/Charles_seq/Ziv_Features/"
     f"all_remaining_after_ziv_{output_track}.xlsx"
 )
 
@@ -61,7 +61,7 @@ if 'Strand' in maturity_df.columns:
 
 
 # Define the base directory containing all libraries
-# base_dir = '/mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Hofstenia/miRge_output/results/'
+# base_dir = '/groups/vaksler_group/Isana_Tzah/Charles_seq/Hofstenia/miRge_output/results/'
 base_dir = os.path.join(dir, f'results{m18_suffix}/')
 
 # Variables to track the number of miRNAs missing 3p or 5p across all libraries
@@ -481,7 +481,7 @@ enhanced_df = enhanced_df[existing_cols + new_cols_order]
 
 
 # Save the enhanced dataframe
-candidates_dir = f"/mnt/new_groups/vaksler_group/Isana_Tzah/RNAcentral/miRNAs/{SPECIES}/"
+candidates_dir = f"/groups/vaksler_group/Isana_Tzah/RNAcentral/miRNAs/{SPECIES}/"
 output_excel_path = os.path.join(candidates_dir, f'final_candidates_v1{m18_suffix}.xlsx')
 enhanced_df.to_excel(output_excel_path, index=False)
 

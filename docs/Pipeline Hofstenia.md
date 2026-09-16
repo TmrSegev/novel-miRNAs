@@ -1,6 +1,6 @@
 **Hofstenia**
 
-**Scripts directory:** `/mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/`
+**Scripts directory:** `/groups/vaksler_group/Isana_Tzah/novel-miRNAs/`
 
 
 **General information:**  
@@ -28,8 +28,8 @@ https://onedrive.live.com/?authkey=%21AKCytbQPG3KfYmM\&id=746671E5D2B00BDD%21140
 
 	sbatch mapper\_test2.sbatch  
 sbatch mapper\_test3.sbatch  
-	path: /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/bash/  
-output: /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/mapper\_out\_test/  
+	path: /groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/bash/  
+output: /groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/mapper\_out\_test/  
 (per-library: `hofstenia_Seq_vs_genome_{LIBRARY}.arf`, `hofstenia_Seq_collapsed_{LIBRARY}.fasta`)  
 	
 
@@ -40,9 +40,9 @@ output: /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/mappe
    2. **mirDeep2.pl:**  
       Run the mirdeep\_test.sbatch file in each folder separately.  
       path:  
-      cd /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/mirdeep\_out/  
+      cd /groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/mirdeep\_out/  
       **Or new genome command:**  
-      cd /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia\_newGenome/mirdeep\_out/  
+      cd /groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia\_newGenome/mirdeep\_out/  
         
       for dir in AMP1 AMP2 AMP3 DI1 DI2 DI3 EC1 EC2 EC3 GA1 GA2 GA3 HL1 HL2 HL3 IST1 IST2 IST3 PDi1 PDi2 PDi3 PDii1 PDii2 PDii3 PH1 PH2 PH3 PL1 PL2 PL3 SMA1 SMA2 SMA3; do  
         (cd "$dir" && sbatch mirdeep\_test.sbatch)  
@@ -59,27 +59,27 @@ conda activate srnabench
    	makeseqobj.sbatch  
    **Full command:**
 
-   java \-jar ../../sRNAtoolboxDB/exec/makeSeqObj.jar /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/Genome/refs/Hmia\_ref/Hmia.030120.fasta  
+   java \-jar ../../sRNAtoolboxDB/exec/makeSeqObj.jar /groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/Genome/refs/Hmia\_ref/Hmia.030120.fasta  
    
 
    **Command for new genome:**
 
-   java \-jar ../../sRNAtoolboxDB/exec/makeSeqObj.jar /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia\_newGenome/sRNA\_PBonly/hofPB\_v6.FINAL.fa  
+   java \-jar ../../sRNAtoolboxDB/exec/makeSeqObj.jar /groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia\_newGenome/sRNA\_PBonly/hofPB\_v6.FINAL.fa  
      
    path: \<basePath\>/sRNAtoolboxDB/seqOBJ/HofsteniaGenomeIndexed.zip  
 1. Copying indexed genome to sRNAtoolboxDB/index:
 
-		cp \-r /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/Genome/refs/Hmia\_ref/index/. /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/sRNAtoolboxDB/index/
+		cp \-r /groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/Genome/refs/Hmia\_ref/index/. /groups/vaksler\_group/Isana\_Tzah/Charles\_seq/sRNAtoolboxDB/index/
 
 **Command for new genome:**  
-cp \-r /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia\_newGenome/sRNA\_PBonly/index/. /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/sRNAtoolboxDB/index/
+cp \-r /groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia\_newGenome/sRNA\_PBonly/index/. /groups/vaksler\_group/Isana\_Tzah/Charles\_seq/sRNAtoolboxDB/index/
 
 2. The seqobj zip file is created in the genome library. Moving command:   
-   mv /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/Genome/refs/Hmia\_ref/Hmia.zip /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/sRNAtoolboxDB/seqOBJ/  
+   mv /groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/Genome/refs/Hmia\_ref/Hmia.zip /groups/vaksler\_group/Isana\_Tzah/Charles\_seq/sRNAtoolboxDB/seqOBJ/  
    
 
 **Command for new genome:**  
-mv /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia\_newGenome/sRNA\_PBonly/hofPB\_v6.zip /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/sRNAtoolboxDB/seqOBJ/hofsteniaNewGenomeIndexed.zip
+mv /groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia\_newGenome/sRNA\_PBonly/hofPB\_v6.zip /groups/vaksler\_group/Isana\_Tzah/Charles\_seq/sRNAtoolboxDB/seqOBJ/hofsteniaNewGenomeIndexed.zip
 
 8. **sRNAbench.jar** \- one FASTQ per library (submit `sRNAbench_{LIBRARY}.sbatch`). Example EC1:
 
@@ -93,15 +93,15 @@ mv /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia\_newGenome
 	Filter each of the 33 libraries results, trim the sequences and produce a “remaining” file.
 
 **Commands sRNAbench:**  
-cd /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/scripts/
+cd /groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/scripts/
 
 **new genome:**  
-cd /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia\_newGenome/scripts/
+cd /groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia\_newGenome/scripts/
 
 Filtering and creating remaining.csv files (Note: make sure conda activate is off\!):  
 sbatch filter\_hof\_sRNAbench.sbatch
 
-python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/srnabenchPerLibraryFilter.py -i novel.txt -a novel451.txt --filter-mc 10
+python /groups/vaksler_group/Isana_Tzah/novel-miRNAs/srnabenchPerLibraryFilter.py -i novel.txt -a novel451.txt --filter-mc 10
 
 \#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#  
 Instructions: 
@@ -113,11 +113,11 @@ Instructions:
 \#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#
 
 **Uniting, removing overlaps and creating GFF:**  
-python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/srnabenchUniteGFF.py -o Hofstenia_sRNAbench.gff3 -s Hofstenia --base-path /mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq --create-fasta Hofstenia_sRNAbench.fasta --uniquecandidates False
+python /groups/vaksler_group/Isana_Tzah/novel-miRNAs/srnabenchUniteGFF.py -o Hofstenia_sRNAbench.gff3 -s Hofstenia --base-path /groups/vaksler_group/Isana_Tzah/Charles_seq --create-fasta Hofstenia_sRNAbench.fasta --uniquecandidates False
 
 **process\_debugging\_Hofstenia command:**
 
-python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/processGoodCandidates.py --tool sRNAbench -s Hofstenia --base-path /mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq
+python /groups/vaksler_group/Isana_Tzah/novel-miRNAs/processGoodCandidates.py --tool sRNAbench -s Hofstenia --base-path /groups/vaksler_group/Isana_Tzah/Charles_seq
 
 **New genome:** add boolean flag \--new-genome True
 
@@ -125,7 +125,7 @@ python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/processGoodCandidat
 Filtering and creating remaining.csv files (Note: make sure conda activate is off\!):  
 sbatch filter\_hof\_mirdeep.sbatch
 
-python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/mirdeepPerLibraryFilter.py -i *.csv --filter-s 10 --filter-mc 10 --exclude-c 100 
+python /groups/vaksler_group/Isana_Tzah/novel-miRNAs/mirdeepPerLibraryFilter.py -i *.csv --filter-s 10 --filter-mc 10 --exclude-c 100 
 
 \#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#  
 Instructions: 
@@ -136,15 +136,15 @@ Instructions:
 
 \#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#  
 **Uniting, removing overlaps and creating GFF:**  
-python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/mirdeepUniteGFF.py -o Hofstenia_mirdeep.gff3 --create-fasta Hofstenia_mirdeep.fasta -s Hofstenia --base-path /mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq --uniquecandidates False --variant new_genome
+python /groups/vaksler_group/Isana_Tzah/novel-miRNAs/mirdeepUniteGFF.py -o Hofstenia_mirdeep.gff3 --create-fasta Hofstenia_mirdeep.fasta -s Hofstenia --base-path /groups/vaksler_group/Isana_Tzah/Charles_seq --uniquecandidates False --variant new_genome
 
 **process\_debugging\_Hofstenia command:**
 
-python /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/scripts/process\_debugging\_Hofstenia.py \--tool miRDeep (--new-genome)
+python /groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/scripts/process\_debugging\_Hofstenia.py \--tool miRDeep (--new-genome)
 
 	**New genome:** add boolean flag \--new-genome True
 
-path: /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/scripts/
+path: /groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/scripts/
 
 **Filtering Criteria:**  
 There are some pairs of miRNAs that have high scores and have a large overlap \- both should be marked as “overlap”. Marked during the filtering process.
@@ -184,29 +184,29 @@ The one that has higher counts will be marked as “sense” and the other as �
    sed \-i 's/\\t\*$//' Hofstenia\_mirdeep\_pre\_only.gff3  
    sed \-i 's/\\t\*$//' Hofstenia\_sRNAbench\_pre\_only.gff3  
      
-   path: /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/scripts/  
+   path: /groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/scripts/  
      
 1. Run intersections.sbatch file.  (new genome in Hofstenia\_newGenome)  
-   Path: /mnt/new\_groups/vaksler\_group/Isana\_Tzah/RNAcentral/miRNAs/Hofstenia/  
+   Path: /groups/vaksler\_group/Isana\_Tzah/RNAcentral/miRNAs/Hofstenia/  
    The commands inside:  
    mirdeep-mirdeep bedtools intersect command:  
-   bedtools intersect \-wao \-loj \-f 0.4 \-a /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/scripts/Hofstenia\_mirdeep\_pre\_only.gff3 \-b /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/scripts/Hofstenia\_mirdeep\_pre\_only.gff3 \> miRdeep\_intersect.bed  
+   bedtools intersect \-wao \-loj \-f 0.4 \-a /groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/scripts/Hofstenia\_mirdeep\_pre\_only.gff3 \-b /groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/scripts/Hofstenia\_mirdeep\_pre\_only.gff3 \> miRdeep\_intersect.bed  
      
    sRNAbench-sRNAbench bedtools intersect command:  
-   bedtools intersect \-wao \-loj \-f 0.4 \-a /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/scripts/Hofstenia\_sRNAbench\_pre\_only.gff3 \-b /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/scripts/Hofstenia\_sRNAbench\_pre\_only.gff3 \> sRNAbench\_intersect.bed  
+   bedtools intersect \-wao \-loj \-f 0.4 \-a /groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/scripts/Hofstenia\_sRNAbench\_pre\_only.gff3 \-b /groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/scripts/Hofstenia\_sRNAbench\_pre\_only.gff3 \> sRNAbench\_intersect.bed  
 2. Script commands for marking as overlaps or sense/antisense:  
    mirdeep:  
-   python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/overlapSenseAnti.py \--intersections-table /mnt/new\_groups/vaksler\_group/Isana\_Tzah/RNAcentral/miRNAs/Hofstenia/miRdeep\_intersect.bed \--gff /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/scripts/Hofstenia\_mirdeep\_pre\_only.gff3  
+   python /groups/vaksler_group/Isana_Tzah/novel-miRNAs/overlapSenseAnti.py \--intersections-table /groups/vaksler\_group/Isana\_Tzah/RNAcentral/miRNAs/Hofstenia/miRdeep\_intersect.bed \--gff /groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/scripts/Hofstenia\_mirdeep\_pre\_only.gff3  
      
    sRNAbench:  
-   python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/overlapSenseAnti.py \--intersections-table /mnt/new\_groups/vaksler\_group/Isana\_Tzah/RNAcentral/miRNAs/Hofstenia/sRNAbench\_intersect.bed \--gff /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/scripts/Hofstenia\_sRNAbench\_pre\_only.gff3  
+   python /groups/vaksler_group/Isana_Tzah/novel-miRNAs/overlapSenseAnti.py \--intersections-table /groups/vaksler\_group/Isana\_Tzah/RNAcentral/miRNAs/Hofstenia/sRNAbench\_intersect.bed \--gff /groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/scripts/Hofstenia\_sRNAbench\_pre\_only.gff3  
      
    **New genome:**  
    mirdeep:  
-   python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/overlapSenseAnti.py \--intersections-table /mnt/new\_groups/vaksler\_group/Isana\_Tzah/RNAcentral/miRNAs/Hofstenia\_newGenome/miRdeep\_intersect.bed \--gff /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia\_newGenome/scripts/Hofstenia\_mirdeep\_pre\_only.gff3  
+   python /groups/vaksler_group/Isana_Tzah/novel-miRNAs/overlapSenseAnti.py \--intersections-table /groups/vaksler\_group/Isana\_Tzah/RNAcentral/miRNAs/Hofstenia\_newGenome/miRdeep\_intersect.bed \--gff /groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia\_newGenome/scripts/Hofstenia\_mirdeep\_pre\_only.gff3  
      
    sRNAbench:  
-   python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/overlapSenseAnti.py \--intersections-table /mnt/new\_groups/vaksler\_group/Isana\_Tzah/RNAcentral/miRNAs/Hofstenia\_newGenome/sRNAbench\_intersect.bed \--gff /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia\_newGenome/scripts/Hofstenia\_sRNAbench\_pre\_only.gff3  
+   python /groups/vaksler_group/Isana_Tzah/novel-miRNAs/overlapSenseAnti.py \--intersections-table /groups/vaksler\_group/Isana\_Tzah/RNAcentral/miRNAs/Hofstenia\_newGenome/sRNAbench\_intersect.bed \--gff /groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia\_newGenome/scripts/Hofstenia\_sRNAbench\_pre\_only.gff3  
      
    
 
@@ -214,7 +214,7 @@ The output changes the pre\_only gff files in the respective folders.
 
 **Intersecting miRdeep & sRNAbench & Known Results (bedtools)**  
 Finding candidates that are part of the intersection between two tools or known miRNAs.  
-path: /mnt/new\_groups/vaksler\_group/Isana\_Tzah/RNAcentral/miRNAs/  
+path: /groups/vaksler\_group/Isana\_Tzah/RNAcentral/miRNAs/  
 All commands documented in \<path\>/Command.txt
 
 1. When applying intersect force use “-s” for strandness, \-f for minimum overlap.  
@@ -236,7 +236,7 @@ All commands documented in \<path\>/Command.txt
 
 1)   **Genome indexing** by **STAR** \- command:
 
-   STAR \--runMode genomeGenerate \--runThreadN 16 \--genomeDir ../STAR/genome\_index/ \--genomeSAindexNbases 11  \--genomeFastaFiles /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/Genome/refs/Hmia\_ref/Hmia.030120.fasta
+   STAR \--runMode genomeGenerate \--runThreadN 16 \--genomeDir ../STAR/genome\_index/ \--genomeSAindexNbases 11  \--genomeFastaFiles /groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/Genome/refs/Hmia\_ref/Hmia.030120.fasta
 
    
 
@@ -248,66 +248,66 @@ All commands documented in \<path\>/Command.txt
 
 2)  **Align** each library FASTQ **to genome** by **STAR** \- separate command for each library:
 
-   STAR \--genomeDir ../STAR/genome\_index/ \--readFilesIn /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/Fastq/Hmia\_annotation/filtered/\<Library\>.filtered.fastq \--outFileNamePrefix ../STAR/align\_to\_genome/\<Library\>/Hofstenia\_ \--outFilterMultimapNmax 20 \--runThreadN 16 \--outSAMtype SAM
+   STAR \--genomeDir ../STAR/genome\_index/ \--readFilesIn /groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/Fastq/Hmia\_annotation/filtered/\<Library\>.filtered.fastq \--outFileNamePrefix ../STAR/align\_to\_genome/\<Library\>/Hofstenia\_ \--outFilterMultimapNmax 20 \--runThreadN 16 \--outSAMtype SAM
 
-	All commands in /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/bash/star\_align\<1 or 2 or 3\>.sbatch
+	All commands in /groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/bash/star\_align\<1 or 2 or 3\>.sbatch
 
 3) **featureCounts** for **sRNAbench gff3 & miRDeep gff3** \- command (run in bash)  
-   path: /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/bash/:  
+   path: /groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/bash/:  
      
    miRdeep:
 
-featureCounts \-t miRNA \-g ID \-O \-s 1 \-M \-a /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/scripts/Hofstenia\_mirdeep.gff3 \-o ../counts\_sep/miRNA\_miRdeep\_counts.txt ../STAR/align\_to\_genome/AMP1/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/AMP2/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/AMP3/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/DI1/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/DI2/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/DI3/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/EC1/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/EC2/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/EC3/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/GA1/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/GA2/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/GA3/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/HL1/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/HL2/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/HL3/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/IST1/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/IST2/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/IST3/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/PDi1/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/PDi2/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/PDi3/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/PDii1/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/PDii2/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/PDii3/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/PH1/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/PH2/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/PH3/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/PL1/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/PL2/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/PL3/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/SMA1/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/SMA2/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/SMA3/Hofstenia\_Aligned.out.sam
+featureCounts \-t miRNA \-g ID \-O \-s 1 \-M \-a /groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/scripts/Hofstenia\_mirdeep.gff3 \-o ../counts\_sep/miRNA\_miRdeep\_counts.txt ../STAR/align\_to\_genome/AMP1/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/AMP2/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/AMP3/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/DI1/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/DI2/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/DI3/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/EC1/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/EC2/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/EC3/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/GA1/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/GA2/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/GA3/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/HL1/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/HL2/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/HL3/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/IST1/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/IST2/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/IST3/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/PDi1/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/PDi2/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/PDi3/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/PDii1/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/PDii2/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/PDii3/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/PH1/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/PH2/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/PH3/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/PL1/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/PL2/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/PL3/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/SMA1/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/SMA2/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/SMA3/Hofstenia\_Aligned.out.sam
 
 	sRNAbench:
 
-featureCounts \-t miRNA \-g ID \-O \-s 1 \-M \-a /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/scripts/Hofstenia\_sRNAbench.gff3 \-o ../counts\_sep/miRNA\_sRNAbench\_counts.txt ../STAR/align\_to\_genome/AMP1/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/AMP2/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/AMP3/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/DI1/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/DI2/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/DI3/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/EC1/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/EC2/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/EC3/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/GA1/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/GA2/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/GA3/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/HL1/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/HL2/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/HL3/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/IST1/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/IST2/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/IST3/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/PDi1/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/PDi2/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/PDi3/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/PDii1/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/PDii2/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/PDii3/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/PH1/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/PH2/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/PH3/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/PL1/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/PL2/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/PL3/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/SMA1/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/SMA2/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/SMA3/Hofstenia\_Aligned.out.sam
+featureCounts \-t miRNA \-g ID \-O \-s 1 \-M \-a /groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/scripts/Hofstenia\_sRNAbench.gff3 \-o ../counts\_sep/miRNA\_sRNAbench\_counts.txt ../STAR/align\_to\_genome/AMP1/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/AMP2/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/AMP3/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/DI1/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/DI2/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/DI3/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/EC1/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/EC2/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/EC3/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/GA1/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/GA2/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/GA3/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/HL1/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/HL2/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/HL3/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/IST1/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/IST2/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/IST3/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/PDi1/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/PDi2/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/PDi3/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/PDii1/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/PDii2/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/PDii3/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/PH1/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/PH2/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/PH3/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/PL1/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/PL2/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/PL3/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/SMA1/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/SMA2/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/SMA3/Hofstenia\_Aligned.out.sam
 
 **For incluster ratio calculation:**
 
 Add flanks of 10bp to pre miRNAs in the GFF:  
-python /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/scripts/add\_flank\_to\_GFF.py (--new-genome)
+python /groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/scripts/add\_flank\_to\_GFF.py (--new-genome)
 
 miRdeep:
 
-featureCounts \-F GFF \-t pre\_miRNA \-g ID \-O \-s 1 \-M \-a /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/scripts/Hofstenia\_mirdeep\_flanked\_pre.gff3 \-o ../counts\_sep/miRNA\_miRdeep\_counts\_flanked.txt ../STAR/align\_to\_genome/AMP1/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/AMP2/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/AMP3/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/DI1/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/DI2/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/DI3/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/EC1/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/EC2/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/EC3/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/GA1/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/GA2/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/GA3/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/HL1/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/HL2/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/HL3/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/IST1/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/IST2/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/IST3/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/PDi1/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/PDi2/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/PDi3/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/PDii1/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/PDii2/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/PDii3/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/PH1/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/PH2/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/PH3/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/PL1/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/PL2/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/PL3/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/SMA1/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/SMA2/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/SMA3/Hofstenia\_Aligned.out.sam
+featureCounts \-F GFF \-t pre\_miRNA \-g ID \-O \-s 1 \-M \-a /groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/scripts/Hofstenia\_mirdeep\_flanked\_pre.gff3 \-o ../counts\_sep/miRNA\_miRdeep\_counts\_flanked.txt ../STAR/align\_to\_genome/AMP1/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/AMP2/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/AMP3/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/DI1/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/DI2/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/DI3/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/EC1/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/EC2/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/EC3/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/GA1/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/GA2/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/GA3/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/HL1/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/HL2/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/HL3/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/IST1/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/IST2/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/IST3/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/PDi1/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/PDi2/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/PDi3/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/PDii1/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/PDii2/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/PDii3/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/PH1/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/PH2/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/PH3/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/PL1/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/PL2/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/PL3/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/SMA1/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/SMA2/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/SMA3/Hofstenia\_Aligned.out.sam
 
-featureCounts \-F GFF \-t pre\_miRNA \-g ID \-O \-s 1 \-M \-a /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/scripts/Hofstenia\_sRNAbench\_flanked\_pre.gff3 \-o ../counts\_sep/miRNA\_sRNAbench\_counts\_flanked.txt ../STAR/align\_to\_genome/AMP1/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/AMP2/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/AMP3/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/DI1/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/DI2/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/DI3/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/EC1/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/EC2/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/EC3/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/GA1/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/GA2/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/GA3/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/HL1/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/HL2/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/HL3/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/IST1/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/IST2/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/IST3/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/PDi1/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/PDi2/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/PDi3/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/PDii1/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/PDii2/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/PDii3/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/PH1/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/PH2/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/PH3/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/PL1/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/PL2/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/PL3/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/SMA1/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/SMA2/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/SMA3/Hofstenia\_Aligned.out.sam
+featureCounts \-F GFF \-t pre\_miRNA \-g ID \-O \-s 1 \-M \-a /groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/scripts/Hofstenia\_sRNAbench\_flanked\_pre.gff3 \-o ../counts\_sep/miRNA\_sRNAbench\_counts\_flanked.txt ../STAR/align\_to\_genome/AMP1/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/AMP2/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/AMP3/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/DI1/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/DI2/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/DI3/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/EC1/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/EC2/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/EC3/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/GA1/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/GA2/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/GA3/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/HL1/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/HL2/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/HL3/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/IST1/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/IST2/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/IST3/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/PDi1/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/PDi2/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/PDi3/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/PDii1/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/PDii2/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/PDii3/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/PH1/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/PH2/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/PH3/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/PL1/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/PL2/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/PL3/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/SMA1/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/SMA2/Hofstenia\_Aligned.out.sam ../STAR/align\_to\_genome/SMA3/Hofstenia\_Aligned.out.sam
 
 **Generate Intersections Table**
 
-1. Path: /mnt/new\_groups/vaksler\_group/Isana\_Tzah/RNAcentral/miRNAs/Hofstenia  
+1. Path: /groups/vaksler\_group/Isana\_Tzah/RNAcentral/miRNAs/Hofstenia  
 2. Command for script:  
-   python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/intersectionsTable.py \-s Hofstenia \--mirdeep-inter-table /mnt/new\_groups/vaksler\_group/Isana\_Tzah/RNAcentral/miRNAs/Hofstenia/miRdeep\_sRNAbench\_intersect.bed \--sRNAbench-inter-table /mnt/new\_groups/vaksler\_group/Isana\_Tzah/RNAcentral/miRNAs/Hofstenia/sRNAbench\_miRdeep\_intersect.bed \--fc-mirdeep /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/counts\_sep/miRNA\_miRdeep\_counts.txt \--fc-pre-mirdeep /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/counts\_sep/miRNA\_miRdeep\_counts\_flanked.txt \--fc-sRNAbench /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/counts\_sep/miRNA\_sRNAbench\_counts.txt \--fc-pre-sRNAbench /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/counts\_sep/miRNA\_sRNAbench\_counts\_flanked.txt \-rm /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/scripts/mirdeep\_all\_remaining\_filtered.csv \-rs /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/scripts/sRNAbench\_all\_remaining\_filtered.csv \-l EC1,EC2,EC3,GA1,GA2,GA3,DI1,DI2,DI3,PDi1,PDi2,PDi3,PDii1,PDii2,PDii3,PL1,PL2,PL3,PH1,PH2,PH3,HL1,HL2,HL3,IST1,IST2,IST3,AMP1,AMP2,AMP3,SMA1,SMA2,SMA3 \--sum-fc-thres 100  
+   python /groups/vaksler_group/Isana_Tzah/novel-miRNAs/intersectionsTable.py \-s Hofstenia \--mirdeep-inter-table /groups/vaksler\_group/Isana\_Tzah/RNAcentral/miRNAs/Hofstenia/miRdeep\_sRNAbench\_intersect.bed \--sRNAbench-inter-table /groups/vaksler\_group/Isana\_Tzah/RNAcentral/miRNAs/Hofstenia/sRNAbench\_miRdeep\_intersect.bed \--fc-mirdeep /groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/counts\_sep/miRNA\_miRdeep\_counts.txt \--fc-pre-mirdeep /groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/counts\_sep/miRNA\_miRdeep\_counts\_flanked.txt \--fc-sRNAbench /groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/counts\_sep/miRNA\_sRNAbench\_counts.txt \--fc-pre-sRNAbench /groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/counts\_sep/miRNA\_sRNAbench\_counts\_flanked.txt \-rm /groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/scripts/mirdeep\_all\_remaining\_filtered.csv \-rs /groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/scripts/sRNAbench\_all\_remaining\_filtered.csv \-l EC1,EC2,EC3,GA1,GA2,GA3,DI1,DI2,DI3,PDi1,PDi2,PDi3,PDii1,PDii2,PDii3,PL1,PL2,PL3,PH1,PH2,PH3,HL1,HL2,HL3,IST1,IST2,IST3,AMP1,AMP2,AMP3,SMA1,SMA2,SMA3 \--sum-fc-thres 100  
    Output:  
    intersections\_table\_Hofstenia.xlsx  
      
    **New genome command:**  
-   python  /mnt/new\_groups/vaksler\_group/Isana\_Tzah/novel-miRNAs/intersectionsTable.py \-s Hofstenia \--mirdeep-inter-table /mnt/new\_groups/vaksler\_group/Isana\_Tzah/RNAcentral/miRNAs/Hofstenia\_newGenome/miRdeep\_sRNAbench\_intersect.bed \--sRNAbench-inter-table /mnt/new\_groups/vaksler\_group/Isana\_Tzah/RNAcentral/miRNAs/Hofstenia\_newGenome/sRNAbench\_miRdeep\_intersect.bed \--fc-mirdeep /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia\_newGenome/counts\_sep/miRNA\_miRdeep\_counts.txt \--fc-pre-mirdeep /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia\_newGenome/counts\_sep/miRNA\_miRdeep\_counts\_flanked.txt \--fc-sRNAbench /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia\_newGenome/counts\_sep/miRNA\_sRNAbench\_counts.txt \--fc-pre-sRNAbench /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia\_newGenome/counts\_sep/miRNA\_sRNAbench\_counts\_flanked.txt \-rm /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia\_newGenome/scripts/mirdeep\_all\_remaining\_filtered.csv \-rs /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia\_newGenome/scripts/sRNAbench\_all\_remaining\_filtered.csv \-l EC1,EC2,EC3,GA1,GA2,GA3,DI1,DI2,DI3,PDi1,PDi2,PDi3,PDii1,PDii2,PDii3,PL1,PL2,PL3,PH1,PH2,PH3,HL1,HL2,HL3,IST1,IST2,IST3,AMP1,AMP2,AMP3,SMA1,SMA2,SMA3 \--sum-fc-thres 100 \--new-genome
+   python  /groups/vaksler\_group/Isana\_Tzah/novel-miRNAs/intersectionsTable.py \-s Hofstenia \--mirdeep-inter-table /groups/vaksler\_group/Isana\_Tzah/RNAcentral/miRNAs/Hofstenia\_newGenome/miRdeep\_sRNAbench\_intersect.bed \--sRNAbench-inter-table /groups/vaksler\_group/Isana\_Tzah/RNAcentral/miRNAs/Hofstenia\_newGenome/sRNAbench\_miRdeep\_intersect.bed \--fc-mirdeep /groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia\_newGenome/counts\_sep/miRNA\_miRdeep\_counts.txt \--fc-pre-mirdeep /groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia\_newGenome/counts\_sep/miRNA\_miRdeep\_counts\_flanked.txt \--fc-sRNAbench /groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia\_newGenome/counts\_sep/miRNA\_sRNAbench\_counts.txt \--fc-pre-sRNAbench /groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia\_newGenome/counts\_sep/miRNA\_sRNAbench\_counts\_flanked.txt \-rm /groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia\_newGenome/scripts/mirdeep\_all\_remaining\_filtered.csv \-rs /groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia\_newGenome/scripts/sRNAbench\_all\_remaining\_filtered.csv \-l EC1,EC2,EC3,GA1,GA2,GA3,DI1,DI2,DI3,PDi1,PDi2,PDi3,PDii1,PDii2,PDii3,PL1,PL2,PL3,PH1,PH2,PH3,HL1,HL2,HL3,IST1,IST2,IST3,AMP1,AMP2,AMP3,SMA1,SMA2,SMA3 \--sum-fc-thres 100 \--new-genome
 
 **Generate all candidates fasta**
 
-path:  /mnt/new\_groups/vaksler\_group/Isana\_Tzah/RNAcentral/miRNAs/Hofstenia/
+path:  /groups/vaksler\_group/Isana\_Tzah/RNAcentral/miRNAs/Hofstenia/
 
 **command:**
 
-python /mnt/new\_groups/vaksler\_group/Isana\_Tzah/novel-miRNAs/allCandidatesFasta.py \--all /mnt/new\_groups/vaksler\_group/Isana\_Tzah/RNAcentral/miRNAs/Hofstenia/intersections\_table\_Hofstenia.xlsx \-s Hofstenia
+python /groups/vaksler\_group/Isana\_Tzah/novel-miRNAs/allCandidatesFasta.py \--all /groups/vaksler\_group/Isana\_Tzah/RNAcentral/miRNAs/Hofstenia/intersections\_table\_Hofstenia.xlsx \-s Hofstenia
 
 **New genome command:**
 
-python /mnt/new\_groups/vaksler\_group/Isana\_Tzah/novel-miRNAs/allCandidatesFasta.py \--all /mnt/new\_groups/vaksler\_group/Isana\_Tzah/RNAcentral/miRNAs/Hofstenia\_newGenome/intersections\_table\_Hofstenia.xlsx \-s Hofstenia \--new-genome
+python /groups/vaksler\_group/Isana\_Tzah/novel-miRNAs/allCandidatesFasta.py \--all /groups/vaksler\_group/Isana\_Tzah/RNAcentral/miRNAs/Hofstenia\_newGenome/intersections\_table\_Hofstenia.xlsx \-s Hofstenia \--new-genome
 
 **Feature Engineering with Ziv’s code**
 
-path: /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Ziv\_Features
+path: /groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Ziv\_Features
 
 **command:**
 
-python /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Ziv\_Features/Ziv\_feature\_SOS.py \--precursors /mnt/new\_groups/vaksler\_group/Isana\_Tzah/RNAcentral/miRNAs/Hofstenia/all\_candidates\_hairpin.fasta \--mature /mnt/new\_groups/vaksler\_group/Isana\_Tzah/RNAcentral/miRNAs/Hofstenia/all\_candidates\_mature.fasta \--star /mnt/new\_groups/vaksler\_group/Isana\_Tzah/RNAcentral/miRNAs/Hofstenia/all\_candidates\_star.fasta \--species Hofstenia \--all-remaining /mnt/new\_groups/vaksler\_group/Isana\_Tzah/RNAcentral/miRNAs/Hofstenia/intersections\_table\_Hofstenia.xlsx
+python /groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Ziv\_Features/Ziv\_feature\_SOS.py \--precursors /groups/vaksler\_group/Isana\_Tzah/RNAcentral/miRNAs/Hofstenia/all\_candidates\_hairpin.fasta \--mature /groups/vaksler\_group/Isana\_Tzah/RNAcentral/miRNAs/Hofstenia/all\_candidates\_mature.fasta \--star /groups/vaksler\_group/Isana\_Tzah/RNAcentral/miRNAs/Hofstenia/all\_candidates\_star.fasta \--species Hofstenia \--all-remaining /groups/vaksler\_group/Isana\_Tzah/RNAcentral/miRNAs/Hofstenia/intersections\_table\_Hofstenia.xlsx
 
 **New genome command:**
 
-python /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Ziv\_Features/Ziv\_feature\_SOS.py \--precursors /mnt/new\_groups/vaksler\_group/Isana\_Tzah/RNAcentral/miRNAs/Hofstenia\_newGenome/all\_candidates\_hairpin.fasta \--mature /mnt/new\_groups/vaksler\_group/Isana\_Tzah/RNAcentral/miRNAs/Hofstenia\_newGenome/all\_candidates\_mature.fasta \--star /mnt/new\_groups/vaksler\_group/Isana\_Tzah/RNAcentral/miRNAs/Hofstenia\_newGenome/all\_candidates\_star.fasta \--species Hofstenia\_newGenome \--all-remaining /mnt/new\_groups/vaksler\_group/Isana\_Tzah/RNAcentral/miRNAs/Hofstenia\_newGenome/intersections\_table\_Hofstenia.xlsx \--new-genome
+python /groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Ziv\_Features/Ziv\_feature\_SOS.py \--precursors /groups/vaksler\_group/Isana\_Tzah/RNAcentral/miRNAs/Hofstenia\_newGenome/all\_candidates\_hairpin.fasta \--mature /groups/vaksler\_group/Isana\_Tzah/RNAcentral/miRNAs/Hofstenia\_newGenome/all\_candidates\_mature.fasta \--star /groups/vaksler\_group/Isana\_Tzah/RNAcentral/miRNAs/Hofstenia\_newGenome/all\_candidates\_star.fasta \--species Hofstenia\_newGenome \--all-remaining /groups/vaksler\_group/Isana\_Tzah/RNAcentral/miRNAs/Hofstenia\_newGenome/intersections\_table\_Hofstenia.xlsx \--new-genome
 
 **Feature Engineering Threshold parameters**
 
@@ -315,19 +315,19 @@ Calculating the thresholds for filtering less likely candidates, according to th
 
 Create all fasta files for miRGeneDB
 
-python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/mirgenedbThresholds.py
+python /groups/vaksler_group/Isana_Tzah/novel-miRNAs/mirgenedbThresholds.py
 
-path: /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/mirbase\_data/
+path: /groups/vaksler\_group/Isana\_Tzah/Charles\_seq/mirbase\_data/
 
 Generate structural features for mirGeneDB
 
-path: /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Ziv\_Features/
+path: /groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Ziv\_Features/
 
 Run the sbatch file “run.sbatch”.
 
 The command inside the file:
 
-python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/Ziv_feature_SOS.py \--precursors /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/mirgenedb\_data\_v3/ALL\_mirgenedb\_hairpin.fasta \--mature /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/mirgenedb\_data\_v3/ALL\_mirgenedb\_mature.fasta \--star /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/mirgenedb\_data\_v3/ALL\_mirgenedb\_star.fasta \--species miRGeneDB
+python /groups/vaksler_group/Isana_Tzah/novel-miRNAs/Ziv_feature_SOS.py \--precursors /groups/vaksler\_group/Isana\_Tzah/Charles\_seq/mirgenedb\_data\_v3/ALL\_mirgenedb\_hairpin.fasta \--mature /groups/vaksler\_group/Isana\_Tzah/Charles\_seq/mirgenedb\_data\_v3/ALL\_mirgenedb\_mature.fasta \--star /groups/vaksler\_group/Isana\_Tzah/Charles\_seq/mirgenedb\_data\_v3/ALL\_mirgenedb\_star.fasta \--species miRGeneDB
 
 This script will create temp.csv.
 
@@ -335,7 +335,7 @@ Plot figures
 
 After that run:
 
-python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/plot_series.py
+python /groups/vaksler_group/Isana_Tzah/novel-miRNAs/plot_series.py
 
 to plot the plots from temp.csv
 
@@ -369,11 +369,11 @@ max\_one\_mer\_hairpin min: 0.2542372881355932 max: 0.4098360655737705 lower thr
 
 **Statistical Analysis**
 
-path: /mnt/new\_groups/vaksler\_group/Isana\_Tzah/RNAcentral/miRNAs/Hofstenia/
+path: /groups/vaksler\_group/Isana\_Tzah/RNAcentral/miRNAs/Hofstenia/
 
 **command:**
 
-python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/statistics.py \--all /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Ziv\_Features/all\_remaining\_after\_ziv\_Hofstenia.xlsx \-s Hofstenia
+python /groups/vaksler_group/Isana_Tzah/novel-miRNAs/statistics.py \--all /groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Ziv\_Features/all\_remaining\_after\_ziv\_Hofstenia.xlsx \-s Hofstenia
 
 The statistics.py script also creates clusters of miRNAs that are within a distance of 10000 bases from each other, on the same strand.
 
@@ -387,11 +387,11 @@ hofstenia\_clusters.csv \- only the candidates and their info that are part of a
 
 **For Hofstenia only:**
 
-path: /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/Expression\_dynamics
+path: /groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/Expression\_dynamics
 
 **command:** 
 
-python /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/expression_dynamics.py \--all /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Ziv\_Features/all\_remaining\_after\_ziv\_Hofstenia.xlsx \--seed GAGGUAG \--libraries EC1,EC2,EC3,GA1,GA2,GA3,DI1,DI2,DI3,PDi1,PDi2,PDi3,PDii1,PDii2,PDii3,PL1,PL2,PL3,PH1,PH2,PH3,HL1,HL2,HL3,IST1,IST2,IST3,AMP1,AMP2,AMP3,SMA1,SMA2,SMA3 \--time early\_cleavage,gastrula,dimple,pos\_dimple\_phase\_i,post\_dimple\_phase\_ii,pill\_&\_post\_pill,pigmented,pre\_hatchling,hatchling,"in\_situ"\_size\_juvenile,"amputation\_\&RNAi"\_size\_juvenile,sexually\_matured\_adult \-s Hofstenia
+python /groups/vaksler_group/Isana_Tzah/novel-miRNAs/expression_dynamics.py \--all /groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Ziv\_Features/all\_remaining\_after\_ziv\_Hofstenia.xlsx \--seed GAGGUAG \--libraries EC1,EC2,EC3,GA1,GA2,GA3,DI1,DI2,DI3,PDi1,PDi2,PDi3,PDii1,PDii2,PDii3,PL1,PL2,PL3,PH1,PH2,PH3,HL1,HL2,HL3,IST1,IST2,IST3,AMP1,AMP2,AMP3,SMA1,SMA2,SMA3 \--time early\_cleavage,gastrula,dimple,pos\_dimple\_phase\_i,post\_dimple\_phase\_ii,pill\_&\_post\_pill,pigmented,pre\_hatchling,hatchling,"in\_situ"\_size\_juvenile,"amputation\_\&RNAi"\_size\_juvenile,sexually\_matured\_adult \-s Hofstenia
 
 **miRge**
 
@@ -401,51 +401,51 @@ The commands below were used either for Oscar’s files, or for the generated fi
 
 **Generate new fasta for remaining candidates after Ziv:**
 
-python /mnt/new\_groups/vaksler\_group/Isana\_Tzah/novel-miRNAs/allCandidatesFasta.py \--all /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Ziv\_Features/all\_remaining\_after\_ziv\_Hofstenia.xlsx \-s Hofstenia \--sheetname "(A) Unfiltered" \--output /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/miRge\_after\_Ziv/
+python /groups/vaksler\_group/Isana\_Tzah/novel-miRNAs/allCandidatesFasta.py \--all /groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Ziv\_Features/all\_remaining\_after\_ziv\_Hofstenia.xlsx \-s Hofstenia \--sheetname "(A) Unfiltered" \--output /groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/miRge\_after\_Ziv/
 
 **New genome:**
 
-python /mnt/new\_groups/vaksler\_group/Isana\_Tzah/novel-miRNAs/allCandidatesFasta.py \--all /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Ziv\_Features/all\_remaining\_after\_ziv\_Hofstenia\_newGenome.xlsx \-s Hofstenia \--sheetname "(A) Unfiltered" \--output /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia\_newGenome/miRge\_after\_Ziv/ 
+python /groups/vaksler\_group/Isana\_Tzah/novel-miRNAs/allCandidatesFasta.py \--all /groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Ziv\_Features/all\_remaining\_after\_ziv\_Hofstenia\_newGenome.xlsx \-s Hofstenia \--sheetname "(A) Unfiltered" \--output /groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia\_newGenome/miRge\_after\_Ziv/ 
 
 **Create files necessary for mirge:**
 
-python 	/mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/scripts/create\_combined\_mature\_star.py \--base\_path /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/miRge\_after\_Ziv/
+python 	/groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/scripts/create\_combined\_mature\_star.py \--base\_path /groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/miRge\_after\_Ziv/
 
-python /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/scripts/generate\_miRNA\_GFF.py \--species Hofstenia
+python /groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/scripts/generate\_miRNA\_GFF.py \--species Hofstenia
 
 **new genome:**
 
-python 	/mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/scripts/create\_combined\_mature\_star.py \--base\_path /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia\_newGenome/miRge\_after\_Ziv/
+python 	/groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/scripts/create\_combined\_mature\_star.py \--base\_path /groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia\_newGenome/miRge\_after\_Ziv/
 
-python /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/scripts/generate\_miRNA\_GFF.py \--species Hofstenia\_newGenome
+python /groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/scripts/generate\_miRNA\_GFF.py \--species Hofstenia\_newGenome
 
 **(If using Oscar’s files:) Reformat Oscar’s GFF files for mirge-build:**
 
-python /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/scripts/reformat\_GFF.py \--input /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/miRge/miRNA.250203.gff \--output /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/miRge/miRNA\_250203\_reformatted.gff3 \--oscar
+python /groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/scripts/reformat\_GFF.py \--input /groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/miRge/miRNA.250203.gff \--output /groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/miRge/miRNA\_250203\_reformatted.gff3 \--oscar
 
 **Calculating 5p heterogeneity**
 
-Command to run all: /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/miRge/run\_miRge.sh
+Command to run all: /groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/miRge/run\_miRge.sh
 
-Or: /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/miRge\_after\_Ziv/run\_miRge.sh
+Or: /groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/miRge\_after\_Ziv/run\_miRge.sh
 
 Or one by one (command for after ziv inside run\_miRge.sh in its folder):
 
 conda activate mirge\_env
 
-cd /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/miRge\_output/
+cd /groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/miRge\_output/
 
-miRge-build   \-g /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/Genome/refs/Hmia\_ref/Hmia.030120.fasta   \-mmf /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/miRge/combined\_mature\_star\_1050.fa   \-hmf /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/miRge/pre\_miR\_1050\_no\_pre\_in\_seqid.fa   \-mtf /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/miRge/tRNA.fa   \-ptf /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/miRge/tRNA.fa   \-snorf /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/miRge/snoRNA.fa   \-rrf /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/miRge/rRNA.fa   \-ncof /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/miRge/other\_ncRNA.fa   \-mrf /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/miRge/mRNA.fasta   \-agff /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/miRge/miRNA\_no\_pre\_reformatted\_v4.gff3  \-db miRBase   \-on Hofstenia   \-cpu 4
+miRge-build   \-g /groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/Genome/refs/Hmia\_ref/Hmia.030120.fasta   \-mmf /groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/miRge/combined\_mature\_star\_1050.fa   \-hmf /groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/miRge/pre\_miR\_1050\_no\_pre\_in\_seqid.fa   \-mtf /groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/miRge/tRNA.fa   \-ptf /groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/miRge/tRNA.fa   \-snorf /groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/miRge/snoRNA.fa   \-rrf /groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/miRge/rRNA.fa   \-ncof /groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/miRge/other\_ncRNA.fa   \-mrf /groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/miRge/mRNA.fasta   \-agff /groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/miRge/miRNA\_no\_pre\_reformatted\_v4.gff3  \-db miRBase   \-on Hofstenia   \-cpu 4
 
 **New genome:**
 
-cd /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia\_newGenome/miRge\_after\_Ziv\_output/
+cd /groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia\_newGenome/miRge\_after\_Ziv\_output/
 
-miRge-build   \-g /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia\_newGenome/sRNA\_PBonly/hofPB\_v6.FINAL.fa   \-mmf /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia\_newGenome/miRge\_after\_Ziv/combined\_mature\_star.fasta   \-hmf /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia\_newGenome/miRge\_after\_Ziv/all\_candidates\_hairpin\_T.fasta   \-mtf /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/miRge\_after\_Ziv/tRNA.fa   \-ptf /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/miRge\_after\_Ziv/tRNA.fa   \-snorf /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/miRge\_after\_Ziv/snoRNA.fa   \-rrf /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/miRge\_after\_Ziv/rRNA.fa   \-ncof /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/miRge\_after\_Ziv/other\_ncRNA.fa   \-mrf /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/miRge\_after\_Ziv/mRNA.fasta   \-agff /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia\_newGenome/miRge\_after\_Ziv/miRNA\_candidates.gff3  \-db miRBase   \-on Hofstenia   \-cpu 4
+miRge-build   \-g /groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia\_newGenome/sRNA\_PBonly/hofPB\_v6.FINAL.fa   \-mmf /groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia\_newGenome/miRge\_after\_Ziv/combined\_mature\_star.fasta   \-hmf /groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia\_newGenome/miRge\_after\_Ziv/all\_candidates\_hairpin\_T.fasta   \-mtf /groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/miRge\_after\_Ziv/tRNA.fa   \-ptf /groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/miRge\_after\_Ziv/tRNA.fa   \-snorf /groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/miRge\_after\_Ziv/snoRNA.fa   \-rrf /groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/miRge\_after\_Ziv/rRNA.fa   \-ncof /groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/miRge\_after\_Ziv/other\_ncRNA.fa   \-mrf /groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/miRge\_after\_Ziv/mRNA.fasta   \-agff /groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia\_newGenome/miRge\_after\_Ziv/miRNA\_candidates.gff3  \-db miRBase   \-on Hofstenia   \-cpu 4
 
 **Run miRge:**
 
-cd /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/bash
+cd /groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/bash
 
 sbatch mirge.sbatch
 
@@ -455,23 +455,23 @@ sbatch mirge\_after\_ziv\_m18.sbatch
 
 **Process miRge results for each library:**
 
-python /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/scripts/mirge\_processing.py \--dir /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/miRge\_output/
+python /groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/scripts/mirge\_processing.py \--dir /groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/miRge\_output/
 
 **After ziv command:**  
-python /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/scripts/mirge\_processing.py \--dir /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/miRge\_after\_Ziv\_output/ \--species Hofstenia \--m18
+python /groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/scripts/mirge\_processing.py \--dir /groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/miRge\_after\_Ziv\_output/ \--species Hofstenia \--m18
 
 **New genome:**
 
-python /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/scripts/mirge\_processing.py \--dir /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia\_newGenome/miRge\_after\_Ziv\_output/ \--species Hofstenia\_newGenome \--m18
+python /groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/scripts/mirge\_processing.py \--dir /groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia\_newGenome/miRge\_after\_Ziv\_output/ \--species Hofstenia\_newGenome \--m18
 
 **Compare genome to fasta and create unique candidates:**
 
 conda activate my\_env
 
-python /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/scripts/compare\_genome\_to\_fasta.py \\  
+python /groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/scripts/compare\_genome\_to\_fasta.py \\  
 \--species Hofstenia \\  
-\--dir /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/miRge/ \\  
-\--genome\_fasta /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/Genome/refs/Hmia\_ref/Hmia.030120.fasta \\  
+\--dir /groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/miRge/ \\  
+\--genome\_fasta /groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/Genome/refs/Hmia\_ref/Hmia.030120.fasta \\  
 \--gff miRNA\_250203\_reformatted.gff3 \\  
 \--premir pre\_miR\_1050\_no\_pre\_in\_seqid.fa \\  
 \--mature\_star combined\_mature\_star\_1050.fa \\  
@@ -480,10 +480,10 @@ python /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/script
 
 **Command for non-Oscar files but our own generated ones after Ziv:**
 
-python /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/scripts/compare\_genome\_to\_fasta.py \\  
+python /groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/scripts/compare\_genome\_to\_fasta.py \\  
 \--species Hofstenia \\  
-\--dir /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/miRge\_after\_Ziv/ \\  
-\--genome\_fasta /mnt/new\_groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/Genome/refs/Hmia\_ref/Hmia.030120.fasta \\  
+\--dir /groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/miRge\_after\_Ziv/ \\  
+\--genome\_fasta /groups/vaksler\_group/Isana\_Tzah/Charles\_seq/Hofstenia/Genome/refs/Hmia\_ref/Hmia.030120.fasta \\  
 \--gff miRNA\_candidates.gff3 \\  
 \--premir all\_candidates\_hairpin\_T.fasta \\  
 \--mature\_star combined\_mature\_star.fasta \\  

@@ -22,8 +22,8 @@ echo -e "SLURM_JOB_NODELIST:\t" $SLURM_JOB_NODELIST "\n\n"
 module load anaconda				### load anaconda module (must be present when working with conda environments)
 source activate /home/stome/.conda/envs/my_env				### activate a conda environment, replace my_env with your conda environmen
 echo start ## execute python script – replace with your own command 
-blastn -query /mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Sulstoni/scripts/Sulstoni_mirdeep.fasta -db ../BLAST_DB/Caenorhabditis_pre_miRNAsDB -out ../queries/Sulstoni/miRdeep_blastn_compact -outfmt 6 -evalue 10 -task blastn-short
-blastn -query /mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Sulstoni/scripts/Sulstoni_sRNAbench.fasta -db ../BLAST_DB/Caenorhabditis_pre_miRNAsDB -out ../queries/Sulstoni/sRNAbench_blastn_compact -outfmt 6 -evalue 10 -task blastn-short
+blastn -query /groups/vaksler_group/Isana_Tzah/Charles_seq/Sulstoni/scripts/Sulstoni_mirdeep.fasta -db ../BLAST_DB/Caenorhabditis_pre_miRNAsDB -out ../queries/Sulstoni/miRdeep_blastn_compact -outfmt 6 -evalue 10 -task blastn-short
+blastn -query /groups/vaksler_group/Isana_Tzah/Charles_seq/Sulstoni/scripts/Sulstoni_sRNAbench.fasta -db ../BLAST_DB/Caenorhabditis_pre_miRNAsDB -out ../queries/Sulstoni/sRNAbench_blastn_compact -outfmt 6 -evalue 10 -task blastn-short
 echo finished.
 
 

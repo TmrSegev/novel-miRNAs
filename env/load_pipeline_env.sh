@@ -2,7 +2,7 @@
 # Sourceable cluster env for novel-miRNAs manual runs.
 #
 # Usage (MUST be sourced, not executed):
-#   source /mnt/new_groups/vaksler_group/Isana_Tzah/novel-miRNAs/env/load_pipeline_env.sh Macrosperma
+#   source /groups/vaksler_group/Isana_Tzah/novel-miRNAs/env/load_pipeline_env.sh Macrosperma
 #   source .../env/load_pipeline_env.sh Macrosperma new_genome
 #   source .../env/load_pipeline_env.sh Hofstenia_newGenome
 #
@@ -35,8 +35,8 @@ fi
 # Resolve script dir → REPO (works when sourced from any cwd)
 _NM_ENV_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 export REPO="$(cd "$_NM_ENV_DIR/.." && pwd)"
-export BASE="${BASE:-/mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq}"
-export RNACENTRAL="${RNACENTRAL:-/mnt/new_groups/vaksler_group/Isana_Tzah/RNAcentral}"
+export BASE="${BASE:-/groups/vaksler_group/Isana_Tzah/Charles_seq}"
+export RNACENTRAL="${RNACENTRAL:-/groups/vaksler_group/Isana_Tzah/RNAcentral}"
 
 # Accept Species_newGenome as a single token
 if [[ "$_NM_ARG1" == *_newGenome ]]; then

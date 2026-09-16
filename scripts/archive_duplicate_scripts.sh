@@ -3,7 +3,7 @@
 # Idempotent: skips files already archived or missing.
 set -euo pipefail
 
-ROOT="/mnt/new_groups/vaksler_group/Isana_Tzah"
+ROOT="/groups/vaksler_group/Isana_Tzah"
 REPO="$ROOT/novel-miRNAs"
 MANIFEST="$REPO/docs/archived_scripts_manifest.txt"
 DRY_RUN="${1:-}"

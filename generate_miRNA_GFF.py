@@ -92,7 +92,7 @@ except ValueError:
 
 output_track = cfg["variant_track"] if cfg and cfg.get("variant") == "new_genome" else SPECIES
 input_excel = Path(
-    f"/mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Ziv_Features/"
+    f"/groups/vaksler_group/Isana_Tzah/Charles_seq/Ziv_Features/"
     f"all_remaining_after_ziv_{output_track}.xlsx"
 )
 sheet_name = cfg["mirge_input_sheet"] if cfg else "(D) Structural Features"
@@ -102,7 +102,7 @@ if cfg and cfg.get("variant") == "new_genome":
 elif cfg:
     mirge_root = Path(cfg["base_path"], cfg["species"])
 else:
-    mirge_root = Path(f"/mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/{SPECIES}")
+    mirge_root = Path(f"/groups/vaksler_group/Isana_Tzah/Charles_seq/{SPECIES}")
 
 if cfg and cfg.get("ziv_profile") == "unfiltered_only":
     output_gff = mirge_root / "miRge_after_Ziv" / "miRNA_candidates.gff3"

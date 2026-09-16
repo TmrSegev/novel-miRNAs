@@ -12,13 +12,13 @@
 echo "Job start"
 module load anaconda				### load anaconda module (must be present when working with conda environments)
 source activate /home/stome/.conda/envs/mirge_env				### activate a conda environment, replace my_env with your conda environmen
-cd /mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Hofstenia/
+cd /groups/vaksler_group/Isana_Tzah/Charles_seq/Hofstenia/
 miRge3.0 \
-  -s /mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Hofstenia/Fastq/Hmia_annotation/filtered/GA3.filtered.fastq \
-  -lib /mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Hofstenia/miRge_output/ \
+  -s /groups/vaksler_group/Isana_Tzah/Charles_seq/Hofstenia/Fastq/Hmia_annotation/filtered/GA3.filtered.fastq \
+  -lib /groups/vaksler_group/Isana_Tzah/Charles_seq/Hofstenia/miRge_output/ \
   -on Hofstenia \
   -db miRBase \
-  -o /mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Hofstenia/miRge_output/results \
+  -o /groups/vaksler_group/Isana_Tzah/Charles_seq/Hofstenia/miRge_output/results \
   -gff \
   -bam \
   -ie \

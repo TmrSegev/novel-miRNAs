@@ -17,9 +17,9 @@ module load anaconda
 
 source activate /home/stome/.conda/envs/my_env
 
-DB=/mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/sRNAtoolboxDB
-TRIM=/mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/Macrosperma/TrimmedFastq
-OUT=/mnt/new_groups/vaksler_group/Isana_Tzah/Charles_seq/sRNAtoolboxDB/out/Macrosperma
+DB=/groups/vaksler_group/Isana_Tzah/Charles_seq/sRNAtoolboxDB
+TRIM=/groups/vaksler_group/Isana_Tzah/Charles_seq/Macrosperma/TrimmedFastq
+OUT=/groups/vaksler_group/Isana_Tzah/Charles_seq/sRNAtoolboxDB/out/Macrosperma
 mkdir -p "$OUT"
 echo start
 java -jar ../../sRNAtoolboxDB/exec/sRNAbench.jar \
