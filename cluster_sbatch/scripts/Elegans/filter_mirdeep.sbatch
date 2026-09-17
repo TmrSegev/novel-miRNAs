@@ -18,7 +18,7 @@ source activate /home/stome/.conda/envs/my_env
 cd "/groups/vaksler_group/Isana_Tzah/Charles_seq/Elegans/mirdeep_out"
 for folder in CE57 CE58 CE59 CE60 CE61 CE62 CE63 CE69 CE78 CE79 CE80 CE81; do
   if [ -d "$folder" ]; then
-    (cd "$folder" && echo "$folder" && python /groups/vaksler_group/Isana_Tzah/novel-miRNAs/mirdeepPerLibraryFilter.py -i result*.csv --filter-s 10 --filter-mc 10 --exclude-c 100)
+    (cd "$folder" && echo "$folder" && result=$(ls -t -- result_*.csv 2>/dev/null | head -n 1) && if [[ -z "$result" ]]; then echo "FAIL: no result_*.csv"; else echo "using $result"; python /groups/vaksler_group/Isana_Tzah/novel-miRNAs/mirdeepPerLibraryFilter.py -i "$result" --filter-s 10 --filter-mc 10 --exclude-c 100; fi)
   fi
 done
 echo finished.

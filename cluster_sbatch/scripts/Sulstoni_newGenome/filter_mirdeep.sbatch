@@ -18,7 +18,7 @@ source activate /home/stome/.conda/envs/my_env
 cd "/groups/vaksler_group/Isana_Tzah/Charles_seq/Sulstoni_newGenome/mirdeep_out"
 for folder in SR0 SR1 SR2 SR3 SR4 SR5 SR6 SR7; do
   if [ -d "$folder" ]; then
-    (cd "$folder" && echo "$folder" && python /groups/vaksler_group/Isana_Tzah/novel-miRNAs/mirdeepPerLibraryFilter.py -i result*.csv --filter-s 10 --filter-mc 10 --exclude-c 100)
+    (cd "$folder" && echo "$folder" && result=$(ls -t -- result_*.csv 2>/dev/null | head -n 1) && if [[ -z "$result" ]]; then echo "FAIL: no result_*.csv"; else echo "using $result"; python /groups/vaksler_group/Isana_Tzah/novel-miRNAs/mirdeepPerLibraryFilter.py -i "$result" --filter-s 10 --filter-mc 10 --exclude-c 100; fi)
   fi
 done
 echo finished.

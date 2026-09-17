@@ -254,6 +254,7 @@ def run(inputs, threshold_tp, threshold_s, threshold_mc, exclude_c, ncrna_dir=NC
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
     input = None
+    input_paths = []
     csv_save = False
     threshold_tp = None
     threshold_s = None
@@ -266,7 +267,11 @@ if __name__ == '__main__':
     while i < len(sys.argv):
         arg = sys.argv[i]
         if arg == '-i':
-            input = sys.argv[i + 1]
+            i += 1
+            while i < len(sys.argv) and not sys.argv[i].startswith('-'):
+                input_paths.append(sys.argv[i])
+                i += 1
+            continue
         elif arg == '--filter-tp':
             threshold_tp = sys.argv[i + 1]
         elif arg == '--filter-s':
@@ -284,7 +289,8 @@ if __name__ == '__main__':
 
         elif arg == '--help' or arg == '-h':
             print(f'Manual:\n'
-                  f' -i <path> : miRDeep2 prediction output path, like result_08_10_2021_t_09_57_05\n'
+                  f' -i <path> [path ...] : miRDeep2 prediction CSV (result_<date>.csv). '
+                  f'If several files are given (or a glob expands to several), the newest mtime is used.\n'
                   f' -o <path> : output path.\n'
                   f' -seed <path> : classify the reads by seed file, should be separated by tab with columns'
                   f' [miRBase_name, seed], default: None.\n'
@@ -298,8 +304,18 @@ if __name__ == '__main__':
             sys.exit()
         i += 2
 
-    if not input:
-        raise ('Input path is required (-i <path>)')
+    if not input_paths:
+        raise SystemExit('Input path is required (-i <path>)')
+    existing = [p for p in input_paths if os.path.isfile(p)]
+    if not existing:
+        raise SystemExit(f'No miRDeep result CSV among: {input_paths}')
+    input = max(existing, key=os.path.getmtime)
+    if len(existing) > 1:
+        sys.stderr.write(
+            f'WARNING: {len(existing)} result CSVs given; using newest by mtime: {input}\n'
+        )
+    else:
+        sys.stderr.write(f'Using miRDeep result: {input}\n')
 
     inputs = readMirbaseResults(input)
     if csv_save is not None:

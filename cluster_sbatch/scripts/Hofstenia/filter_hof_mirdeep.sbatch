@@ -27,7 +27,13 @@ cd /groups/vaksler_group/Isana_Tzah/Charles_seq/Hofstenia/mirdeep_out/
 for folder in EC1 EC2 EC3 GA1 GA2 GA3 DI1 DI2 DI3 PDi1 PDi2 PDi3 PDii1 PDii2 PDii3 PL1 PL2 PL3 PH1 PH2 PH3 HL1 HL2 HL3 IST1 IST2 IST3 AMP1 AMP2 AMP3 SMA1 SMA2 SMA3; do
     cd "$folder"
     echo "$folder"
-    python /groups/vaksler_group/Isana_Tzah/novel-miRNAs/mirdeepPerLibraryFilter.py -i result*.csv --filter-s 10 --filter-mc 10 --exclude-c 100
+    result=$(ls -t -- result_*.csv 2>/dev/null | head -n 1)
+    if [[ -z "$result" ]]; then
+      echo "FAIL: no result_*.csv in $folder"
+    else
+      echo "using $result"
+      python /groups/vaksler_group/Isana_Tzah/novel-miRNAs/mirdeepPerLibraryFilter.py -i "$result" --filter-s 10 --filter-mc 10 --exclude-c 100
+    fi
     cd ..
 done
 echo finished.

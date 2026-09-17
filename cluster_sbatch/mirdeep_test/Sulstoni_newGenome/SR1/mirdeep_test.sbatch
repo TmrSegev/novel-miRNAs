@@ -16,8 +16,10 @@ module load anaconda
 source activate /home/stome/.conda/envs/my_env
 
 # Hofstenia-style: run from mirdeep_out/SR1/
+# miRDeep2 FASTA identifiers must have no whitespace (raw WBPS19 headers include " length=").
+
 miRDeep2.pl /groups/vaksler_group/Isana_Tzah/Charles_seq/Sulstoni_newGenome/mapper_out/sulstoni_Seq_collapsed_SR1.fasta \
-  /groups/vaksler_group/Isana_Tzah/Charles_seq/Sulstoni_newGenome/genome/CSULS.caenorhabditis_sulstoni_PRJEB12601_WBPS19.scaffolds.fna \
+  /groups/vaksler_group/Isana_Tzah/Charles_seq/Sulstoni_newGenome/genome/CSULS.caenorhabditis_sulstoni_PRJEB12601_WBPS19.scaffolds.no_ws.fna \
   /groups/vaksler_group/Isana_Tzah/Charles_seq/Sulstoni_newGenome/mapper_out/sulstoni_Seq_vs_genome_SR1.arf \
   /groups/vaksler_group/Isana_Tzah/Charles_seq/mirbase_data/animalsMature.fa none /groups/vaksler_group/Isana_Tzah/Charles_seq/mirbase_data/animalsHairpin.fa -g -1 \
   2>mirdeep.log

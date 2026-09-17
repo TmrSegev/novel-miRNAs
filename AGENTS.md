@@ -24,6 +24,6 @@
 
 - Use `$TRACK` (`{Species}` vs `{Species}_newGenome`) so RNA-mi / Ziv / BLAST query paths stay separated. See overwrite + Verify sections in `docs/pipeline_v4.md`.
 - Cluster env loader (source, do not execute): `env/load_pipeline_env.sh` — or `env/moba_aliases.sh` → `nm Macrosperma`. Libraries come from `pipeline_config.py`.
-- **Hofstenia_newGenome** already has prior outputs; nematode `_newGenome` tracks have not been run yet.
+- **Hofstenia_newGenome** already has prior outputs (multiple `result_*.csv` dates per library; filter must use the newest mtime). Nematode `_newGenome`: Macrosperma and Elegans Phase 2 done; Sulstoni miRDeep needs the whitespace-stripped FASTA (`$GENOME_FA_NO_WS`).
 - Stop after Phase 11 (Ziv) until Phase 12 (Oscar / 5p-het) is implemented; do not run 13–14 early.
 - Snapshot existing tracks before re-running in-place phases (esp. old genomes and Hofstenia_newGenome).

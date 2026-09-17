@@ -132,12 +132,14 @@ case "$SPECIES" in
     export GENOME_DIR="$SPECIES_DIR/genome"
     if [[ -n "$VARIANT" ]]; then
       export GENOME_FA="$GENOME_DIR/CSULS.caenorhabditis_sulstoni_PRJEB12601_WBPS19.scaffolds.fna"
+      # WBPS19 headers are ">ID length=..."; miRDeep2 rejects whitespace in the first identifier.
+      export GENOME_FA_NO_WS="$GENOME_DIR/CSULS.caenorhabditis_sulstoni_PRJEB12601_WBPS19.scaffolds.no_ws.fna"
       export SRNABENCH_INDEX=sulstoniNewGenomeIndexed
     else
       export GENOME_FA="$GENOME_DIR/CSULS.caenorhabditis_sulstoni_JU2788_v1.scaffolds.fna"
+      export GENOME_FA_NO_WS="$GENOME_FA"
       export SRNABENCH_INDEX=sulstoniGenomeIndexed
     fi
-    export GENOME_FA_NO_WS="$GENOME_FA"
     unset READ_FASTQ_DIR
     ;;
   Hofstenia)
@@ -214,6 +216,9 @@ echo "  SPECIES=$SPECIES  TRACK=$TRACK  VARIANT=${VARIANT:-<empty>}"
 echo "  SPECIES_DIR=$SPECIES_DIR"
 echo "  LIBRARIES=$LIBRARIES"
 echo "  GENOME_FA=$GENOME_FA"
+if [[ "$GENOME_FA_NO_WS" != "$GENOME_FA" ]]; then
+  echo "  GENOME_FA_NO_WS=$GENOME_FA_NO_WS"
+fi
 echo "  SRNABENCH_INDEX=$SRNABENCH_INDEX  SEQOBJ_NAME=$SEQOBJ_NAME"
 echo "  SEQOBJ_ZIP=$SEQOBJ_ZIP"
 echo "Helpers: need_file (≤7d) / need_input / need_dir / nm_snapshot"

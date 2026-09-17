@@ -124,11 +124,18 @@ sbatch makeseqobj.sbatch            # FASTA → seqOBJ zip
 sbatch star_genome_indexing.sbatch  # FASTA → STAR index
 ```
 
-**Elegans only** — whitespace-stripped genome (old genome; `$GENOME_FA_NO_WS` differs) and miRBase GFF (once; needed before Phase 7/9 miRBase steps):
+**Whitespace-stripped genome for miRDeep2** — when `$GENOME_FA_NO_WS` differs from `$GENOME_FA` (Sulstoni new genome; Elegans old genome). miRDeep2 rejects spaces in the first FASTA identifier (`>CSP32.scaffold00013 length=1008935`). Bowtie / STAR / mapper keep using `$GENOME_FA` (first token already matches). Do **not** overwrite `$GENOME_FA` in place. Macrosperma and Elegans new-genome headers are already single-token (`>CMACR_scaffold00001`, `>I`).
 
 ```bash
-perl -lane 's/\s+.+$//' < "$GENOME_FA" > "$GENOME_FA_NO_WS"
+if [[ "$GENOME_FA_NO_WS" != "$GENOME_FA" && ! -s "$GENOME_FA_NO_WS" ]]; then
+  perl -lane 's/\s+.+$//' < "$GENOME_FA" > "$GENOME_FA_NO_WS"
+fi
+head -n 1 "$GENOME_FA_NO_WS"   # must be a single token after >
+```
 
+**Elegans only** — miRBase GFF (once; needed before Phase 7/9 miRBase steps):
+
+```bash
 cd "$BASE/mirbase_data"
 python "$REPO/mirbaseToGFF3.py"
 ```
@@ -309,6 +316,18 @@ mapper.pl "$READ_FASTQ_DIR/${LIBRARY}.filtered.fastq" -e -i -j -m -h \
 
 ### miRDeep (all species — one job per library)
 
+Confirm the FASTA miRDeep2 will read has no whitespace in the first identifier (Sulstoni new genome: `$GENOME_FA_NO_WS`, created in Phase 1):
+
+```bash
+need_input "$GENOME_FA_NO_WS"
+hdr=$(head -n 1 "$GENOME_FA_NO_WS")
+if [[ "$hdr" == '>'*' '* ]]; then
+  echo "ERROR: whitespace in genome header (miRDeep2 will reject): $hdr"
+else
+  echo "OK: $hdr"
+fi
+```
+
 ```bash
 cd "$SPECIES_DIR/mirdeep_out"
 for dir in ${LIBRARIES//,/ }; do
@@ -330,11 +349,12 @@ sbatch "$SPECIES_DIR/scripts/filter_mirdeep.sbatch"
 sbatch "$SPECIES_DIR/scripts/filter_hof_mirdeep.sbatch"
 ```
 
-Example inside filter sbatch (per library)
+Example inside filter sbatch (per library). If a folder has several `result_*.csv` (Hofstenia_newGenome does), use the **newest mtime** — an unquoted glob is alphabetical and would re-filter the November 2025 file instead of the current run.
 
 ```bash
 cd "$SPECIES_DIR/mirdeep_out/$LIBRARY"
-python "$REPO/mirdeepPerLibraryFilter.py" -i result_*.csv \
+result=$(ls -t -- result_*.csv | head -n 1)
+python "$REPO/mirdeepPerLibraryFilter.py" -i "$result" \
   --filter-s 10 --exclude-c 100 --filter-mc 10
 ```
 
@@ -342,6 +362,13 @@ python "$REPO/mirdeepPerLibraryFilter.py" -i result_*.csv \
 
 ```bash
 FAIL=0
+need_input "$GENOME_FA_NO_WS"
+hdr=$(head -n 1 "$GENOME_FA_NO_WS" 2>/dev/null || true)
+if [[ "$hdr" == '>'*' '* ]]; then
+  fail "whitespace in genome header (miRDeep2 will reject): $hdr"
+elif [[ -n "$hdr" ]]; then
+  ok "genome header $hdr"
+fi
 missing=0
 for lib in ${LIBRARIES//,/ }; do
   d="$SPECIES_DIR/mirdeep_out/$lib"
@@ -1198,7 +1225,7 @@ Optional: `chmod -R a-w` on the snapshot. Helper: `nm_snapshot` (from `moba_alia
 
 ### Recommended execution order (post-refactor)
 
-Status: **Hofstenia_newGenome already has prior outputs**; nematode `_newGenome` tracks have **not** been run.
+Status: **Hofstenia_newGenome already has prior outputs** (multiple `result_*.csv` dates per library — filter must use the newest). Nematode `_newGenome`: Macrosperma and Elegans Phase 2 done; Sulstoni miRDeep needs `$GENOME_FA_NO_WS`.
 
 ```
 0. Snapshot any track you will re-touch (especially old genomes + Hofstenia_newGenome)
@@ -1353,7 +1380,8 @@ export STAR_SAMS="$(for lib in ${LIBRARIES//,/ }; do echo ../STAR/align_to_genom
 
 **Macrosperma:** `SPECIES=Macrosperma`, `LIBRARIES=MR4,MR5,MR6,MR7,MR8`, `INDEX_BASENAME=macrosperma`, `BASH_DIR=$SPECIES_DIR/bash`, `GENOME_DIR=$SPECIES_DIR/genome`.  
 **Sulstoni:** `SPECIES=Sulstoni`, `LIBRARIES=SR0,...,SR7`, `INDEX_BASENAME=sulstoni`, lowercase `bash/` / `genome/`.  
-**new_genome:** `VARIANT="--variant new_genome"`, `TRACK=${SPECIES}_newGenome`, re-export dirs from `$TRACK`, `SRNABENCH_INDEX=${INDEX_BASENAME}NewGenomeIndexed` (not `${INDEX_BASENAME}GenomeIndexed`).
+**new_genome:** `VARIANT="--variant new_genome"`, `TRACK=${SPECIES}_newGenome`, re-export dirs from `$TRACK`, `SRNABENCH_INDEX=${INDEX_BASENAME}NewGenomeIndexed` (not `${INDEX_BASENAME}GenomeIndexed`).  
+**Sulstoni new_genome:** `GENOME_FA_NO_WS` is `...scaffolds.no_ws.fna` (WBPS19 headers contain ` length=`). Create with the perl strip before miRDeep2; do not set it equal to `$GENOME_FA`.
 
 ### Manual export fallback — Hofstenia
 
