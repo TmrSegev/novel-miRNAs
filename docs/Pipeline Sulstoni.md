@@ -318,7 +318,7 @@ python /groups/vaksler_group/Isana_Tzah/novel-miRNAs/statistics.py \--all /group
 
 basePath = Sulstoni\_newGenome/  
 Genome: `CSULS.caenorhabditis_sulstoni_PRJEB12601_WBPS19.scaffolds.fna` under `genome/`  
-miRDeep2 genome: same basename with `.no_ws.fna` — WBPS19 headers are `>CSP32.scaffold00013 length=...`; strip with `perl -lane 's/\s+.+$//'` before `miRDeep2.pl` (bowtie/STAR keep the raw FASTA).  
+miRDeep2 genome: same basename with `.no_ws.fna` — WBPS19 headers are `>CSP32.scaffold00013 length=...`; strip with `perl -pe 's/\s+.+$//'` before `miRDeep2.pl` (bowtie/STAR keep the raw FASTA). `-lane` does not print and yields a 0-byte file.  
 Annotations: `CSULS.caenorhabditis_sulstoni_PRJEB12601_WBPS19.annotations.gff3` under `genome/`  
 Sequencing reads: reuse `Sulstoni/TrimmedFastq/` (SR0–SR7; same libraries as v1)
 

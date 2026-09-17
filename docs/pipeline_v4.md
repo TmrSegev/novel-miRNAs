@@ -128,9 +128,11 @@ sbatch star_genome_indexing.sbatch  # FASTA → STAR index
 
 ```bash
 if [[ "$GENOME_FA_NO_WS" != "$GENOME_FA" && ! -s "$GENOME_FA_NO_WS" ]]; then
-  perl -lane 's/\s+.+$//' < "$GENOME_FA" > "$GENOME_FA_NO_WS"
+  perl -pe 's/\s+.+$//' < "$GENOME_FA" > "$GENOME_FA_NO_WS"
 fi
 head -n 1 "$GENOME_FA_NO_WS"   # must be a single token after >
+ls -lh "$GENOME_FA" "$GENOME_FA_NO_WS"   # no_ws must be non-empty and similar size
+# Use -pe (print). perl -lane does not print → 0-byte output.
 ```
 
 **Elegans only** — miRBase GFF (once; needed before Phase 7/9 miRBase steps):

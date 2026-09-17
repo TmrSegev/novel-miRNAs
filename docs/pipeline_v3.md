@@ -541,7 +541,7 @@ bowtie-build -f "$GENOME_FA" "index/${INDEX_BASENAME}GenomeIndexed"
 **Genome whitespace fix** (before miRDeep2 if needed):
 
 ```bash
-perl -lane 's/\s+.+$//' < "$GENOME_FA" > "$GENOME_FA_NO_WS"
+perl -pe 's/\s+.+$//' < "$GENOME_FA" > "$GENOME_FA_NO_WS"
 ```
 
 **sRNAbench genome object** (`makeSeqObj.jar` writes a **seq-object zip** next to the input FASTA; input stays plain `.fa`/`.fna`/`.fasta`. The jar names the zip from the basename prefix before the first dot — e.g. `CMACR....fna` → `CMACR.zip`, `caenorhabditis_elegans....fa` → `caenorhabditis_elegans.zip`, `Hmia.030120.fasta` → `Hmia.zip`):
