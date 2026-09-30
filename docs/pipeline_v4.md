@@ -543,17 +543,18 @@ done
 
 ### Hofstenia (Steps A → B → C)
 
-Omit `-seed`; keep `$HOF_FLAGS` (`--base-path $BASE`). No coordinate QC.
+Omit `-seed`; keep `$HOF_FLAGS` (`--base-path $BASE`). No coordinate QC.  
+Include `$VARIANT` on **A, B, and C**. Without it, `-s Hofstenia` writes the old `Hofstenia/` tree even if `nm Hofstenia_newGenome` is loaded (`$SCRIPTS_DIR` / Verify still point at `_newGenome`).
 
 ```bash
 cd "$SCRIPTS_DIR"
 
 # A
 python "$REPO/srnabenchUniteGFF.py" -o Hofstenia_sRNAbench.gff3 -s Hofstenia \
-  $HOF_FLAGS --create-fasta Hofstenia_sRNAbench.fasta --debug-only
+  $HOF_FLAGS $VARIANT --create-fasta Hofstenia_sRNAbench.fasta --debug-only
 python "$REPO/mirdeepUniteGFF.py" -o Hofstenia_mirdeep.gff3 \
   --create-fasta Hofstenia_mirdeep.fasta -s Hofstenia \
-  $HOF_FLAGS --debug-only
+  $HOF_FLAGS $VARIANT --debug-only
 
 # B
 python "$REPO/processGoodCandidates.py" --tool sRNAbench -s "$SPECIES" $VARIANT $HOF_FLAGS
@@ -561,9 +562,9 @@ python "$REPO/processGoodCandidates.py" --tool miRDeep -s "$SPECIES" $VARIANT $H
 
 # C
 python "$REPO/srnabenchUniteGFF.py" -o Hofstenia_sRNAbench.gff3 -s Hofstenia \
-  $HOF_FLAGS --create-fasta Hofstenia_sRNAbench.fasta --uniquecandidates True
+  $HOF_FLAGS $VARIANT --create-fasta Hofstenia_sRNAbench.fasta --uniquecandidates True
 python "$REPO/mirdeepUniteGFF.py" -o Hofstenia_mirdeep.gff3 -s Hofstenia \
-  $HOF_FLAGS --create-fasta Hofstenia_mirdeep.fasta --uniquecandidates True
+  $HOF_FLAGS $VARIANT --create-fasta Hofstenia_mirdeep.fasta --uniquecandidates True
 ```
 
 ### Verify — Phase 5
