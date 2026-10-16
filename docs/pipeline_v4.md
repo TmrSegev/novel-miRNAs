@@ -722,7 +722,7 @@ Prefer **sbatch** (jobs can take 1–2 h). Each wrapper runs **one** multi-SAM `
 cd "$BASH_DIR"
 sbatch featurecounts_mirdeep_sep.sbatch
 sbatch featurecounts_sRNAbench_sep.sbatch
-# Elegans old genome only (miRBase GFF is WBPS16 coordinates):
+# Elegans, both tracks. cel_mirbase_seq.gff3 uses chromosome names I–X, which match WBPS19.
 sbatch featurecounts_mirbase_sep.sbatch
 ```
 
@@ -807,7 +807,7 @@ for tag in miRdeep sRNAbench; do
   [[ "$cols" -ge $((nlib + 6)) ]] && ok "$tag counts columns≈$cols (libs=$nlib)" \
     || fail "$tag counts look under-columned (NF=$cols, libs=$nlib) — was featureCounts multi-SAM?"
 done
-if [[ "$SPECIES" == "Elegans" && -z "$VARIANT" ]]; then
+if [[ "$SPECIES" == "Elegans" ]]; then
   need_file "$SPECIES_DIR/counts_sep/miRNA_mirbase_counts.txt"
 fi
 [[ $FAIL -eq 0 ]] && echo "Phase 7 VERIFY PASSED" || echo "Phase 7 VERIFY FAILED"
@@ -1013,7 +1013,10 @@ python "$REPO/intersectionsTable.py" -s "$SPECIES" $VARIANT \
 
 ### Elegans (BLAST + miRBase / miRGeneDB)
 
+`intersectionsTable.py` names count columns by position from `-l`. Elegans featureCounts files are ordered CE81, CE80, CE69, CE63, CE62, CE61, CE60, CE59, CE58, CE57, CE79, CE78. That is not `$LIBRARIES`.
+
 ```bash
+FC_LIBS=CE81,CE80,CE69,CE63,CE62,CE61,CE60,CE59,CE58,CE57,CE79,CE78
 python "$REPO/intersectionsTable.py" -s "$SPECIES" $VARIANT \
   --mirdeep-inter-table "$RNA_MI_DIR/miRdeep_sRNAbench_intersect.bed" \
   --mirdeep-mirbase-inter "$RNA_MI_DIR/miRdeep_miRBase_intersect.bed" \
@@ -1032,7 +1035,7 @@ python "$REPO/intersectionsTable.py" -s "$SPECIES" $VARIANT \
   -rm "$SCRIPTS_DIR/mirdeep_all_remaining_filtered.csv" \
   -rs "$SCRIPTS_DIR/sRNAbench_all_remaining_filtered.csv" \
   -mgff "$BASE/mirbase_data/cel_mirbase_seq.gff3" \
-  -l "$LIBRARIES" \
+  -l "$FC_LIBS" \
   --sum-fc-thres 100 \
   --blast-mirdeep "$BLAST_QUERY_DIR/miRdeep_blastn_compact" \
   --blast-sRNAbench "$BLAST_QUERY_DIR/sRNAbench_blastn_compact"
@@ -1533,6 +1536,7 @@ $RNACENTRAL/
 ### Elegans — Phase 10 full command
 
 ```bash
+FC_LIBS=CE81,CE80,CE69,CE63,CE62,CE61,CE60,CE59,CE58,CE57,CE79,CE78
 python "$REPO/intersectionsTable.py" -s Elegans $VARIANT \
   --mirdeep-inter-table "$RNA_MI_DIR/miRdeep_sRNAbench_intersect.bed" \
   --mirdeep-mirbase-inter "$RNA_MI_DIR/miRdeep_miRBase_intersect.bed" \
@@ -1549,7 +1553,7 @@ python "$REPO/intersectionsTable.py" -s Elegans $VARIANT \
   --fc-pre-sRNAbench "$SPECIES_DIR/counts_sep/miRNA_sRNAbench_counts_flanked.txt" \
   -rm "$SCRIPTS_DIR/mirdeep_all_remaining_filtered.csv" \
   -rs "$SCRIPTS_DIR/sRNAbench_all_remaining_filtered.csv" \
-  -l "$LIBRARIES" \
+  -l "$FC_LIBS" \
   --sum-fc-thres 100 \
   --blast-mirdeep "$BLAST_QUERY_DIR/miRdeep_blastn_compact" \
   --blast-sRNAbench "$BLAST_QUERY_DIR/sRNAbench_blastn_compact" \
@@ -1645,7 +1649,7 @@ bash "$REPO/cluster_sbatch/symlink_newgenome_on_cluster.sh"
 
 That script makes `$BASH_DIR` a **real directory** with per-file links. Do not replace it with a whole-directory symlink into the git repo — Slurm’s cwd follows that link, so `../genome` resolves next to `cluster_sbatch/` instead of `$SPECIES_DIR/genome` (`Unable to open` in bowtie-build even when `$GENOME_FA` exists). Check: `cd "$BASH_DIR" && pwd -P` must stay under `Charles_seq/`, and `ls ../genome/` must show the FASTA.
 
-Then submit from `$BASH_DIR` / `$RNA_MI_DIR` as in Phases 1–9. Do **not** use `star_align_all_libraries.sbatch` or `mirdeep.sbatch` (legacy combined). Skip `featurecounts_mirbase_sep.sbatch` on WBPS19 (miRBase GFF is old-genome coordinates).
+Then submit from `$BASH_DIR` / `$RNA_MI_DIR` as in Phases 1–9. Do **not** use `star_align_all_libraries.sbatch` or `mirdeep.sbatch` (legacy combined). Elegans new genome also runs `featurecounts_mirbase_sep.sbatch` (`cel_mirbase_seq.gff3` chromosome names match WBPS19).
 
 ---
 
