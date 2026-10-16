@@ -761,8 +761,9 @@ featureCounts -t miRNA -g ID -O -s 1 -M \
   -o "../counts_sep/miRNA_sRNAbench_counts.txt" \
   $STAR_SAMS
 
-# Elegans miRBase only (separate conversation if this job fails)
-featureCounts -t miRNA -g ID -O -s 1 -M \
+# Elegans miRBase only. -F GFF is required: featureCounts 2.0.1 otherwise
+# reads cel_mirbase_seq.gff3 as GTF and does not see GFF3 ID= attributes.
+featureCounts -F GFF -t miRNA -g ID -O -s 1 -M \
   -a "$BASE/mirbase_data/cel_mirbase_seq.gff3" \
   -o ../counts_sep/miRNA_mirbase_counts.txt \
   $STAR_SAMS
