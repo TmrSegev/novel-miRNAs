@@ -939,7 +939,7 @@ Manual bedtools (Elegans extras)
 ```bash
 cd "$RNA_MI_DIR"
 MIRBASE_GFF="$BASE/mirbase_data/cel_mirbase_seq.gff3"
-MIRGENEDB_GFF="$BASE/mirgenedb_data_v3/cel_mirgenedb.gff3"
+MIRGENEDB_GFF="$RNACENTRAL/miRNAs/Elegans/miRGene_DB_cel_premiRNAs.gff"
 
 bedtools intersect -wa -wb -loj -s -f 0.6 -a "$SCRIPTS_DIR/${SPECIES}_mirdeep_pre_only.gff3" -b "$MIRBASE_GFF" > miRdeep_miRBase_intersect.bed
 bedtools intersect -wa -wb -loj -s -f 0.6 -a "$SCRIPTS_DIR/${SPECIES}_sRNAbench_pre_only.gff3" -b "$MIRBASE_GFF" > sRNAbench_miRBase_intersect.bed
