@@ -25,5 +25,35 @@ source activate /home/stome/.conda/envs/my_env				### activate a conda environme
 mkdir -p "/groups/vaksler_group/Isana_Tzah/Charles_seq/Elegans_newGenome/counts_sep"
 echo start ## execute python script – replace with your own command 
 set -e
-featureCounts -F GFF -t miRNA -g ID -O -s 1 -M -a /groups/vaksler_group/Isana_Tzah/Charles_seq/mirbase_data/cel_mirbase_seq.gff3 -o /groups/vaksler_group/Isana_Tzah/Charles_seq/Elegans_newGenome/counts_sep/miRNA_mirbase_counts.txt /groups/vaksler_group/Isana_Tzah/Charles_seq/Elegans_newGenome/STAR/align_to_genome/CE81/Elegans_Aligned.out.sam /groups/vaksler_group/Isana_Tzah/Charles_seq/Elegans_newGenome/STAR/align_to_genome/CE80/Elegans_Aligned.out.sam /groups/vaksler_group/Isana_Tzah/Charles_seq/Elegans_newGenome/STAR/align_to_genome/CE69/Elegans_Aligned.out.sam /groups/vaksler_group/Isana_Tzah/Charles_seq/Elegans_newGenome/STAR/align_to_genome/CE63/Elegans_Aligned.out.sam /groups/vaksler_group/Isana_Tzah/Charles_seq/Elegans_newGenome/STAR/align_to_genome/CE62/Elegans_Aligned.out.sam /groups/vaksler_group/Isana_Tzah/Charles_seq/Elegans_newGenome/STAR/align_to_genome/CE61/Elegans_Aligned.out.sam /groups/vaksler_group/Isana_Tzah/Charles_seq/Elegans_newGenome/STAR/align_to_genome/CE60/Elegans_Aligned.out.sam /groups/vaksler_group/Isana_Tzah/Charles_seq/Elegans_newGenome/STAR/align_to_genome/CE59/Elegans_Aligned.out.sam /groups/vaksler_group/Isana_Tzah/Charles_seq/Elegans_newGenome/STAR/align_to_genome/CE58/Elegans_Aligned.out.sam /groups/vaksler_group/Isana_Tzah/Charles_seq/Elegans_newGenome/STAR/align_to_genome/CE57/Elegans_Aligned.out.sam /groups/vaksler_group/Isana_Tzah/Charles_seq/Elegans_newGenome/STAR/align_to_genome/CE79/Elegans_Aligned.out.sam /groups/vaksler_group/Isana_Tzah/Charles_seq/Elegans_newGenome/STAR/align_to_genome/CE78/Elegans_Aligned.out.sam
+# Same featureCounts call as miRDeep/sRNAbench/Hofstenia: -t miRNA -g ID, no -F.
+# Those GFF3 miRNA rows are only "ID=<id>". cel_mirbase_seq.gff3 appends a raw
+# sequence and 5p/3p with no key, and featureCounts 2.0.1 then cannot read ID=.
+# Rewrite miRNA rows to that GFF3 shape. Phase 10 -mgff stays the original file.
+GFF_IN=/groups/vaksler_group/Isana_Tzah/Charles_seq/mirbase_data/cel_mirbase_seq.gff3
+GFF_OUT=/groups/vaksler_group/Isana_Tzah/Charles_seq/Elegans_newGenome/counts_sep/cel_mirbase_miRNA.gff3
+awk -F'\t' 'BEGIN{OFS="\t"; print "##gff-version 3"}
+$0 !~ /^#/ && $3 == "miRNA" && NF >= 9 {
+  id = $9
+  sub(/;.*/, "", id)
+  if (id !~ /^ID=/) id = "ID=" id
+  if (id != "ID=") print $1, $2, "miRNA", $4, $5, $6, $7, $8, id
+}' "$GFF_IN" > "$GFF_OUT"
+nfeat=$(awk 'END{print NR-1}' "$GFF_OUT")
+echo "GFF3 miRNA features: $nfeat"
+[[ "$nfeat" -gt 0 ]]
+featureCounts -t miRNA -g ID -O -s 1 -M \
+  -a "$GFF_OUT" \
+  -o /groups/vaksler_group/Isana_Tzah/Charles_seq/Elegans_newGenome/counts_sep/miRNA_mirbase_counts.txt \
+  /groups/vaksler_group/Isana_Tzah/Charles_seq/Elegans_newGenome/STAR/align_to_genome/CE81/Elegans_Aligned.out.sam \
+  /groups/vaksler_group/Isana_Tzah/Charles_seq/Elegans_newGenome/STAR/align_to_genome/CE80/Elegans_Aligned.out.sam \
+  /groups/vaksler_group/Isana_Tzah/Charles_seq/Elegans_newGenome/STAR/align_to_genome/CE69/Elegans_Aligned.out.sam \
+  /groups/vaksler_group/Isana_Tzah/Charles_seq/Elegans_newGenome/STAR/align_to_genome/CE63/Elegans_Aligned.out.sam \
+  /groups/vaksler_group/Isana_Tzah/Charles_seq/Elegans_newGenome/STAR/align_to_genome/CE62/Elegans_Aligned.out.sam \
+  /groups/vaksler_group/Isana_Tzah/Charles_seq/Elegans_newGenome/STAR/align_to_genome/CE61/Elegans_Aligned.out.sam \
+  /groups/vaksler_group/Isana_Tzah/Charles_seq/Elegans_newGenome/STAR/align_to_genome/CE60/Elegans_Aligned.out.sam \
+  /groups/vaksler_group/Isana_Tzah/Charles_seq/Elegans_newGenome/STAR/align_to_genome/CE59/Elegans_Aligned.out.sam \
+  /groups/vaksler_group/Isana_Tzah/Charles_seq/Elegans_newGenome/STAR/align_to_genome/CE58/Elegans_Aligned.out.sam \
+  /groups/vaksler_group/Isana_Tzah/Charles_seq/Elegans_newGenome/STAR/align_to_genome/CE57/Elegans_Aligned.out.sam \
+  /groups/vaksler_group/Isana_Tzah/Charles_seq/Elegans_newGenome/STAR/align_to_genome/CE79/Elegans_Aligned.out.sam \
+  /groups/vaksler_group/Isana_Tzah/Charles_seq/Elegans_newGenome/STAR/align_to_genome/CE78/Elegans_Aligned.out.sam
 echo finished.

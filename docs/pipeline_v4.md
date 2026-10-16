@@ -761,10 +761,13 @@ featureCounts -t miRNA -g ID -O -s 1 -M \
   -o "../counts_sep/miRNA_sRNAbench_counts.txt" \
   $STAR_SAMS
 
-# Elegans miRBase only. -F GFF is required: featureCounts 2.0.1 otherwise
-# reads cel_mirbase_seq.gff3 as GTF and does not see GFF3 ID= attributes.
-featureCounts -F GFF -t miRNA -g ID -O -s 1 -M \
-  -a "$BASE/mirbase_data/cel_mirbase_seq.gff3" \
+# Elegans miRBase only. Same flags as miRDeep/sRNAbench/Hofstenia (no -F).
+# featureCounts 2.0.1 rejects -F GFF. miRNA rows must be GFF3 "ID=<id>" only,
+# as in mirdeepUniteGFF.py. cel_mirbase_seq.gff3 also appends a raw sequence
+# and 5p/3p, which hides ID=. The sbatch writes cel_mirbase_miRNA.gff3 from
+# the miRNA rows. Phase 10 -mgff stays cel_mirbase_seq.gff3.
+featureCounts -t miRNA -g ID -O -s 1 -M \
+  -a ../counts_sep/cel_mirbase_miRNA.gff3 \
   -o ../counts_sep/miRNA_mirbase_counts.txt \
   $STAR_SAMS
 ```
