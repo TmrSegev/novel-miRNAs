@@ -726,6 +726,8 @@ sbatch featurecounts_sRNAbench_sep.sbatch
 sbatch featurecounts_mirbase_sep.sbatch
 ```
 
+Elegans featureCounts wrappers list SAMs as CE81, CE80, CE69, CE63, CE62, CE61, CE60, CE59, CE58, CE57, CE79, CE78. Phase 10 must pass that order as `-l "$FC_LIBS"`. `$LIBRARIES` (CE57…CE81) is a different order.
+
 **Hofstenia — mature:**
 
 ```bash
@@ -1013,7 +1015,17 @@ python "$REPO/intersectionsTable.py" -s "$SPECIES" $VARIANT \
 
 ### Elegans (BLAST + miRBase / miRGeneDB)
 
-`intersectionsTable.py` names count columns by position from `-l`. Elegans featureCounts files are ordered CE81, CE80, CE69, CE63, CE62, CE61, CE60, CE59, CE58, CE57, CE79, CE78. That is not `$LIBRARIES`.
+Run this only after `featurecounts_mirbase_sep.sbatch` has finished and `$SPECIES_DIR/counts_sep/miRNA_mirbase_counts.txt` is non-empty.
+
+**Use `-l "$FC_LIBS"` in place of `-l "$LIBRARIES"`.** Leave every other flag as written below. `intersectionsTable.py` names count columns by position, and the Elegans featureCounts files are ordered CE81, CE80, CE69, CE63, CE62, CE61, CE60, CE59, CE58, CE57, CE79, CE78. `$LIBRARIES` is CE57…CE81, so `-l "$LIBRARIES"` attaches each column to the wrong sample.
+
+```bash
+if [[ -s "$SPECIES_DIR/counts_sep/miRNA_mirbase_counts.txt" ]]; then
+  echo "miRBase counts ready"
+else
+  echo "STOP: miRBase counts missing or empty: $SPECIES_DIR/counts_sep/miRNA_mirbase_counts.txt"
+fi
+```
 
 ```bash
 FC_LIBS=CE81,CE80,CE69,CE63,CE62,CE61,CE60,CE59,CE58,CE57,CE79,CE78
@@ -1534,6 +1546,16 @@ $RNACENTRAL/
 
 
 ### Elegans — Phase 10 full command
+
+Same rule as [Phase 10](#elegans-blast--mirbase--mirgenedb): **use `-l "$FC_LIBS"` in place of `-l "$LIBRARIES"`.** Leave every other flag as written below.
+
+```bash
+if [[ -s "$SPECIES_DIR/counts_sep/miRNA_mirbase_counts.txt" ]]; then
+  echo "miRBase counts ready"
+else
+  echo "STOP: miRBase counts missing or empty: $SPECIES_DIR/counts_sep/miRNA_mirbase_counts.txt"
+fi
+```
 
 ```bash
 FC_LIBS=CE81,CE80,CE69,CE63,CE62,CE61,CE60,CE59,CE58,CE57,CE79,CE78
