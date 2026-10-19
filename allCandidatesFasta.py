@@ -1,7 +1,7 @@
 import pandas as pd
 import sys
 
-from pipeline_config import get_species_config
+from pipeline_config import build_description, get_species_config, species_uses_mirbase
 
 
 def create_all_candidatess_fasta(df):
@@ -182,14 +182,14 @@ if __name__ == '__main__':
             sys.exit()
         i += 2
 
-    if not output_explicitly_provided and species:
-        try:
-            cfg = get_species_config(species, base_path, variant=variant)
-            output = cfg["output_dir"]
-            if not output.endswith("/"):
-                output += "/"
-        except ValueError:
-            pass
+    cfg = None
+    if species:
+        cfg = get_species_config(species, base_path, variant=variant)
+
+    if not output_explicitly_provided and cfg is not None:
+        output = cfg["output_dir"]
+        if not output.endswith("/"):
+            output += "/"
 
     if not all_path:
         print("Error: Missing required argument --all <path>")
@@ -198,17 +198,10 @@ if __name__ == '__main__':
     print(f"Reading sheet: {sheet_name}")
     all_df = pd.read_excel(all_path, sheet_name=sheet_name)
 
-    # Clean and merge description columns
-    if species and species.lower() == "elegans":
-        all_df['Description'] = all_df[['Description_mirdeep', 'Description_sRNAbench', 'Description_mirbase']].astype(
-            str).agg('__'.join, axis=1).str.replace("|", ",", regex=False).str.replace('.', '_', regex=False)
-    else:
-        all_df['Description'] = all_df[['Description_mirdeep', 'Description_sRNAbench']].astype(str).agg('__'.join,
-                                                                                                         axis=1).str.replace(
-            ";", "|", regex=False).str.replace("ID=", "", regex=False).str.replace('.', '', regex=False)
-
-    # Remove nan values from description
-    all_df['Description'] = all_df['Description'].str.replace('nan, ', '').str.replace(', nan', '')
+    # FASTA header is the same Description key Ziv merges on.
+    # Elegans includes miRBase; other species and both genome variants do not.
+    include_mirbase = bool(cfg and species_uses_mirbase(cfg))
+    all_df["Description"] = build_description(all_df, include_mirbase=include_mirbase)
 
     create_all_candidatess_fasta(all_df)
     print("FINISH")

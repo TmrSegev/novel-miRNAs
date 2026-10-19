@@ -9,19 +9,67 @@ import sys
 import numpy as np
 import pprint
 
-from pipeline_config import build_description, get_species_config, species_ziv_unfiltered_only
+from pipeline_config import (
+    build_description,
+    get_species_config,
+    species_uses_mirbase,
+    species_ziv_unfiltered_only,
+)
 
 
 def get_seq_data(path, start_end_mark=False):
     seq = {}
     for seq_record in SeqIO.parse(path, "fasta"):
         seq_id = seq_record.description
+        if seq_id in seq:
+            raise ValueError(
+                "Duplicate FASTA header in {}: {}".format(path, seq_id[:200])
+            )
         rna = Ziv_Git.as_rna(seq_record.seq)
         if start_end_mark:
             seq[seq_id] = ('S' + rna + 'E')
         else:
             seq[seq_id] = rna
     return seq
+
+
+def attach_ziv_by_description(all_remaining, ziv_df, include_mirbase):
+    """Left-merge Ziv rows onto candidates by the shared Description key.
+
+    Candidates with no FASTA record keep blank Ziv columns. A FASTA header that
+    matches nothing in the table is an error, because that fold would be dropped.
+    """
+    table = all_remaining.reset_index(drop=True).copy()
+    table["Description"] = build_description(table, include_mirbase=include_mirbase)
+    if table["Description"].duplicated().any():
+        duplicated = table.loc[
+            table["Description"].duplicated(keep=False), "Description"
+        ].unique()[:5]
+        raise ValueError(
+            "Duplicate Description values in the candidate table: {}".format(
+                [value[:200] for value in duplicated]
+            )
+        )
+    if ziv_df["Description"].duplicated().any():
+        duplicated = ziv_df.loc[
+            ziv_df["Description"].duplicated(keep=False), "Description"
+        ].unique()[:5]
+        raise ValueError(
+            "Duplicate FASTA headers: {}".format(
+                [value[:200] for value in duplicated]
+            )
+        )
+    missing = sorted(set(ziv_df["Description"]) - set(table["Description"]))
+    if missing:
+        raise ValueError(
+            "{} FASTA headers are absent from the candidate table. First: {}".format(
+                len(missing), missing[0][:200]
+            )
+        )
+    merged = table.merge(ziv_df, on="Description", how="left")
+    column_order = [column for column in merged.columns if column != "Description"]
+    column_order.append("Description")
+    return merged[column_order]
 
 
 def load_double_mature_names(double_mature_path):
@@ -345,35 +393,47 @@ if __name__ == '__main__':
     gen_dict = build_dict()
     neg_dict = build_dict()
     mirdb_dict = build_dict()
-    # Track candidate names for mirgenedb processing
+    # One name per folded record, including folds that fail.
     candidate_names_list = []
     for name, seq in precursors.items():
+        candidate_names_list.append(name)
         try:
             seed = find_seed(name, seq)
         except Exception as e:
             print("Skipping", name, "–", e)
             append_ziv_row(mirdb_dict, build_exception_dict())
-            if species == "miRGeneDB":
-                candidate_names_list.append(name)
             continue
         print("seed is:", seed)
         create_setting_ini(seed)
         try:
             out_dict = Ziv_Git.start_filtering(seq, true_mature=mature[name], true_star=star.get(name))
             append_ziv_row(mirdb_dict, out_dict['new'])
-            if species == "miRGeneDB":
-                candidate_names_list.append(name)
         except Exception as e:
             print("FAILED in start_filtering or append:", e)
             append_ziv_row(mirdb_dict, build_exception_dict())
-            if species == "miRGeneDB":
-                candidate_names_list.append(name)
             continue
 
     mirdb_df = pd.DataFrame(mirdb_dict)
-    all_remaining.reset_index(inplace=True, drop=True)
-    mirdb_df.reset_index(inplace=True, drop=True)
-    output = pd.concat([all_remaining, mirdb_df], axis=1)
+    if len(candidate_names_list) != len(mirdb_df):
+        raise RuntimeError(
+            "Ziv row count ({}) does not match FASTA header count ({}).".format(
+                len(mirdb_df), len(candidate_names_list)
+            )
+        )
+    if species == "miRGeneDB":
+        all_remaining.reset_index(inplace=True, drop=True)
+        mirdb_df.reset_index(inplace=True, drop=True)
+        output = pd.concat([all_remaining, mirdb_df], axis=1)
+    else:
+        include_mirbase = bool(cfg and species_uses_mirbase(cfg))
+        mirdb_df.insert(0, "Description", candidate_names_list)
+        output = attach_ziv_by_description(all_remaining, mirdb_df, include_mirbase)
+        n_blank = int(output["Valid mir_ziv"].isna().sum())
+        print(
+            "Merged Ziv features on Description: {} FASTA records, {} candidates without a fold.".format(
+                len(mirdb_df), n_blank
+            )
+        )
 
     # Add two_matures flag column for mirgenedb
     if species == "miRGeneDB":
@@ -407,7 +467,6 @@ if __name__ == '__main__':
             {'Mature_BP_ratio_ziv': 'float', 'Mature_max_bulge_ziv': 'float', 'Star_BP_ratio_ziv': 'float',
              'Star_max_bulge_ziv': 'float'})
         if cfg and cfg.get("apply_manual_corrections"):
-            output['Description'] = output[['Description_mirdeep', 'Description_sRNAbench']].astype(str).agg('__'.join, axis=1).str.replace(';', '|', regex=False).str.replace('ID=', '', regex=False).str.replace('.', '', regex=False)
             output = manual_change(
                 output,
                 new_genome=(cfg.get("species") == "Hofstenia" and cfg.get("variant") == "new_genome"),
