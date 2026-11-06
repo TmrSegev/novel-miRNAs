@@ -1,18 +1,61 @@
 from collections import defaultdict
 
 from Bio import SeqIO
+import atexit
 import re
 import os
+import shlex
+import shutil
+import tempfile
 import configparser
 import RNA
 import pandas as pd
 from subprocess import Popen
 from Bio import pairwise2
 import numpy as np
-os.chdir(r"/groups/vaksler_group/Isana_Tzah/Charles_seq/Ziv_Features/")
+
+ZIV_HOME = r"/groups/vaksler_group/Isana_Tzah/Charles_seq/Ziv_Features/"
+if os.path.isdir(ZIV_HOME):
+    os.chdir(ZIV_HOME)
 
 dirpath = os.getcwd()
 res = {}
+_scratch_dir = None
+
+
+def scratch_dir():
+    """Private directory for this process's settings.ini, ct.txt, and ct_file.ct."""
+    global _scratch_dir
+    if _scratch_dir is None:
+        _scratch_dir = tempfile.mkdtemp(prefix="ziv_run_")
+        print("Ziv scratch directory:", _scratch_dir)
+        atexit.register(cleanup_scratch)
+    return _scratch_dir
+
+
+def cleanup_scratch():
+    global _scratch_dir
+    if _scratch_dir and os.path.isdir(_scratch_dir):
+        shutil.rmtree(_scratch_dir, ignore_errors=True)
+        print("Removed Ziv scratch directory:", _scratch_dir)
+    _scratch_dir = None
+
+
+def settings_path():
+    """Create this run's scratch directory and return its settings.ini path."""
+    return os.path.join(scratch_dir(), "settings.ini")
+
+
+def read_settings_path():
+    """Scratch settings if this run created them, otherwise the shared cwd file."""
+    if _scratch_dir is None:
+        return "settings.ini"
+    return os.path.join(_scratch_dir, "settings.ini")
+
+
+def ct_paths():
+    folder = scratch_dir()
+    return os.path.join(folder, "ct.txt"), os.path.join(folder, "ct_file.ct")
 
 
 def as_rna(seq):
@@ -30,12 +73,11 @@ def missing_seq(seq):
 
 def build_global_variables():
     seed=short_window_size=long_window_size=max_energy=input_filter_parameters=organism_name_in_db=None
-    path = ''
     windows = [65, 60, 55, 50, 45]
     param = 30
     settings = configparser.ConfigParser()
     settings._interpolation = configparser.ExtendedInterpolation()
-    settings.read(f'{path}settings.ini')
+    settings.read(read_settings_path())
 
     if not settings.has_section('mode_1'):
         print('OK continue')
@@ -494,16 +536,20 @@ def filter_candidates(true_mature=None, true_star=None):
 
         fold = fold_candidates_by_seq(hairpin)
 
-        with open('ct.txt', 'w') as infile:
+        ct_txt, ct_out = ct_paths()
+        with open(ct_txt, 'w') as infile:
             infile.write('>' + key + '\n')
             infile.write(hairpin + '\n')
             infile.write(fold)
 
-        cmd = "~/.conda/envs/my_env/bin/RNAfold --noPS ct.txt | ~/.conda/envs/my_env/bin/b2ct > ct_file.ct"
+        cmd = (
+            "~/.conda/envs/my_env/bin/RNAfold --noPS {ct} | "
+            "~/.conda/envs/my_env/bin/b2ct > {out}"
+        ).format(ct=shlex.quote(ct_txt), out=shlex.quote(ct_out))
         p = Popen(cmd, shell=True)
         p.communicate()
 
-        ct_df = pd.read_csv('ct_file.ct', delimiter='\s+', header=None, names=[0, 1, 2, 3, 4, 5])
+        ct_df = pd.read_csv(ct_out, delimiter='\s+', header=None, names=[0, 1, 2, 3, 4, 5])
         ct_df = ct_df.iloc[1:]
         ct_df = ct_df.astype({4: 'int'})
 

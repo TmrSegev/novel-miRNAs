@@ -108,7 +108,7 @@ def create_setting_ini(seed):
     organism_name_in_db = Caenorhabditis elegans
     input_filter_parameters = filter_parameters_mir35.txt
     """
-    with open("settings.ini", "w") as f:
+    with open(Ziv_Git.settings_path(), "w") as f:
         f.write(mode_1)
 
 

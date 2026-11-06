@@ -1102,7 +1102,7 @@ PY
 
 ## Phase 11 — Structural filtering (Ziv)
 
-Same command for nematodes and Hofstenia. **Overwrite critical:** on the default (old) assembly, Ziv writes into **cwd** — always `cd "$BASE/Ziv_Features"` first.
+Same command for nematodes and Hofstenia. **Overwrite critical:** on the default (old) assembly, Ziv writes the workbook into **cwd** — always `cd "$BASE/Ziv_Features"` first. `settings.ini`, `ct.txt`, and `ct_file.ct` go in a temporary directory private to that process and are deleted when the process exits, so two tracks can fold at the same time.
 
 ```bash
 python "$REPO/allCandidatesFasta.py" \

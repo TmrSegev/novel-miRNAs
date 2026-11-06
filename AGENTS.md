@@ -27,3 +27,4 @@
 - **Hofstenia_newGenome** already has prior outputs (multiple `result_*.csv` dates per library; filter must use the newest mtime). Nematode `_newGenome`: Macrosperma and Elegans Phase 2 done; Sulstoni miRDeep needs the whitespace-stripped FASTA (`$GENOME_FA_NO_WS`).
 - Stop after Phase 11 (Ziv) until Phase 12 (Oscar / 5p-het) is implemented; do not run 13–14 early.
 - Snapshot existing tracks before re-running in-place phases (esp. old genomes and Hofstenia_newGenome).
+- Phase 11 fold scratch (`settings.ini`, `ct.txt`, `ct_file.ct`) is a per-run temp directory, deleted when `Ziv_feature_SOS.py` exits. The workbook is still `$BASE/Ziv_Features/all_remaining_after_ziv_${TRACK}.xlsx`. Tracks may fold at the same time.
